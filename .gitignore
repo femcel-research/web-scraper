@@ -10,3 +10,5 @@ wizchan-venv/
 .vscode-server/
 .gitconfig
 .bash_history
+.cache/
+.codetogether/
