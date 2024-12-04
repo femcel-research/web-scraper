@@ -9,14 +9,13 @@ from utils import SiteMetaCollector
 class HomePageScraper:
     """Makes a list of urls from homepage"""
 
-    def __init__(self, url, site_title):
+    def __init__(self, url):
         self.page = requests.get(url, stream=True)  
         self.soup = BeautifulSoup(self.page.content, "html.parser")
         self.url_list = []
-        self.site_title = site_title
         
         # JSON sitewide metadata file
-        site_meta = SiteMetaCollector(self.page, self.soup, self.site_title, "./data/wizchan/")
+        site_meta = SiteMetaCollector(self.page, self.soup, "./data/")
         (site_meta.meta_dump())
 
 
@@ -28,7 +27,6 @@ class HomePageScraper:
             anchor_tag = list.find("a")
             if anchor_tag:
                 url = anchor_tag.get("href")  # Get the value of "href" attribute; url info
-                self.url_list.append("https://wizchan.org" + url)
+                self.url_list.append("https://crystal.cafe" + url)
 
         return(self.url_list)
-
