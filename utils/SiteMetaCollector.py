@@ -8,16 +8,15 @@ import os
 import re
 
 class SiteMetaCollector (MetaCollector):
-    def __init__(self, page, soup, site_title, folder_path):
+    def __init__(self, page, soup, folder_path):
         """Collects site-wide metadata from a website and stores it in a JSON file"""
         # Website info
         self.page = page
         self.soup = soup
-        self.site_title = site_title
 
         # File path
         self.folder_path = folder_path
-        self.file_name = self.site_title+ "_meta.json"
+        self.file_name = self.soup.title.string + "_meta.json"
         self.file_path = os.path.join(self.folder_path, self.file_name)
         
     def page_info_to_JSON(self):
@@ -39,7 +38,7 @@ class SiteMetaCollector (MetaCollector):
 
         info = {
             "URL": page.url,
-            "site_title": self.site_title,
+            "site_title": self.soup.title.string,
             "description": description,
             "keywords": keywords,
         }
