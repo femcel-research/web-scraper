@@ -60,10 +60,14 @@ class Process:
         logging.info("Logging " + url + " in processed.txt")
 
     def make_soup_object(self, page):
-        soup = BeautifulSoup(page.content, "html.parser")
-        return soup
+        if type(page) == str:
+            soup = BeautifulSoup(page, "html.parser")
+            return soup  
+        else:
+            soup = BeautifulSoup(page.content, "html.parser")
+            return soup        
         
-    def make_scan_files(self, page, soup, url, id):
+    def make_scan_files(self, soup, url, id):
         logging.info("Starting new scan for thread #" + id)
         # JSON thread metadata file
         os.makedirs(self.SCAN_FOLDER_PATH.substitute(t = id), exist_ok = True)  # Make scan @ current time folder
@@ -73,19 +77,23 @@ class Process:
         thread = HTMLCollector(soup, self.SCAN_FOLDER_PATH.substitute(t = id))
         (thread.saveHTML())
         logging.info("Saved HTML info for thread #" + id)
+        
+        # Meta and Content Scans are done via the local HTML file
+        thread_html = thread.getHTML()
+        html_soup = self.make_soup_object(thread_html)
 
         # JSON current scan metadata file
-        meta = MetaCollector(page, soup, self.SCAN_FOLDER_PATH.substitute(t = id), False)
+        meta = MetaCollector(url, thread_html, html_soup, self.SCAN_FOLDER_PATH.substitute(t = id), False)
         (meta.meta_dump(False))
         logging.info("Saved current scan metadata for thread #" + id)
 
         # JSON current scan thread content file
-        content = TextCollector(soup, self.SCAN_FOLDER_PATH.substitute(t = id))
+        content = TextCollector(html_soup, self.SCAN_FOLDER_PATH.substitute(t = id))
         (content.write_thread())
         logging.info("Saved current thread content for thread #" + id)
 
         # JSON thread scan metadata
-        thread_meta = MetaCollector(page, self.make_soup_object(page), self.THREAD_FOLDER_PATH.substitute(t = id), True)
+        thread_meta = MetaCollector(url, thread_html, html_soup, self.THREAD_FOLDER_PATH.substitute(t = id), True)
         (thread_meta.meta_dump(True))
         logging.info("Saved/updated thread metadata for thread #" + id)
 
@@ -161,8 +169,8 @@ class Process:
             # Gets page from URL and makes a new directory for the thread
             logging.info("Processing " + url)  # Log message
             page = requests.get(url, stream=True)  
-            soup = self.make_soup_object(page)
-            intro_element = soup.find(class_="intro")
+            requests_soup = self.make_soup_object(page)
+            intro_element = requests_soup.find(class_="intro")
             
             # Using intro_element since requests.get would still technically return a page, the page itself would just have a 404 error?
             # Tries to retrieve the id of the intro elem. If unable, it will log the specific status code of the page. Otherwise, continue as normal.
@@ -179,10 +187,10 @@ class Process:
                     os.makedirs(self.THREAD_FOLDER_PATH.substitute(t = id), exist_ok=True)  # if False, make thread ID folder
                     logging.info("Made thread folder for thread #" + id)
                 if not self.check_thread_meta(id):  # return True if there is an thread_meta file for the thread
-                    self.make_scan_files(page, soup, url, id)
+                    self.make_scan_files(requests_soup, url, id)
                 else: 
                     if not self.check_date_updated(page, id):  # return True if previous scan up-to-date
-                        self.make_scan_files(page, soup, url, id)  # if False, then scan normally
+                        self.make_scan_files(page, requests_soup, url, id)  # if False, then scan normally
             logging.info("Moving to next URL")
                             
         logging.info("Fully processed all URLs; complete") # Log message
