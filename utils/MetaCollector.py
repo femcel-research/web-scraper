@@ -15,12 +15,12 @@ class MetaCollector:
     """Collects metadata from a website and stores it in a JSON file"""
     THREAD_META_PATH = Template("./data/$t/thread_meta_$t.json")  # $t for thread self.id
 
-    def __init__(self, page, soup, site_title, id, folder_path, is_thread_meta):
+    def __init__(self, url, thread_html, soup, folder_path, is_thread_meta):
         # Website info
-        self.page = page
+        self.html_content = thread_html
         self.soup = soup
-        self.site_title = site_title
-        self.id = id
+        self.url = url
+        id = soup.find(class_="intro").get("id")
 
         # File path
         if is_thread_meta:
@@ -37,13 +37,13 @@ class MetaCollector:
 
         # Uses htmldate lib to find original and update dates
         publish_Date = find_date(
-            self.page.content,
+            self.html_content,
             extensive_search=True,
             original_date=True,
             outputformat="%Y-%m-%dT%H:%M:%S",
         )
         update_Date = find_date(
-            self.page.content,
+            self.html_content,
             extensive_search=False,
             original_date=False,
             outputformat="%Y-%m-%dT%H:%M:%S",
@@ -65,7 +65,7 @@ class MetaCollector:
         """Captures page URL, title, description, keywords, site info"""
 
         # page = requests.get(self.URL, stream=True)
-        page = self.page
+        page = self.html_content
         # soup = BeautifulSoup(page.content, "html.parser")
         
         # Splits board and thread title
@@ -77,7 +77,7 @@ class MetaCollector:
         title = board_and_title[1]
 
         info = {
-            "URL": page.url,
+            "URL": self.url,
             "board": board,
             "thread_title": title,
             "thread_number": self.id,
