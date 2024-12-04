@@ -9,3 +9,5 @@ femcel_venv/
 .vscode-server/
 .gitconfig
 .bash_history
+.cache/
+.codetogether/
