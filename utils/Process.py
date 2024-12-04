@@ -38,10 +38,11 @@ class Process:
             self.scraper = HomePageScraper.HomePageScraper(url)
             self.url_list = self.scraper.urls_to_list()
         except:
+            # If unable to scrape URLs due to homepage being down
             logging.info("Page is inaccessible.")
             logging.info("Status Code: " + str(page.status_code))
         else:   
-            # Log message
+            # If able to retrieve a url list, log message
             if (len(self.url_list) <= 0):
                 logging.critical("URL list is empty")
             else: 
@@ -189,7 +190,7 @@ class Process:
                     self.make_scan_files(requests_soup, url, id)
                 else: 
                     if not self.check_date_updated(page, id):  # return True if previous scan up-to-date
-                        self.make_scan_files(page, requests_soup, url, id)  # if False, then scan normally
+                        self.make_scan_files(requests_soup, url, id)  # if False, then scan normally
             logging.info("Moving to next URL")
                             
         logging.info("Fully processed all URLs; complete") # Log message

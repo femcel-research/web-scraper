@@ -4,7 +4,6 @@ import requests
 import json
 import os
 import re
-from utils import MasterVersionGenerator
 
 
 class TextCollector:
@@ -15,13 +14,13 @@ class TextCollector:
 
         # Returns top portion of original post
         self.threadIntro = soup.find(class_="intro")
-        self.threadNumber = self.threadIntro.find("a").get("id")
+        self.threadNumber = soup.find(class_="intro").get("id")
 
         # Returns original post.
         self.originalPost = soup.find(class_="post op")
 
         # Variable holds the ID of the original post.
-        self.originalPostID = self.threadNumber
+        self.originalPostID = self.threadIntro["id"]
 
         # Finds every page element with the class "post reply" and returns it in an array.
         self.postReplies = soup.find_all(class_="post reply")
@@ -39,7 +38,7 @@ class TextCollector:
         for image in post.find_all("img", class_="post-image"):
             src = image.get("src")
             if src:
-                image_links.append("https://wizchan.org" + src)
+                image_links.append("https://crystal.cafe" + src)
         return image_links
 
     def extract_text(self, post):
@@ -66,7 +65,7 @@ class TextCollector:
         links = []
 
         original_content = {
-            "post_id": self.threadNumber,
+            "post_id": self.originalPost.find(class_="intro").get("id"),
             "username": self.originalPost.find(class_="name").get_text(),
             "reply_to_another_thread?": True if links_to_other_posts else False,
             "date_posted": date,
@@ -129,13 +128,10 @@ class TextCollector:
         replies = self.extract_replies()
 
         thread_contents = {
-            "thread_number": self.threadNumber,
-            "original_post": original_post,
+            "thread number": self.threadNumber,
+            "original post": original_post,
             "replies": replies,
         }
-        
-        # Add content to master version
-        self.add_to_master(original_post, replies, self.threadNumber, self.folder_path)
 
         return thread_contents
 
@@ -143,6 +139,3 @@ class TextCollector:
         """Opens a writeable text file, writes related headers and original post content on it and then closes file."""
         with open(self.file_path, "w", encoding="utf-8") as f:
             json.dump(self.get_thread_contents(), f, indent=3, ensure_ascii=False)
-            
-    def add_to_master(self, original, replies, thread_number, folder_path):
-        master = MasterVersionGenerator(original, replies, thread_number, folder_path)

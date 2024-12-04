@@ -6,9 +6,8 @@ import os
 #TODO no longer need to pass page
 class HTMLCollector:
     """Saves a URL's HTML into a file"""
-    def __init__(self, soup, id, folder_path):
+    def __init__(self, soup, folder_path):
         self.soup = soup
-        self.id = id
         self.folder_path = folder_path
         
         self.threadNumber = self.soup.find(class_="intro").get("id")

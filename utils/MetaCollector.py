@@ -13,7 +13,7 @@ from .MetaStatHandler import MetaStatHandler
 # add automatic html, meta, thread folders
 class MetaCollector:
     """Collects metadata from a website and stores it in a JSON file"""
-    THREAD_META_PATH = Template("./data/$t/thread_meta_$t.json")  # $t for thread self.id
+    THREAD_META_PATH = Template("./data/$t/thread_meta_$t.json")  # $t for thread id
 
     def __init__(self, url, thread_html, soup, folder_path, is_thread_meta):
         # Website info
@@ -24,13 +24,13 @@ class MetaCollector:
 
         # File path
         if is_thread_meta:
-            file_name = "thread_meta_" + self.id + ".json"
+            file_name = "thread_meta_" + id + ".json"
         else:
-            file_name = "meta_{}.json".format(self.id)
+            file_name = "meta_" + id + ".json"
         self.file_path = os.path.join(folder_path, file_name)
 
-        json_path = self.THREAD_META_PATH.substitute(t = self.id)
-        self.stat_handler = MetaStatHandler(json_path, self.site_title)
+        json_path = self.THREAD_META_PATH.substitute(t = id)
+        self.stat_handler = MetaStatHandler(json_path)
 
     def date_to_JSON(self):
         """Captures date published, date updated, and date scraped from a specified website"""
@@ -80,7 +80,7 @@ class MetaCollector:
             "URL": self.url,
             "board": board,
             "thread_title": title,
-            "thread_number": self.id,
+            "thread_number": self.soup.find(class_="intro").get("id"),
         }
         return info
 
@@ -88,7 +88,7 @@ class MetaCollector:
         """Dumps website metadata into a JSON file; if is_thread_meta, dumps thread values, else updates site_meta and dumps scan values"""
 
         if is_thread_meta:
-            self.stat_handler.set_scan_and_thread_values(self.soup, self.site_title)
+            self.stat_handler.set_scan_and_thread_values(self.soup)
             self.stat_handler.update_site_meta(True)
             metadata = {**self.page_info_to_JSON(), **self.date_to_JSON(), **self.stat_handler.get_thread_meta()}   
         else:

@@ -3,9 +3,8 @@ import os
 
 
 class MetaStatHandler:
-    def __init__(self, thread_meta, site_title):
+    def __init__(self, thread_meta):
         """Initializes with thread meta stats if it exists already; otherwise sets everything to 0"""
-        self.site_title = site_title
         if os.path.exists(thread_meta):
             with open(thread_meta) as json_file:
                 self.data = json.load(json_file)
@@ -25,7 +24,6 @@ class MetaStatHandler:
     def set_scan_and_thread_values(self, soup):
         """Sets the values for the current scan of the website and changes thread meta file values from initialized values
         accordingly"""
-        
         # Get a masterlist of all posts
         self.all_post_ids = []
         original_post = soup.find(class_="post op")
@@ -40,8 +38,7 @@ class MetaStatHandler:
             keywords = meta_keywords["content"]
         else:
             keywords = ""
-        #self.site_title = keywords.split(",")[0]
-        
+        self.site_title = keywords.split(",")[0]
     
         self.new_post_ids = []
         self.new_lost_posts = []
@@ -119,7 +116,7 @@ class MetaStatHandler:
     def update_site_meta(self, new_thread):
         """Call after setting scan and thread values; accesses and updates site meta file with appropriate stats from
         get_site_meta()"""
-        site_meta = "./data/wizchan/" + self.site_title + "_meta.json"
+        site_meta = "./data/" + self.site_title + "_meta.json"
 
         with open(site_meta, 'r+') as site_json_file:
             site_data = json.load(site_json_file)
