@@ -70,7 +70,7 @@ class TextCollector:
             "reply_to_another_thread?": True if links_to_other_posts else False,
             "date_posted": date,
             "image_links": self.extract_images(self.originalPost),
-            "post_content": self.extract_text(original_post_body).strip().replace("\n", ""),
+            "post_content": " ".join( self.extract_text(original_post_body).split()),
         }
 
         # Removes double arrows from in-post reference to replied post
@@ -105,15 +105,16 @@ class TextCollector:
                 text = self.extract_text(reply_body)
                 for link in links:
                     text = text.replace(">>" + link, "")
-                content = text.strip().replace("\n", "")
+                content = " ".join(text.split())
             else:
-                content = self.extract_text(reply_body).strip().replace("\n", "")
+                # content = self.extract_text(reply_body).replace("\n", "").strip()
+                content = " ".join(self.extract_text(reply_body).split())
 
             # Dictionary housing reply content.
             reply_content = {
                 "post_id": reply.find(class_="intro").get("id"),
                 "ids_of_replied_posts": links,
-                "username": reply.find(class_="name").get_text().strip().replace("\n", ""),
+                "username": reply.find(class_="name").get_text().replace("\n", "").strip(),
                 "date_posted": date,
                 "image_links": self.extract_images(reply),
                 "post_content": content,
