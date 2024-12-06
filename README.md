@@ -53,7 +53,7 @@ Each thread can be scanned multiple times, depending on when previous scans were
 ## JSON Parameters for different imageboard homepages (WIP)
 Note that not all homepages have a keywords and/or description attribute in their meta information.  
 At this point the scraper only works with homepages, but we always have the option of adding other parameters to
-make it easier to toss in catalogs.
+make it easier to toss in catalogs.  
 **["url"]** url  
 **["domain"]** used to append to relative urls  
 **["container"]** name of class for location of links on the homepage ("box right")  
