@@ -49,3 +49,17 @@ A warning displaying the webpage's error code will print if there is not content
 In addition to the statistics above, a complete scan of each webpage's HTML is collected with each processing. Additional metadata regarding thread number, etc. is also saved alongside the above statistics in the associated meta JSON files with each scan — as well as a parsed JSON file containing the posts in the scanned thread.  
 
 Each thread can be scanned multiple times, depending on when previous scans were/if a scan was already performed at a specified update_date. As scans are performed using homepage URLs in descending order, each scan of a particular thread will be performed using the most up-to-date version of the thread.
+
+## JSON Parameters for different imageboard homepages (WIP)
+Note that not all homepages have a keywords and/or description attribute in their meta information.  
+At this point the scraper only works with homepages, but we always have the option of adding other parameters to
+make it easier to toss in catalogs.
+**["url"]** url  
+**["domain"]** used to append to relative urls  
+**["container"]** name of class for location of links on the homepage ("box right")  
+**["op"]** name of class for original posts ("post op")  
+**["op_id_prefix"]** prefix for ids of original posts (""(crystal, lolcow) and "op_"(wizchan))  
+**["reply"]** name of class for post replies ("post reply")  
+**["reply_id_prefix"]** prefix for ids of post replies ("reply_")  
+**["post_date_location"]** class/label "time datetime= " is in ("label for= delete_**op_id**" and "class_="post_no date-link"")  
+**["highlighted_post"]** name of class for highlighted post ("post reply  highlighted"[sic] and "post reply highlighted") **May be not be needed if the highlight is parsed from the url**
