@@ -13,7 +13,7 @@ from .MetaStatHandler import MetaStatHandler
 # add automatic html, meta, thread folders
 class MetaCollector:
     """Collects metadata from a website and stores it in a JSON file"""
-    THREAD_META_PATH = Template("./data/$t/thread_meta_$t.json")  # $t for thread id
+    THREAD_META_PATH = Template("./data/crystalcafe/$t/thread_meta_$t.json")  # $t for thread id
 
     def __init__(self, url, thread_html, soup, folder_path, is_thread_meta):
         # Website info

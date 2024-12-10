@@ -15,7 +15,7 @@ class HomePageScraper:
         self.url_list = []
         
         # JSON sitewide metadata file
-        site_meta = SiteMetaCollector(self.page, self.soup, "./data/")
+        site_meta = SiteMetaCollector(self.page, self.soup, "./data/crystalcafe/")
         (site_meta.meta_dump())
 
 

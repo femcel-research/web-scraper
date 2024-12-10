@@ -14,17 +14,17 @@ from string import Template
 
 class Process:
     """Takes in a homepage URL then loops through the links on it, 'processing' each one"""
-    THREAD_META_PATH = Template("./data/$t/thread_meta_$t.json")  # $t for thread id
+    THREAD_META_PATH = Template("./data/crystalcafe/$t/thread_meta_$t.json")  # $t for thread id
     SCAN_META_PATH = Template("$s/meta_$t.json")
-    THREAD_FOLDER_PATH = Template("./data/$t")  # $t for thread id
-    SCAN_FOLDER_PATH = Template("./data/$t/" + datetime.today().strftime("%Y-%m-%dT%H:%M:%S"))  # $t for thread id
+    THREAD_FOLDER_PATH = Template("./data/crystalcafe/$t")  # $t for thread id
+    SCAN_FOLDER_PATH = Template("./data/crystalcafe/$t/" + datetime.today().strftime("%Y-%m-%dT%H:%M:%S"))  # $t for thread id
     successful_scans = 0
 
     def __init__(self, url):
         # Logging
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(
-            filename=("./data/logs/" + datetime.today().strftime('%Y-%m-%dT%H:%M:%S') + ".log"),
+            filename=("./data/crystalcafe/logs/" + datetime.today().strftime('%Y-%m-%dT%H:%M:%S') + ".log"),
             filemode="w",
             format=(datetime.today().strftime('%Y-%m-%dT%H:%M:%S') + " %(levelname)s: %(message)s"),
             style="%",
@@ -55,7 +55,7 @@ class Process:
 
     def log_processed_url(self, url):
         """Save list of processed URLs to txt file in data/processed"""
-        with open("./data/processed/processed.txt", "a") as file:
+        with open("./data/crystalcafe/processed/processed.txt", "a") as file:
             file.write(url + '\n')
         logging.info("Logging " + url + " in processed.txt")
 
