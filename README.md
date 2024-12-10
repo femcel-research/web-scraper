@@ -22,6 +22,15 @@ Once all URLs have been processed, the number of functional and broken URLs is p
 
 A message indicating the scan is complete should finally be printed in the terminal.  
 
+### Scan terminology  
+**scan** a collection of an html file, metadata file, and content file that was collected at a specific date/time
+(with the three files sharing a folder named after the scan date/time)  
+**post** an original post in a thread/a reply to a post in a thread  
+**# posts scanned** number of posts saved in an html file/content file  
+**thread folder** a folder within a website subfolder that corresponds to a thread on the website; all links
+regardless of highighted comment data will correlate to the same thread folder if they link to the same thread.  
+**update date/["update_date"]** the date a page was last updated, according to its html file  
+
 ### Errors you may come across  
 A critical message "URL list is empty" will print if there are no URLs to scan.  
 A warning displaying the webpage's error code will print if there is not content available to scan.  
@@ -54,7 +63,8 @@ Each thread can be scanned multiple times, depending on when previous scans were
 Note that not all homepages have a keywords and/or description attribute in their meta information.  
 At this point the scraper only works with homepages, but we always have the option of adding other parameters to
 make it easier to toss in catalogs.  
-**["url"]** url  
+**["file_name"]** name of the folder website data will be found in, as well as the prefix for the sitewide meta file  
+**["url"]** website url  
 **["domain"]** used to append to relative urls  
 **["container"]** name of class for location of links on the homepage ("box right")  
 **["op"]** name of class for original posts ("post op")  
