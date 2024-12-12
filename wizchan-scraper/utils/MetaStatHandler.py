@@ -27,10 +27,10 @@ class MetaStatHandler:
         # Get a masterlist of all posts
         self.all_post_ids = []
         original_post = soup.find(class_="post op")
-        self.all_post_ids.append(original_post.find(class_="intro").get("id"))
+        self.all_post_ids.append(original_post.get('id').strip('op_'))
 
-        for reply in soup.find_all(class_="post reply"):
-            self.all_post_ids.append(reply.find(class_="intro").get("id"))
+        for reply in soup.find_all(class_="reply"):
+            self.all_post_ids.append(reply.get('id').strip('reply_'))
 
         # Get the title of the website for any use in update_site_meta()
         meta_keywords = soup.find("meta", attrs={"name": "keywords"})
@@ -38,7 +38,7 @@ class MetaStatHandler:
             keywords = meta_keywords["content"]
         else:
             keywords = ""
-        self.site_title = keywords.split(",")[0]
+        self.site_title = "wizchan"
     
         self.new_post_ids = []
         self.new_lost_posts = []
@@ -116,7 +116,7 @@ class MetaStatHandler:
     def update_site_meta(self, new_thread):
         """Call after setting scan and thread values; accesses and updates site meta file with appropriate stats from
         get_site_meta()"""
-        site_meta = "./data/crystalcafe/" + self.site_title + "_meta.json"
+        site_meta = "./data/wizchan/" + self.site_title + "_meta.json"
 
         with open(site_meta, 'r+') as site_json_file:
             site_data = json.load(site_json_file)
