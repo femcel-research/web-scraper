@@ -7,50 +7,77 @@ import os
 
 
 class MasterVersionGenerator:
-    #TODO: might have to change params depending on where funct is utilized; most likely will have to be used in Process to be in outer file
-    def __init__(self, original, replies, thread_number, folder_path):
-        # Website info
+    # TODO: might have to change params depending on where funct is utilized; most likely will have to be used in Process to be in outer file
+    def __init__(self, original, replies, thread_meta, id, folder_path):
+        # Thread contents
         self.original = original
         self.replies = replies
+        self.meta = thread_meta
+
+        # File directory info
+        self.thread_number = id
         self.folder_path = folder_path
-        self.thread_number = thread_number
-        self.file_name = "master_version_" + self.threadNumber + ".json"
+        self.file_name = f"master_version_{self.thread_number}.json"
         self.file_path = os.path.join(self.folder_path, self.file_name)
 
-    def get_set_contents(self):
-        """Returns the set of post_ids"""
-        thread_set = set(())
-        return thread_set
+        # Retrieves distinct post ids from thread meta
+        distinct_reply_ids = thread_meta.get("dist_post_ids")
 
-    def add_to_set(self, original_post, replies):
+        # Adds ids to a set to ensure no duplication.
+        self.thread_post_ids = set(distinct_reply_ids)
+
+    def add_to_set(self, thread_replies):
         """Adds original post and replies to a set to preserve deleted posts"""
-        id_set = self.get_set_contents()
-        id_set.update(original_post["post_id"])
-
-        for reply in replies.values():
-            id_set.update(reply["post_id"])
+        for reply in thread_replies:
+            self.thread_post_ids.add(reply["post_id"])
 
     def generate_dict(self):
         """Generates a dictionary containing all posts on a given thread"""
-        id_set = self.get_set_contents
-        original_post_id = self.original["post_id"]
-        replies = {}
-        
+        current_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
+        thread_replies = self.replies.values()
+        self.add_to_set(thread_replies)
+        all_replies = {}
+
         thread_contents = {
+            "date_of_previous_scan": "",
+            "date_of_latest_scan": current_time,
             "thread_number": self.thread_number,
+            "original_post": self.original,
         }
 
-        if id_set.issubset(original_post_id):
-            thread_contents.update({"original_post": self.original})
+        # Add replies with ids recorded in set in order to prevent duplication.
+        for reply in thread_replies:
+            reply_id = reply["post_id"]
+            if reply_id in self.thread_post_ids:
+                all_replies[reply_id] = reply
 
-        for reply in self.replies.values():
-            if id_set.issubset(reply["post_id"]):
-                replies[reply["post_id"]] = reply
+        # Updates scan times
+        previous_scan_time = thread_contents.get("date_of_latest_scan")
+        thread_contents.update({"date_of_previous_scan": previous_scan_time})
+        thread_contents.update(
+            {"date_of_latest_scan": datetime.today().strftime("%Y-%m-%dT%H:%M:%S")}
+        )
 
-        thread_contents.update({"replies": replies})
+        # Updates replies
+        thread_contents.update({"replies": all_replies})
         return thread_contents
 
-    def write_thread(self):
+    def write_master_thread(self):
         """Opens a writeable text file, writes related headers and original post content on it and then closes file."""
+        try:
+            with open(self.file_path, "r") as f:
+                existing_data = json.load(f)
+        except FileNotFoundError:
+            # Initialize with empty replies if file doesn't exist
+            existing_data = {"replies": {}}
+
+        # Generate the updated thread dictionary
+        thread_contents = self.generate_dict()
+
+        # Merge existing replies with new replies
+        existing_replies = existing_data.get("replies", {})
+        thread_contents["replies"].update(existing_replies)
+
+        # Write the updated data to the file
         with open(self.file_path, "w", encoding="utf-8") as f:
-            json.dump(self.generate_dict(), f, indent=3, ensure_ascii=False)
+            json.dump(thread_contents, f, indent=3, ensure_ascii=False)

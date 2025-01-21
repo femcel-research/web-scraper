@@ -1,5 +1,6 @@
 from datetime import datetime
 from bs4 import BeautifulSoup
+from .MasterVersionGenerator import MasterVersionGenerator
 import requests
 import json
 import os
@@ -7,7 +8,7 @@ import re
 
 
 class TextCollector:
-    def __init__(self, soup, folder_path):
+    def __init__(self, soup, scan_folder_path):
 
         # Creates a soup object.
         self.soup = soup
@@ -26,9 +27,9 @@ class TextCollector:
         self.postReplies = soup.find_all(class_="post reply")
         
         # Directory variables
-        self.folder_path = folder_path
+        self.scan_folder_path = scan_folder_path
         self.file_name = "content_" + self.threadNumber + ".json"
-        self.file_path = os.path.join(self.folder_path, self.file_name)
+        self.file_path = os.path.join(self.scan_folder_path, self.file_name)
 
     def extract_images(self, post):
         """Extracts image links from a given post and returns them as an array."""
@@ -129,13 +130,13 @@ class TextCollector:
         replies = self.extract_replies()
 
         thread_contents = {
-            "thread number": self.threadNumber,
-            "original post": original_post,
+            "thread_number": self.threadNumber,
+            "original_post": original_post,
             "replies": replies,
         }
 
         return thread_contents
-
+      
     def write_thread(self):
         """Opens a writeable text file, writes related headers and original post content on it and then closes file."""
         with open(self.file_path, "w", encoding="utf-8") as f:
