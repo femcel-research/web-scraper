@@ -7,7 +7,7 @@ import os
 
 
 class MasterVersionGenerator:
-    # TODO: might have to change params depending on where funct is utilized; most likely will have to be used in Process to be in outer file
+    # TODO: Might add logging to this part to keep track of changes. Ask Wren if they would be okay with having separate logging folders.
     def __init__(self, original, replies, thread_meta, id, folder_path):
         # Thread contents
         self.original = original
