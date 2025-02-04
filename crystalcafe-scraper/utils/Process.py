@@ -104,11 +104,12 @@ class Process:
         logging.info("Saved/updated thread metadata for thread #" + id)
 
         # JSON master version file
+        #TODO: probably a cleaner way to do this
         thread_meta_path =  os.path.join(self.THREAD_FOLDER_PATH.substitute(t=id), f"thread_meta_{id}.json")
         with open(thread_meta_path, 'r') as f:
             thread_meta = json.load(f)
         generator = MasterVersionGenerator(
-            content.extract_original_post(), content.extract_replies(), thread_meta, id, self.THREAD_FOLDER_PATH.substitute(t=id)
+            content.get_thread_contents(), thread_meta, id, self.THREAD_FOLDER_PATH.substitute(t=id)
         )
         generator.write_master_thread()
 
