@@ -15,8 +15,9 @@ class HomePageScraper:
         self.url_list = []
         
         # JSON sitewide metadata file
-        site_meta = SiteMetaCollector(self.page, self.soup, "./data/crystalcafe/")
-        (site_meta.meta_dump())
+        if(self.page.status_code == 200): # Only update site meta when the page is working
+            site_meta = SiteMetaCollector(self.page, self.soup, "./data/crystalcafe/")
+            (site_meta.meta_dump())
 
 
     def urls_to_list(self):
