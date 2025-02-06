@@ -11,36 +11,26 @@ from utils import HomePageScraper
 from .MasterVersionGenerator import MasterVersionGenerator
 from datetime import datetime
 from htmldate import find_date
-from string import Template
-
 
 class Process:
     """Takes in a homepage URL then loops through the links on it, 'processing' each one"""
 
-    THREAD_META_PATH = Template(
-        "./data/crystalcafe/$t/thread_meta_$t.json"
-    )  # $t for thread id
-    SCAN_META_PATH = Template("$s/meta_$t.json")
-    THREAD_FOLDER_PATH = Template("./data/crystalcafe/$t")  # $t for thread id
-    SCAN_FOLDER_PATH = Template(
-        "./data/crystalcafe/$t/" + datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
-    )  # $t for thread id
+    # Path String Templates
+    thread_meta_path = "./data/crystalcafe/{}/thread_meta_{}.json"  # Format with thread id, thread id
+    scan_meta_path = "{}/meta_{}.json"  # Format with folder_path, thread id
+    thread_folder_path = "./data/crystalcafe/{}"  # Format with thread id
+    scan_folder_path = "./data/crystalcafe/{}/{}"  # Format with thread id, scan_time
+
+    scan_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
     successful_scans = 0
 
     def __init__(self, url):
         # Logging
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(
-            filename=(
-                "./data/crystalcafe/logs/"
-                + datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
-                + ".log"
-            ),
+            filename=(f"./data/crystalcafe/logs/{self.scan_time}.log"),
             filemode="w",
-            format=(
-                datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
-                + " %(levelname)s: %(message)s"
-            ),
+            format=(datetime.today().strftime("%Y-%m-%dT%H:%M:%S") + " %(levelname)s: %(message)s"),  # TODO: Make str literal?
             style="%",
             level=logging.INFO,
         )
@@ -54,7 +44,7 @@ class Process:
         except:
             # If unable to scrape URLs due to homepage being down
             logging.info("Page is inaccessible.")
-            logging.info("Status Code: " + str(page.status_code))
+            logging.info(f"Status Code: {str(page.status_code)}")
         else:
             # If able to retrieve a url list, log message
             if len(self.url_list) <= 0:
@@ -86,45 +76,45 @@ class Process:
 
         # JSON current scan metadata file
         meta = MetaCollector(
-            url, html, html_soup, self.SCAN_FOLDER_PATH.substitute(t=id), False
+            url, html, html_soup, self.scan_folder_path.format(id, self.scan_time), False
         )
         (meta.meta_dump(False))
-        logging.info("Saved current scan metadata for thread #" + id)
+        logging.info(f"Saved current scan metadata for thread #{id}")
 
         # JSON current scan thread content file
-        content = TextCollector(html_soup, self.SCAN_FOLDER_PATH.substitute(t=id))
+        content = TextCollector(html_soup, self.scan_folder_path.format(id, self.scan_time))
         thread_content = content.write_thread()
-        logging.info("Saved current thread content for thread #" + id)
+        logging.info(f"Saved current thread content for thread #{id}")
 
         # JSON thread scan metadata
         thread_meta = MetaCollector(
-            url, html, html_soup, self.THREAD_FOLDER_PATH.substitute(t=id), True
+            url, html, html_soup, self.thread_folder_path.format(id), True
         )
         (thread_meta.meta_dump(True))
-        logging.info("Saved/updated thread metadata for thread #" + id)
+        logging.info(f"Saved/updated thread metadata for thread #{id}")
 
         # JSON master version file
         #TODO: probably a cleaner way to do this
-        thread_meta_path =  os.path.join(self.THREAD_FOLDER_PATH.substitute(t=id), f"thread_meta_{id}.json")
+        thread_meta_path =  os.path.join(self.thread_folder_path.format(id), f"thread_meta_{id}.json")
         with open(thread_meta_path, 'r') as f:
             thread_meta = json.load(f)
         generator = MasterVersionGenerator(
-            content.get_thread_contents(), thread_meta, id, self.THREAD_FOLDER_PATH.substitute(t=id)
+            content.get_thread_contents(), thread_meta, id, self.thread_folder_path.format(id)
         )
         generator.write_master_thread()
 
     def make_scan_files(self, soup, url, id):
-        logging.info("Starting new scan for thread #" + id)
+        logging.info(f"Starting new scan for thread #{id}")
         # JSON thread metadata file
         os.makedirs(
-            self.SCAN_FOLDER_PATH.substitute(t=id), exist_ok=True
+            self.scan_folder_path.format(id, self.scan_time), exist_ok=True
         )  # Make scan @ current time folder
         logging.info("Made folder for current scan")
 
         # HTML current scan file
-        thread = HTMLCollector(soup, self.SCAN_FOLDER_PATH.substitute(t=id))
+        thread = HTMLCollector(soup, self.scan_folder_path.format(id, self.scan_time))
         (thread.saveHTML())
-        logging.info("Saved HTML info for thread #" + id)
+        logging.info(f"Saved HTML info for thread #{id}")
         thread_html = thread.getHTML()
 
         # Process the saved HTML
@@ -133,39 +123,37 @@ class Process:
         # Add URL to list of processed URLs
         self.log_processed_url(url)
 
-        logging.info("Generated all scans for thread #" + id)  # Log message
-        folder_path = self.SCAN_FOLDER_PATH.substitute(t=id)
-        if os.path.exists(self.SCAN_META_PATH.substitute(s=folder_path, t=id)):
-            with open(self.SCAN_META_PATH.substitute(s=folder_path, t=id)) as json_file:
+        logging.info(f"Generated all scans for thread #{id}")  # Log message
+        folder_path = self.scan_folder_path.format(id, self.scan_time)
+        if os.path.exists(self.scan_meta_path.format(folder_path, id)):
+            with open(self.scan_meta_path.format(folder_path, id)) as json_file:
                 data = json.load(json_file)
-                logging.info(str(data["num_all_posts"]) + " posts scanned")
-                logging.info(str(data["num_new_posts"]) + " new posts scanned")
+                logging.info(f"{str(data["num_all_posts"])} posts scanned")
+                logging.info(f"{str(data["num_new_posts"])} new posts scanned")
 
         self.successful_scans += 1
 
     def check_thread_folder(self, id):
         """Return True if a folder for the specified ID exists"""
-        if os.path.exists(self.THREAD_FOLDER_PATH.substitute(t=id)):
-            logging.info("A thread folder exists for thread #" + id)
+        if os.path.exists(self.thread_folder_path.format(id)):
+            logging.info(f"A thread folder exists for thread #{id}")
             return True
         else:
-            logging.info("A thread folder does not exist for thread #" + id)
+            logging.info(f"A thread folder does not exist for thread #{id}")
             return False
 
     def check_thread_meta(self, id):
         """Return True if an thread_meta file for the specified ID exists"""
-        if os.path.exists(self.THREAD_META_PATH.substitute(t=id)):
-            logging.info("An thread_meta_" + id + ".json exists for thread #" + id)
+        if os.path.exists(self.thread_meta_path.format(id, id)):
+            logging.info(f"An thread_meta_{id}.json exists for thread #{id}")
             return True
         else:
-            logging.info(
-                "An thread_meta_" + id + ".json does not exist for thread #" + id
-            )
+            logging.info(f"An thread_meta_{id}.json does not exist for thread #{id}")
             return False
 
     def check_date_updated(self, page, id):
         """Return True if update_date in thread_meta matches current update_date"""
-        with open(self.THREAD_META_PATH.substitute(t=id)) as json_file:
+        with open(self.thread_meta_path.format(id, id)) as json_file:
             data = json.load(json_file)
 
         previous_update_date = datetime.strptime(
@@ -181,18 +169,16 @@ class Process:
         update_date = datetime.strptime(update_date, "%Y-%m-%dT%H:%M:%S")
 
         # Log message
-        logging.info("Current update date for " + id + ": " + str(update_date))
-        logging.info(
-            "Previous update date for " + id + ": " + str(previous_update_date)
-        )
+        logging.info(f"Current update date for {id}: {str(update_date)}")
+        logging.info(f"Previous update date for {id}: {str(previous_update_date)}")
 
         if update_date == previous_update_date:
             logging.info("update_dates match")  # Log message
-            logging.info("The previous scan is up to date for thread #" + id)
+            logging.info(f"The previous scan is up to date for thread #{id}")
             return True
         else:
             logging.info("update_dates do not match")  # Log message
-            logging.info("The previous scan is not up to date for thread #" + id)
+            logging.info(f"The previous scan is not up to date for thread #{id}")
             return False
 
     def process_current_list(self):
@@ -215,9 +201,7 @@ class Process:
             try:
                 id = intro_element.get("id")
             except:
-                logging.warning(
-                    page.status_code + " error; processing unsuccessful; skipping"
-                )  # Log message
+                logging.warning(f"{page.status_code} error; processing unsuccessful; skipping")  # Log message
                 failed_urls += 1
             else:
                 working_urls += 1
@@ -226,9 +210,9 @@ class Process:
                     id
                 ):  # return True if there is a thread ID folder
                     os.makedirs(
-                        self.THREAD_FOLDER_PATH.substitute(t=id), exist_ok=True
+                        self.thread_folder_path.format(id), exist_ok=True
                     )  # if False, make thread ID folder
-                    logging.info("Made thread folder for thread #" + id)
+                    logging.info(f"Made thread folder for thread #{id}")
                 if not self.check_thread_meta(
                     id
                 ):  # return True if there is an thread_meta file for the thread
@@ -243,13 +227,5 @@ class Process:
             logging.info("Moving to next URL")
 
         logging.info("Fully processed all URLs; complete")  # Log message
-        logging.info(
-            "Of the "
-            + str(len(self.url_list))
-            + " urls, "
-            + str(working_urls)
-            + " worked and "
-            + str(failed_urls)
-            + " did not"
-        )
-        logging.info(str(self.successful_scans) + " succesful scans were performed")
+        logging.info(f"Of the {str(len(self.url_list))} urls, {str(working_urls)} worked and {str(failed_urls)} did not")
+        logging.info(f"{str(self.successful_scans)} succesful scans were performed")
