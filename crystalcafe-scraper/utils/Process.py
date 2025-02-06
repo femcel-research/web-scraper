@@ -59,7 +59,7 @@ class Process:
         """Save list of processed URLs to txt file in data/processed"""
         with open("./data/crystalcafe/processed/processed.txt", "a") as file:
             file.write(url + "\n")
-        logging.info("Logging " + url + " in processed.txt")
+        logging.info(f"Logging {url} in processed.txt")
 
     def make_soup_object(self, page):
         if type(page) == str:
@@ -190,7 +190,7 @@ class Process:
 
         for url in self.url_list:
             # Gets page from URL and makes a new directory for the thread
-            logging.info("Processing " + url)  # Log message
+            logging.info(f"Processing {url}")  # Log message
             page = requests.get(url, stream=True)
             requests_soup = self.make_soup_object(page)
             intro_element = requests_soup.find(class_="intro")
