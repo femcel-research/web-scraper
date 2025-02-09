@@ -7,4 +7,5 @@ from .SiteMetaCollector import SiteMetaCollector
 from .Process import Process
 from .MetaStatHandler import MetaStatHandler
 from .MasterVersionGenerator import MasterVersionGenerator
+from .PortionRetriever import PortionRetriever
 # from .HomePageScraper import HomePageScraper
