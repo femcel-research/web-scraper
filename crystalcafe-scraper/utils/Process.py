@@ -13,13 +13,15 @@ from datetime import datetime
 from htmldate import find_date
 
 class Process:
+    #TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
+    #TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
     """Takes in a homepage URL then loops through the links on it, 'processing' each one"""
 
     # Path String Templates
-    thread_meta_path = "./data/crystalcafe/{}/thread_meta_{}.json"  # Format with thread id, thread id
+    thread_meta_path = "./data/crystal.cafe/{}/thread_meta_{}.json"  # Format with thread id, thread id
     scan_meta_path = "{}/meta_{}.json"  # Format with folder_path, thread id
-    thread_folder_path = "./data/crystalcafe/{}"  # Format with thread id
-    scan_folder_path = "./data/crystalcafe/{}/{}"  # Format with thread id, scan_time
+    thread_folder_path = "./data/crystal.cafe/{}"  # Format with thread id
+    scan_folder_path = "./data/crystal.cafe/{}/{}"  # Format with thread id, scan_time
 
     scan_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
     successful_scans = 0
@@ -28,7 +30,7 @@ class Process:
         # Logging
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(
-            filename=(f"./data/crystalcafe/logs/{self.scan_time}.log"),
+            filename=(f"./data/crystal.cafe/logs/{self.scan_time}.log"),
             filemode="w",
             format=(datetime.today().strftime("%Y-%m-%dT%H:%M:%S") + " %(levelname)s: %(message)s"),  # TODO: Make str literal?
             style="%",
@@ -57,7 +59,7 @@ class Process:
 
     def log_processed_url(self, url):
         """Save list of processed URLs to txt file in data/processed"""
-        with open("./data/crystalcafe/processed/processed.txt", "a") as file:
+        with open("./data/crystal.cafe/processed/processed.txt", "a") as file:
             file.write(url + "\n")
         logging.info(f"Logging {url} in processed.txt")
 
@@ -102,6 +104,8 @@ class Process:
             content.get_thread_contents(), thread_meta, id, self.thread_folder_path.format(id)
         )
         generator.write_master_thread()
+        logging.info("Generated/updated master thread for thread #" + id)
+        logging.info("Generated/updated master thread for thread #" + id)
 
     def make_scan_files(self, soup, url, id):
         logging.info(f"Starting new scan for thread #{id}")
@@ -128,8 +132,11 @@ class Process:
         if os.path.exists(self.scan_meta_path.format(folder_path, id)):
             with open(self.scan_meta_path.format(folder_path, id)) as json_file:
                 data = json.load(json_file)
-                logging.info(f"{str(data["num_all_posts"])} posts scanned")
-                logging.info(f"{str(data["num_new_posts"])} new posts scanned")
+                num_all_posts = str(data["num_all_posts"])
+                num_new_posts = str(data["num_new_posts"])
+                
+                logging.info(f"{num_all_posts} posts scanned")
+                logging.info(f"{num_new_posts} new posts scanned")
 
         self.successful_scans += 1
 

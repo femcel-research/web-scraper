@@ -40,7 +40,7 @@ class PortionRetriever:
         #TODO: iron out pathing format
         if not os.path.exists(folder_path):
             try:
-                folder_path = os.mkdir(folder_path)
+                os.mkdir(folder_path)
                 print(f"Directory '{folder_name}' created successfully.")
             except FileExistsError:
                 print(f"Directory '{folder_name}' already exists.")
@@ -116,15 +116,19 @@ class PortionRetriever:
     def generate_portion(self):
         '''Generates and outputs portion of data.'''
         folder_path = os.path.join(self.data_folder_path, self.site_dir_name)
-        portion_folder_path = self.generate_portion_folder()
         num_of_threads = math.ceil(self.generate_number_of_threads())
         used_ids = self.read_used_thread_ids_from_txt()
-        for i in range(0, num_of_threads,1):
+        portion_folder_path = self.generate_portion_folder()
+        successful_threads = 0
+        while successful_threads < num_of_threads:
             thread_folder = self.random_thread_folder(folder_path)
             master_thread_path = self.thread_master_retrieval(thread_folder)
-            with open(master_thread_path, "r") as file:  # Fetch meta file
-                master_thread = json.load(file)
-            thread_id = master_thread["thread_number"]
-            if (thread_id not in used_ids):
-                self.convert_thread_to_txt(master_thread_path, portion_folder_path)
-                self.write_used_thread_ids_to_txt(thread_id)
+            if (master_thread_path is not None):
+                with open(master_thread_path, "r") as file:  # Fetch meta file
+                    master_thread = json.load(file)
+                    thread_id = master_thread["thread_number"]
+                    if (thread_id not in used_ids):
+                        self.convert_thread_to_txt(master_thread_path, portion_folder_path)
+                        self.write_used_thread_ids_to_txt(thread_id)
+                successful_threads += 1
+        

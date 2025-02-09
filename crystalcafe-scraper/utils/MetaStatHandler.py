@@ -116,7 +116,7 @@ class MetaStatHandler:
     def update_site_meta(self, new_thread):
         """Call after setting scan and thread values; accesses and updates site meta file with appropriate stats from
         get_site_meta()"""
-        site_meta = "./data/crystalcafe/" + self.site_title + "_meta.json"
+        site_meta = "./data/crystal.cafe/" + self.site_title + "_meta.json"
 
         with open(site_meta, 'r+') as site_json_file:
             site_data = json.load(site_json_file)

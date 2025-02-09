@@ -31,10 +31,11 @@ class MasterVersionGenerator:
         # Master version generation logging
         self.master_logger = logging.getLogger('Master_Thread')
         self.master_logger.setLevel(logging.INFO)
-
+        
+        #TODO: fix logging for master vers gen.
         #File handler
         master_log_filename = (
-            "./data/crystalcafe/logs/master-thread-logs/"
+            "./data/crystal.cafe/logs/master-thread-logs/"
             + datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
             + ".log"
         )

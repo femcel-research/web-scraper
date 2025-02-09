@@ -16,7 +16,7 @@ class HomePageScraper:
         
         # JSON sitewide metadata file
         if(self.page.status_code == 200): # Only update site meta when the page is working
-            site_meta = SiteMetaCollector(self.page, self.soup, "./data/crystalcafe/")
+            site_meta = SiteMetaCollector(self.page, self.soup, "./data/crystal.cafe/")
             (site_meta.meta_dump())
 
 
