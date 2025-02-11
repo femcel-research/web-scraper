@@ -130,8 +130,8 @@ class TextCollector:
         replies = self.extract_replies()
 
         thread_contents = {
-            "thread number": self.threadNumber,
-            "original post": original_post,
+            "thread_number": self.threadNumber,
+            "original_post": original_post,
             "replies": replies,
         }
 

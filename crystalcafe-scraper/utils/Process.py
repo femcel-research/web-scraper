@@ -12,13 +12,16 @@ from .MasterVersionGenerator import MasterVersionGenerator
 from datetime import datetime
 from htmldate import find_date
 
+
 class Process:
-    #TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
-    #TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
+    # TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
+    # TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
     """Takes in a homepage URL then loops through the links on it, 'processing' each one"""
 
     # Path String Templates
-    thread_meta_path = "./data/crystal.cafe/{}/thread_meta_{}.json"  # Format with thread id, thread id
+    thread_meta_path = (
+        "./data/crystal.cafe/{}/thread_meta_{}.json"  # Format with thread id, thread id
+    )
     scan_meta_path = "{}/meta_{}.json"  # Format with folder_path, thread id
     thread_folder_path = "./data/crystal.cafe/{}"  # Format with thread id
     scan_folder_path = "./data/crystal.cafe/{}/{}"  # Format with thread id, scan_time
@@ -32,7 +35,10 @@ class Process:
         logging.basicConfig(
             filename=(f"./data/crystal.cafe/logs/{self.scan_time}.log"),
             filemode="w",
-            format=(datetime.today().strftime("%Y-%m-%dT%H:%M:%S") + " %(levelname)s: %(message)s"),  # TODO: Make str literal?
+            format=(
+                datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
+                + " %(levelname)s: %(message)s"
+            ),  # TODO: Make str literal?
             style="%",
             level=logging.INFO,
         )
@@ -78,13 +84,19 @@ class Process:
 
         # JSON current scan metadata file
         meta = MetaCollector(
-            url, html, html_soup, self.scan_folder_path.format(id, self.scan_time), False
+            url,
+            html,
+            html_soup,
+            self.scan_folder_path.format(id, self.scan_time),
+            False,
         )
         (meta.meta_dump(False))
         logging.info(f"Saved current scan metadata for thread #{id}")
 
         # JSON current scan thread content file
-        content = TextCollector(html_soup, self.scan_folder_path.format(id, self.scan_time))
+        content = TextCollector(
+            html_soup, self.scan_folder_path.format(id, self.scan_time)
+        )
         thread_content = content.write_thread()
         logging.info(f"Saved current thread content for thread #{id}")
 
@@ -96,17 +108,20 @@ class Process:
         logging.info(f"Saved/updated thread metadata for thread #{id}")
 
         # JSON master version file
-        #TODO: probably a cleaner way to do this
-        thread_meta_path =  os.path.join(self.thread_folder_path.format(id), f"thread_meta_{id}.json")
-        with open(thread_meta_path, 'r') as f:
+        # TODO: probably a cleaner way to do this
+        thread_meta_path = os.path.join(
+            self.thread_folder_path.format(id), f"thread_meta_{id}.json"
+        )
+        with open(thread_meta_path, "r") as f:
             thread_meta = json.load(f)
         generator = MasterVersionGenerator(
-            content.get_thread_contents(), thread_meta, id, self.thread_folder_path.format(id)
+            content.get_thread_contents(),
+            thread_meta,
+            id,
+            self.thread_folder_path.format(id),
         )
         generator.write_master_thread()
         logging.info("Generated/updated master thread for thread #" + id)
-        logging.info("Generated/updated master thread for thread #" + id)
-
     def make_scan_files(self, soup, url, id):
         logging.info(f"Starting new scan for thread #{id}")
         # JSON thread metadata file
@@ -134,7 +149,7 @@ class Process:
                 data = json.load(json_file)
                 num_all_posts = str(data["num_all_posts"])
                 num_new_posts = str(data["num_new_posts"])
-                
+
                 logging.info(f"{num_all_posts} posts scanned")
                 logging.info(f"{num_new_posts} new posts scanned")
 
@@ -208,7 +223,9 @@ class Process:
             try:
                 id = intro_element.get("id")
             except:
-                logging.warning(f"{page.status_code} error; processing unsuccessful; skipping")  # Log message
+                logging.warning(
+                    f"{page.status_code} error; processing unsuccessful; skipping"
+                )  # Log message
                 failed_urls += 1
             else:
                 working_urls += 1
@@ -234,5 +251,7 @@ class Process:
             logging.info("Moving to next URL")
 
         logging.info("Fully processed all URLs; complete")  # Log message
-        logging.info(f"Of the {str(len(self.url_list))} urls, {str(working_urls)} worked and {str(failed_urls)} did not")
+        logging.info(
+            f"Of the {str(len(self.url_list))} urls, {str(working_urls)} worked and {str(failed_urls)} did not"
+        )
         logging.info(f"{str(self.successful_scans)} succesful scans were performed")

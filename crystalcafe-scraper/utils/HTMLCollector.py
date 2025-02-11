@@ -15,15 +15,7 @@ class HTMLCollector:
         self.file_path = os.path.join(self.folder_path, self.file_name) 
 
     def saveHTML(self):
-        """Saves HTML"""
-        #soup = BeautifulSoup(self.page.content, "html.parser")
-        # Should hopefully always return the thread number, given that for crystal.cafe, the thread number is always the first id in the intro class
-
-        # moved to init:
-        #   threadNumber = self.soup.find(class_="intro").get("id")
-        #   file_name = "thread_" + threadNumber + ".html"
-        #   file_path = os.path.join(self.folder_path, file_name) 
-             
+        """Saves HTML"""     
         with open(self.file_path, "w") as f:
             f.write(self.soup.prettify())
     

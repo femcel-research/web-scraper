@@ -13,20 +13,20 @@ from .MetaStatHandler import MetaStatHandler
 # add automatic html, meta, thread folders
 class MetaCollector:
     """Collects metadata from a website and stores it in a JSON file"""
-    THREAD_META_PATH = Template("./data/crystalcafe/$t/thread_meta_$t.json")  # $t for thread id
+    THREAD_META_PATH = Template("./data/wizchan/$t/thread_meta_$t.json")  # $t for thread id
 
     def __init__(self, url, thread_html, soup, folder_path, is_thread_meta):
         # Website info
         self.html_content = thread_html
         self.soup = soup
         self.url = url
-        self.id = soup.find('div', class_="thread").get('id').strip('thread_') 
+        id = soup.find('div', class_="thread").get('id').strip('thread_') 
 
         # File path
         if is_thread_meta:
-            file_name = "thread_meta_{}.json".format(self.id)
+            file_name = "thread_meta_{}.json".format(id)
         else:
-            file_name = "meta_{}.json".format(self.id)
+            file_name = "meta_{}.json".format(id)
         self.file_path = os.path.join(folder_path, file_name)
 
         json_path = self.THREAD_META_PATH.substitute(t = id)
@@ -80,7 +80,7 @@ class MetaCollector:
             "URL": self.url,
             "board": board,
             "thread_title": title,
-            "thread_number": self.id,
+            "thread_number": self.soup.find('div', class_="thread").get('id').strip('thread_'),
         }
         return info
 

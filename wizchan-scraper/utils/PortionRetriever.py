@@ -10,9 +10,9 @@ import argparse
 
 class PortionRetriever:
     """Returns a portion of threads as a folder containing .txt files. Enter percentage as a whole number (i.e enter 15% as 15)"""
-    #look up how to clean a folder
-
-    def __init__(self, thread_percentage, site_name):       
+    #TODO: look up how to clean a folder
+    
+    def __init__(self, thread_percentage, site_name):        
         self.thread_percent = thread_percentage / 100
         self.data_folder_path = "./data/"
         self.site_dir_name = site_name #name of site subfolder in data (i.e crystal.cafe data subfolder is titled crystalcafe)
@@ -21,7 +21,8 @@ class PortionRetriever:
         txt_name = f"{self.site_dir_name}_list_of_used_threads.txt"
         
         self.used_threads_txt = os.path.join(self.data_folder_path, "thread_portion", txt_name)
-        
+    
+    
     # Helper functions
     def generate_number_of_threads(self):
         '''Generates number of threads based off of the number of sitewide threads recorded in the site_meta.json.'''
@@ -147,4 +148,4 @@ if __name__ == "__main__":  #used to run script as executable
     parser.add_argument("site_name", type=str, help="Name of the site (e.g., crystal.cafe)")
     args = parser.parse_args()
     retriever = PortionRetriever(args.thread_percentage, args.site_name)
-    retriever.generate_portion()          
+    retriever.generate_portion()  
