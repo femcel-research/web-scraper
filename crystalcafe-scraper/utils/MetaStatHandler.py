@@ -38,8 +38,10 @@ class MetaStatHandler:
             keywords = meta_keywords["content"]
         else:
             keywords = ""
-        self.site_title = keywords.split(",")[0]
-    
+        # self.site_title = keywords.split(",")[0]
+        
+        self.site_title = "crystal.cafe"
+        
         self.new_post_ids = []
         self.new_lost_posts = []
         self.num_new_lost_posts = 0

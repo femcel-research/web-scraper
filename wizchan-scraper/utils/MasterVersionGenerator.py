@@ -94,11 +94,13 @@ class MasterVersionGenerator:
     def write_master_thread(self):
         """Opens a writeable text file, writes related headers and original post content on it and then closes file."""
         try:
-            with open(self.file_path, "r") as f:
-                existing_data = json.load(f)
-                self.master_logger.info(
+            if os.path.exists(self.file_path):
+                with open(self.file_path, "r") as f:
+                    existing_data = json.load(f)
+                    self.master_logger.info(
                     f"Openining existing master thread for thread #{self.thread_number}"
-                )
+                    )
+            existing_data = {"replies": {}}
         except FileNotFoundError:
             # Initialize with empty replies if file doesn't exist
             self.master_logger.info(
