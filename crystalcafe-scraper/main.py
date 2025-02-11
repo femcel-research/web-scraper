@@ -1,8 +1,5 @@
 from utils import Process
 from utils import PortionRetriever
-import sys
-
-
 
 process = Process("https://crystal.cafe/")
 process.process_current_list()

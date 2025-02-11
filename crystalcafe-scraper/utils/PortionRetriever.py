@@ -1,30 +1,22 @@
-import datetime
 import json
 import os
 import random
 import glob
 import math
 from string import Template
-from datetime import datetime
-import argparse
+
 
 class PortionRetriever:
     """Returns a portion of threads as a folder containing .txt files. Enter percentage as a whole number (i.e enter 15% as 15)"""
-    #look up how to clean a folder
 
-    def __init__(self, thread_percentage, site_name):       
+    def __init__(self, thread_percentage, site_name):
         self.thread_percent = thread_percentage / 100
         self.data_folder_path = "./data/"
         self.site_dir_name = site_name #name of site subfolder in data (i.e crystal.cafe data subfolder is titled crystalcafe)
-        self.scan_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
-        
-        txt_name = f"{self.site_dir_name}_list_of_used_threads.txt"
-        
-        self.used_threads_txt = os.path.join(self.data_folder_path, "thread_portion", txt_name)
+        self.used_threads_txt = os.path.join(self.data_folder_path, "thread_portion", "list_of_used_threads.txt")
         
     # Helper functions
     def generate_number_of_threads(self):
-        '''Generates number of threads based off of the number of sitewide threads recorded in the site_meta.json.'''
         # Meta stat retrieval:
         site_meta_path = (
             f"./data/{self.site_dir_name}/{self.site_dir_name}_meta.json"  # Search for site meta file
@@ -43,13 +35,12 @@ class PortionRetriever:
         return num_of_threads
         
     def generate_portion_folder(self): 
-        '''Creates a thread_portion folder.'''
         folder_name = "thread_portion"
-        folder_path = os.path.join(self.data_folder_path, folder_name, self.site_dir_name, self.scan_time)
+        folder_path = os.path.join(self.data_folder_path, folder_name)
         #TODO: iron out pathing format
         if not os.path.exists(folder_path):
             try:
-                os.makedirs(folder_path, exist_ok=True)
+                os.mkdir(folder_path)
                 print(f"Directory '{folder_name}' created successfully.")
             except FileExistsError:
                 print(f"Directory '{folder_name}' already exists.")
@@ -140,11 +131,4 @@ class PortionRetriever:
                         self.convert_thread_to_txt(master_thread_path, portion_folder_path)
                         self.write_used_thread_ids_to_txt(thread_id)
                 successful_threads += 1
-                
-if __name__ == "__main__":  #used to run script as executable
-    parser = argparse.ArgumentParser(description="Generate a portion of threads.")
-    parser.add_argument("thread_percentage", type=int, help="Percentage of threads to retrieve (e.g., 10 for 10%)")
-    parser.add_argument("site_name", type=str, help="Name of the site (e.g., crystal.cafe)")
-    args = parser.parse_args()
-    retriever = PortionRetriever(args.thread_percentage, args.site_name)
-    retriever.generate_portion()          
+        
