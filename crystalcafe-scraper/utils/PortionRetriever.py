@@ -68,7 +68,7 @@ class PortionRetriever:
         original_post = thread_contents["original_post"]  
         replies = thread_contents["replies"]
         
-        txt_filepath = os.path.join(portion_folder_path, f"{thread_id}.txt")
+        txt_filepath = os.path.join(portion_folder_path, f"thread_{thread_id}.txt")
         with open(txt_filepath, "w") as file:
             #Orignal Post Info:
             og_post_id = original_post["post_id"]
