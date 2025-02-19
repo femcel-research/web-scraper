@@ -1,3 +1,4 @@
+import glob
 import json
 import os
 import requests
@@ -122,6 +123,7 @@ class Process:
         )
         generator.write_master_thread()
         logging.info("Generated/updated master thread for thread #" + id)
+
     def make_scan_files(self, soup, url, id):
         logging.info(f"Starting new scan for thread #{id}")
         # JSON thread metadata file
@@ -203,13 +205,46 @@ class Process:
             logging.info(f"The previous scan is not up to date for thread #{id}")
             return False
 
+    def process_existing_files(self):
+        """Processes existing files present within the crystal.cafe data subfolder."""
+        directory = "./data/crystal.cafe"
+        html_pattern = "*.html"  # Look for an html file
+        meta_pattern = "meta_*.json"  # Look for a meta file
+        
+        logging.info("Processing existing threads")  # Log message
+        for thread_folder in os.listdir(directory):
+            thread_folder_path = os.path.join(directory, thread_folder)
+
+            # If the thread folder is a directory, find its newest .html and meta file and use that to reprocess the thread.
+            if os.path.isdir(thread_folder_path):
+                html_search_path = os.path.join(thread_folder_path, "**", html_pattern)
+                matching_html_files = glob.glob(html_search_path, recursive=True)
+
+                meta_search_path = os.path.join(thread_folder_path, "**", meta_pattern)
+                matching_meta_files = glob.glob(meta_search_path, recursive=True)
+
+                # If the subfolder has an html file, process. Done to prevent processing of non-thread subfolders (i.e logs, processed, etc.)
+                if len(matching_html_files) > 0:
+                    newest_html = matching_html_files[len(matching_html_files) - 1]
+                    newest_meta = matching_meta_files[len(matching_meta_files) - 1]
+                    with open(newest_html, "r") as file:
+                        html = file.read()
+
+                    with open(newest_meta, "r") as file:
+                        meta = json.load(file)
+
+                    thread_url = meta["URL"]
+                    html_soup = self.make_soup_object(html)
+                    id = html_soup.find(class_="intro").get("id")
+                    self.make_scan_files(html_soup, thread_url, id)
+
     def process_current_list(self):
         """For each URL in the list, get thread HTML, metadata JSON, and content JSON"""
-
-        logging.info("Processing the URLs")  # Log message
+        
+        logging.info("Processing the URLs") 
         working_urls = 0
         failed_urls = 0
-
+        
         for url in self.url_list:
             # Gets page from URL and makes a new directory for the thread
             logging.info(f"Processing {url}")  # Log message

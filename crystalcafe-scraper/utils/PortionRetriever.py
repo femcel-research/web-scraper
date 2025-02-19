@@ -6,6 +6,7 @@ import glob
 import math
 from string import Template
 from datetime import datetime
+from .Process import Process
 import argparse
 
 class PortionRetriever:
