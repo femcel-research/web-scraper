@@ -73,3 +73,10 @@ make it easier to toss in catalogs.
 **["reply_id_prefix"]** prefix for ids of post replies ("reply_")  
 **["post_date_location"]** class/label "time datetime= " is in ("label for= delete_**op_id**" and "class_="post_no date-link"")  
 **["highlighted_post"]** name of class for highlighted post ("post reply  highlighted"[sic] and "post reply highlighted") **May be not be needed if the highlight is parsed from the url**
+
+## Makefile Targets
+**["setup"]** installs project dependencies  
+**["run"]** runs scrapers for Crystal.cafe and Wizchan  
+**["portion"]** retrieves portions of overall threads from Crystal.cafe and Wizchan. Default thread percentage is 10%, however this can be overwitten in the command line (i.e make THREAD_PERCENTAGE=15 portion)  
+**["all"]** sets up project dependencies, runs scrapers, outputs a portion of the collected threads.  
+**["clean"]** cleans pycache, and thread portion folders.
