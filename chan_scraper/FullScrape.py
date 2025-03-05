@@ -12,8 +12,8 @@ from utils import URLListToSoupList
 class FullScrape:
     """A "full scrape" collects HTML data, metadata, and statistics."""
     @staticmethod
-    def full_scrape(params, homepage_url: str, scan_time: str):
-        """Perform a "full scrape,": HTML data; post and site metadata; statistics.
+    def full_scrape(params, scan_time: str):
+        """Perform a "full scrape,": HTML data; post and site metadata; stats.
 
         Args:
             filepath: Location of parameters JSON file.
@@ -22,15 +22,16 @@ class FullScrape:
 
         Attributes:
             scrape_dir: Directory for current scrapes.
-            TODO: Add rest?
+            homepage_url_retriever: HomepageURLRetriever object.
+            url_list: List of URLs.
+            soup_list: List of BeautifulSoup objects.
         """
-        scrape_dir: str = f"{params["data_dir"]}{os.sep}\
-            {params["site_dir"]}{os.sep}"
+        scrape_dir: str = f"{params["data_dir"]}{os.sep}{params["site_dir"]}{os.sep}"
 
         # Retrieve list of URLs
         # TODO: Make a parameter "domain", "container", etc. in params JSON
         homepage_url_retriever = HomepageURLRetriever(
-            homepage_url, params["domain"], 
+            params["hp_url"], params["domain"], 
             params["container"])
         url_list: list[str] = homepage_url_retriever.urls_to_list()
 
@@ -43,11 +44,14 @@ class FullScrape:
         
         # Save HTML data for each BeautifulSoup object
         SoupListToHTML.soup_list_to_html(
-            soup_list, scan_time, scrape_dir)
+            soup_list, scan_time, 
+            scrape_dir, params["id_class"])
         
-        # Save thread content for each BeautifulSoup object
-        SoupListToContent.soup_list_to_content(
-            soup_list, scan_time, scrape_dir, params["op_class"], 
+        # Save thread content for each BeautifulSoup object        
+        soup_list_to_content_object = SoupListToContent()
+        soup_list_to_content_object.soup_list_to_content(
+            soup_list, scan_time, 
+            scrape_dir, params["op_class"], 
             params["reply_class"], params["url"], 
             params["post_date_location"])
         

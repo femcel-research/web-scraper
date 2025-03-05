@@ -15,16 +15,18 @@ class HomepageURLRetriever:
         soup: A BeautifulSoup object; made from homepage.
         url_list: The list of URLs that will ultimately be returned.
         domain_param: The string that will be concatenated with relative URLs.
+        container_param: Class URLs are stored in.
     """
-    def __init__(self, url, domain_param, container_param):
+    def __init__(self, url_param, domain_param, container_param):
         """Retrieves and returns a list of URLs.
 
         Args:
-            url: URL to a chan-style homepage.
+            url_param: URL to a chan-style homepage.
             domain_param: Domain prefix concatenated with relative URLs.
+            container_param: Class URLs are stored in.
         """
         try:
-            response = requests.get(url)
+            response = requests.get(url_param)
             response.raise_for_status()
             self.soup = BeautifulSoup(response.content, "html.parser")
         except requests.HTTPError as error:

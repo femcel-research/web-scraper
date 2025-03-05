@@ -30,15 +30,17 @@ class SoupListToContent:
         # of the same thread. Each duplicate URL will lead to the same,
         # up-to-date instance of a thread. Therefore, if a thread has been
         # scraped once, it doesn't need to be scraped again.
-        thread_set: set[str] = []  
+        thread_set: set[str] = set()  
         for soup in soup_list:
+            thread_number = soup.find(class_="intro").get("id")
+            if thread_number is None:
+                thread_number = soup.find(class_="intro").find("a")\
+                    .get("id").replace("post_no_", "")
             if thread_number not in thread_set:
                 thread_set.add(thread_number)
-                thread_number = soup.find(class_="intro").get("id")
                 content_file_name = f"content_{thread_number}.json"
-                content_file_path = f"{scrape_dir}\
-                    {thread_number}{os.sep}{scan_time}\
-                    {os.sep}{content_file_name}"
+                content_file_path = f"{scrape_dir}{thread_number}{os.sep}{scan_time}{os.sep}{content_file_name}"
+                os.makedirs(f"{scrape_dir}{thread_number}{os.sep}{scan_time}", exist_ok=True)
                 # Original post
                 original_post = soup.find(class_=op_class)
                 # Set of every page element with the class "post reply"
@@ -69,12 +71,7 @@ class SoupListToContent:
     def extract_datetime(self, post, post_date_location):
         """Extracts datetime from a given post."""
         # TODO: May not work as intended, maybe modify
-        try:
-            post_date = post.find(class_=post_date_location)
-        except:
-            pass
-        else:
-            post_date = post.find(label_for=post_date_location)
+        post_date = post.find(class_=post_date_location)
         datetime_str = post_date.find("time")["datetime"]
 
         # Converts post date to a datetime object
@@ -95,8 +92,13 @@ class SoupListToContent:
 
         return links
 
-    def extract_original_post(self, original_post, url, post_date_location):
+    def extract_original_post(
+            self, original_post, url, post_date_location, thread_number):
         """Outputs content from original post as a dictionary."""
+        op_id = original_post.find(class_="intro").get("id")
+        if op_id is None:
+            op_id = thread_number
+        print(op_id)
         date = self.extract_datetime(original_post, post_date_location)
         original_post_body = original_post.find(class_="body")
         links_to_other_posts = self.extract_replied_posts_ids(
@@ -105,7 +107,7 @@ class SoupListToContent:
 
         original_content = {
             "post_id": 
-                original_post.find(class_="intro").get("id"),
+                op_id,
             "username": 
                 original_post.find(class_="name").get_text()
                 .strip().replace("\n", ""),
@@ -133,6 +135,10 @@ class SoupListToContent:
         """Outputs replies as a dictionary"""
         replies = {}
         for reply in post_replies:
+            reply_id = reply.find(class_="intro").get("id")
+            if reply_id is None:
+                reply_id = reply.get("id").replace("reply_", "")
+            print(reply_id)
             date = self.extract_datetime(reply, post_date_location)
             reply_body = reply.find("div", class_="body")
             links = self.extract_replied_posts_ids(reply_body)
@@ -150,7 +156,7 @@ class SoupListToContent:
             # Dictionary housing reply content
             reply_content = {
                 "post_id": 
-                    reply.find(class_="intro").get("id"),
+                    reply_id,
                 "ids_of_replied_posts": 
                     links,
                 "username": 
@@ -172,7 +178,7 @@ class SoupListToContent:
             url, post_date_location):
         """Returns thread contents as a JSON"""
         op = self.extract_original_post(
-            original_post, url, post_date_location)
+            original_post, url, post_date_location, thread_number)
         replies = self.extract_replies(post_replies, url, post_date_location)
 
         thread_contents = {
