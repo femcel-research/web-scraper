@@ -1,35 +1,39 @@
 # Imports
-import datetime
-import unittest
+import json
 
-from ..utils import SoupListToHTML
-from ..utils import URLListToSoupList
+from bs4 import BeautifulSoup
+from datetime import datetime
+
+from ..src import HomepageURLRetriever
+from ..src import SoupListToHTML
+from ..src import URLListToSoupList
 
 # Run as module to make relative import work:
 # python -m chan_scraper.tests.TestSoupListToHTML
 
-class TestSoupListToHTML(unittest.TestCase): 
-    """Performs temp dir tests with temp HTML dir on SoupListToHTML."""   
+class TestSoupListToHTML: 
+    """Performs test with test directory on SoupListToHTML."""   
+    def __init__(self):
+        filepath_input = input("Enter params filepath \n")
+        # Using ./data/params/tests/test_params.json right now
+        self.filepath = filepath_input
+        with open(self.filepath, "r") as params:
+            self.params_data = json.load(params)
+        self.scan_time = datetime.today()
+
     def test_html_outputs(self):
-        scan_time = datetime.date.today().strftime("%Y-%m-%dT%H:%M:%S")
-        scrape_dir = input("Provide the scrape directory\n")
-        # Using ./chan_scraper/tests/HTML/ for now
-        id_class = input("Provide an id_class for collecting thread IDs\n")
-        # Likely "intro" or "post_anchor", depending on the site; check params
+        homepage_url_retriever = HomepageURLRetriever(
+            self.params_data["hp_url"], self.params_data["url"], 
+            self.params_data["container"])
+        url_list: list[str] = homepage_url_retriever.urls_to_list()
 
-        url_list: list[str] = []
-        url = input("Add one URL\n")  # Be sure to include "https://"
-        url_list.append(url)
-        url = input("Add another URL\n")
-        url_list.append(url)
-        url = input("Add one more URL\n")
-        url_list.append(url)
-
-        soup_list = URLListToSoupList.url_list_to_soup_list(url_list)
+        soup_list: list[tuple[datetime, BeautifulSoup]] = URLListToSoupList.\
+            url_list_to_soup_list(self.scan_time, url_list)
 
         SoupListToHTML.soup_list_to_html(
-            soup_list, scan_time, 
-            scrape_dir, id_class)
+            soup_list,
+            self.params_data["site_dir"], self.params_data["id_class"])
 
 if __name__ == '__main__':
-    unittest.main()
+    test = TestSoupListToHTML()
+    test.test_html_outputs()

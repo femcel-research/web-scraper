@@ -1,18 +1,22 @@
 # Imports
 import os
 
-from utils import BuildNestDictionary
-from utils import HomepageURLRetriever
-from utils import InitializeNestDictionary
-from utils import SoupListToContent
-from utils import SoupListToHTML
-from utils import SoupListToNestDictionary
-from utils import URLListToSoupList
+# from bs4 import BeautifulSoup
+from datetime import datetime
 
+# from src import HomepageURLRetriever
+# from src import SoupListToContent
+# from src import SoupListToHTML
+# from src import SoupListToMeta
+# from src import URLListToSoupList
+# TODO: Fix with new class structure!
 class FullScrape:
-    """A "full scrape" collects HTML data, metadata, and statistics."""
+    """A "full scrape" collects HTML data, metadata/stats, and site-wide.
+    
+    Site-wide data is incremented.
+    """
     @staticmethod
-    def full_scrape(params, scan_time: str):
+    def full_scrape(params, scan_time: datetime):
         """Perform a "full scrape,": HTML data; post and site metadata; stats.
 
         Args:
@@ -21,61 +25,52 @@ class FullScrape:
             scan_time: Time of scan.
 
         Attributes:
-            scrape_dir: Directory for current scrapes.
             homepage_url_retriever: HomepageURLRetriever object.
             url_list: List of URLs.
             soup_list: List of BeautifulSoup objects.
         """
-        scrape_dir: str = f"{params["data_dir"]}{os.sep}{params["site_dir"]}{os.sep}"
+        # scrape_dir: str = f"{params["data_dir"]}{os.sep}{params["site_dir"]}{os.sep}"
 
         # Retrieve list of URLs
-        # TODO: Make a parameter "domain", "container", etc. in params JSON
-        homepage_url_retriever = HomepageURLRetriever(
-            params["hp_url"], params["domain"], 
-            params["container"])
-        url_list: list[str] = homepage_url_retriever.urls_to_list()
+        # homepage_url_retriever_object = HomepageURLRetriever(
+        #     params["hp_url"], params["domain"], 
+        #     params["container"])
+        # url_list: list[str] = homepage_url_retriever_object.urls_to_list()
 
-        # Turn URL list to BeautifulSoup object list
-        if url_list is not None:  # None if error
-            soup_list = URLListToSoupList.url_list_to_soup_list(url_list)
-        else:
-            # TODO: Print error in log
-            return None
+        # # Turn URL list to BeautifulSoup tuples list
+        # if url_list is not None:  # None if error
+        #     soup_list: list[tuple[datetime, BeautifulSoup]] = URLListToSoupList.\
+        #         url_list_to_soup_list(scan_time, url_list)
+        # else:
+        #     # TODO: Print error in log
+        #     return None  # TODO: Abort
         
-        # Save HTML data for each BeautifulSoup object
-        SoupListToHTML.soup_list_to_html(
-            soup_list, scan_time, 
-            scrape_dir, params["id_class"])
+        # # Save HTML data for each BeautifulSoup object
+        # SoupListToHTML.soup_list_to_html(
+        #     soup_list, scan_time, 
+        #     params["site_dir"], params["id_class"])
         
-        # Save thread content for each BeautifulSoup object        
-        soup_list_to_content_object = SoupListToContent()
-        soup_list_to_content_object.soup_list_to_content(
-            soup_list, scan_time, 
-            scrape_dir, params["op_class"], 
-            params["reply_class"], params["url"], 
-            params["post_date_location"])
+        # # Turn BeautifulSoup tuples list to list of ThreadData objects
+        # # TODO: Implement
         
-        # Create an empty nested dictionary for handling metadata and stats 
-        # across prior and current scans
-        nested_dictionary = BuildNestDictionary.build_nest_dictionary(
-            soup_list)
+        # # Save thread content for each BeautifulSoup object        
+        # soup_list_to_content_object = SoupListToContent()
+        # soup_list_to_content_object.soup_list_to_content(
+        #     soup_list, scan_time, 
+        #     params["site_dir"], params["op_class"], 
+        #     params["reply_class"], params["url"], 
+        #     params["post_date_location"])
+        
+        # # Save thread and current scrape metadata for each BeautifulSoup obj
+        # soup_list_to_meta_object = SoupListToMeta()
+        # soup_list_to_meta_object.soup_list_to_meta(...)
 
-        # Initialize the empty dictionary to be a skeleton with 
-        # data from prior scans
-        InitializeNestDictionary.initialize_nest_dictionary(nested_dictionary)
-
-        # Make a copy of the skeleton dictionary and populate it 
-        # with data from current BeautifulSoup object list
-        # TODO: Finish working on: add scrape_dir, etc.
-        filled_dictionary = (
-            SoupListToNestDictionary.soup_list_to_nest_dictionary(
-                soup_list, ))
-        # SoupListToNestDictionary.soup_list_to_nest_dictionary(
-        #     soup_list, nested_dictionary)
-
-        # TODO: Used new populated dictionary
-
-        # Collect site-wide metadata
-        # TODO: Use nested dictionary; aggregate new post stats, etc. 
-        # for this             
+        # # Collect/update site-wide/aggregate metadata
+        # aggregate_dictionary = soup_list_to_meta_object.\
+        #     get_aggregate_dictionary()
+        # TODO: Make a util to update or overwrite aggregate dict,
+        # depending on if you're doing a normal scrape and want to add
+        # to current statistics, or if you're doing a re-scrape of all past
+        # data and want to "rebase"
+                    
     

@@ -1,52 +1,40 @@
 # Imports
 import json
-import unittest
 
-from ..utils import HomepageURLRetriever
+from ..src import HomepageURLRetriever
 
 # Run as module to make relative import work:
 # python -m chan_scraper.tests.TestHomepageURLRetriever
+# from web-scraper
 
-class TestHomepageURLRetriever(unittest.TestCase): 
+class TestHomepageURLRetriever: 
     """Performs visual tests with prints on TestHomepageURLRetriever.
     
     Confirms the appropriate parameters are utilized and a list of
     URLs is retrieved.
     """   
-    def test_param_outputs(self):
-        hp_url: str
-        domain: str
-        container: str
-        filepath = input("Enter params filepath \n")
+    def __init__(self):
+        filepath_input = input("Enter params filepath \n")
         # Using ./data/params/tests/test_params.json right now
+        self.filepath = filepath_input
+        with open(self.filepath, "r") as params:
+            self.params_data = json.load(params)
 
-        with open(filepath, "r") as params:
-            params_data = json.load(params)
-            hp_url = params_data["hp_url"]
-            domain = params_data["domain"]
-            container = params_data["container"]
-
-        print(f"Params are {hp_url}, {domain}, {container}\n")
+    def test_param_outputs(self):
+        """Prints parameters used in initialization."""
+        print(f"Params are {self.params_data["hp_url"]},{self.params_data["domain"]}, {self.params_data["container"]}\n")
 
     def test_retriever_outputs(self):
-        hp_url: str
-        domain: str
-        container: str
-        filepath = input("Enter params filepath \n")
-        
-        with open(filepath, "r") as params:
-            params_data = json.load(params)
-            hp_url = params_data["hp_url"]
-            domain = params_data["domain"]
-            container = params_data["container"]
-            
+        """Prints out a list of URLs that have been retrieved."""
         homepage_url_retriever = HomepageURLRetriever(
-            hp_url, domain, 
-            container)
+            self.params_data["hp_url"], self.params_data["domain"], 
+            self.params_data["container"])
         url_list: list[str] = homepage_url_retriever.urls_to_list()
 
         print(url_list)
 
 if __name__ == '__main__':
-    unittest.main()
+    test = TestHomepageURLRetriever()
+    test.test_param_outputs()
+    test.test_retriever_outputs()
     

@@ -108,4 +108,15 @@ if __name__ == "__main__":
     # TODO: Sort out different behavior; different scrape classes will
     # have different utils. Everything is designed to be fully modular
 
+    # temp_param_path = ""  # TODO: Add actual path from command-line
+    # temp_html_directory = ""  # TODO: Add actual HTML directory
+    # temp_json_content_directory = ""  # TODO: Add actual JSON directory
+    # scan_time = datetime.datetime.today()  # .strftime("%Y-%m-%dT%H:%M:%S") 
+    # # Load parameters JSON for use in other steps
+    # params = load_param(temp_param_path)  # TODO: Add actual param file
+    # if params is None:
+    #     pass  # TODO: Print error in log and halt
+
+    # TODO: Sort out different behavior; different scrape classes will
+    # have different utils. Everything is designed to be fully modular
     # Etc.

@@ -6,41 +6,35 @@ import re
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-class SoupListToContent:
-    """Collects a list of URL's thread data into individual files."""
-    def soup_list_to_content(
-            self, soup_list: list[BeautifulSoup], scan_time: str, 
-            scrape_dir: str, op_class: str, reply_class: str,
-            url: str, post_date_location: str):
-        """For each BeautifulSoup object, thread content is collected.
+from . import ThreadData
+
+class ThreadListToContent:
+    """Saves a list of thread's data into individual files."""
+    def thread_list_to_content(
+            self, thread_list: list[ThreadData], 
+            site_dir: str, op_class: str, 
+            reply_class: str, url: str, post_date_location: str):
+        """For each ScrapeData object, thread content is collected.
         
         Each content JSON is collected by thread ID number, to an internally
         specified file directory (based on arguments).
 
         Args:
-            soup_list: List of BeautifulSoup objects.
-            scan_time: Time of scan.
-            scrape_dir: Directory for scrape data.
+            thread_list: List of ThreadData objects.
+            site_dir: Directory for scrape data.
             op_class: Name of class for original posts.
             reply_class: Name of class for post replies.
             url: Used as a prefix in image URLs.
             post_date_location: Class/label string for datetime.
         """
-        # Each batch of URLs/BeautifulSoup objects can have multiple instances
-        # of the same thread. Each duplicate URL will lead to the same,
-        # up-to-date instance of a thread. Therefore, if a thread has been
-        # scraped once, it doesn't need to be scraped again.
-        thread_set: set[str] = set()  
-        for soup in soup_list:
-            thread_number = soup.find(class_="intro").get("id")
-            if thread_number is None:
-                thread_number = soup.find(class_="intro").find("a")\
-                    .get("id").replace("post_no_", "")
-            if thread_number not in thread_set:
-                thread_set.add(thread_number)
+        for thread in thread_list:
+            thread_number = thread.get_thread_number()
+            for scrape in thread.get_scrapes():
+                scan_time = scrape.get_scan_time().strftime("%Y-%m-%dT%H:%M:%S")
+                soup = scrape.get_soup()
                 content_file_name = f"content_{thread_number}.json"
-                content_file_path = f"{scrape_dir}{thread_number}{os.sep}{scan_time}{os.sep}{content_file_name}"
-                os.makedirs(f"{scrape_dir}{thread_number}{os.sep}{scan_time}", exist_ok=True)
+                content_file_path = f"{site_dir}{thread_number}{os.sep}{scan_time}{os.sep}{content_file_name}"
+                os.makedirs(f"{site_dir}{thread_number}{os.sep}{scan_time}", exist_ok=True)
                 # Original post
                 original_post = soup.find(class_=op_class)
                 # Set of every page element with the class "post reply"
@@ -51,6 +45,7 @@ class SoupListToContent:
                             thread_number, original_post, post_replies, 
                             url, post_date_location),
                         file, indent=3, ensure_ascii=False)
+
 
     def extract_images(self, post, url):
         """Extracts image links from a given post and returns an array."""
@@ -98,7 +93,6 @@ class SoupListToContent:
         op_id = original_post.find(class_="intro").get("id")
         if op_id is None:
             op_id = thread_number
-        print(op_id)
         date = self.extract_datetime(original_post, post_date_location)
         original_post_body = original_post.find(class_="body")
         links_to_other_posts = self.extract_replied_posts_ids(
@@ -138,7 +132,6 @@ class SoupListToContent:
             reply_id = reply.find(class_="intro").get("id")
             if reply_id is None:
                 reply_id = reply.get("id").replace("reply_", "")
-            print(reply_id)
             date = self.extract_datetime(reply, post_date_location)
             reply_body = reply.find("div", class_="body")
             links = self.extract_replied_posts_ids(reply_body)
@@ -191,4 +184,3 @@ class SoupListToContent:
         }
 
         return thread_contents
-

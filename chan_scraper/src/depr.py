@@ -39,9 +39,8 @@ class SoupListToNestDictionary:
         # Each batch of URLs/BeautifulSoup objects can have multiple instances
         # of the same thread. Each duplicate URL will lead to the same,
         # up-to-date instance of a thread. Therefore, if a thread has been
-        # scraped once, it doesn't need to be scraped again. There will not
-        # be more than
-        thread_set: set[str] = []  
+        # scraped once, it doesn't need to be scraped again; hence the set
+        thread_set: set[str] = set()  
 
         new_dictionary = nested_dictionary.deepcopy()  # TODO: Confirm works
         

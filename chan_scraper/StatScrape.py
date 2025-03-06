@@ -1,6 +1,6 @@
 # Imports
-from utils import HomepageURLRetriever
-from utils import URLListToSoupList
+from src import HomepageURLRetriever
+from src import URLListToSoupList
 
 class StatScrape:
     """A "stat scrape" collects statistics."""
