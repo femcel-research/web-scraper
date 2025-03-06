@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-from . import ScrapeData
+from .ScrapeData import ScrapeData
 
 class URLListToScrapeList:
     """A tool to return a list of ScrapeData objects, given a list of URLs."""

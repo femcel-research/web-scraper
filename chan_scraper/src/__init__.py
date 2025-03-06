@@ -1,5 +1,5 @@
 # src package
-from ScrapeData import ScrapeData
+from .ScrapeData import ScrapeData
 from .ScrapeListToHTML import ScrapeListToHTML
 from .ScrapeListToThreadList import ScrapeListToThreadList
 from .ThreadData import ThreadData

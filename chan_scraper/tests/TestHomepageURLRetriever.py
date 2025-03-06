@@ -5,7 +5,8 @@ from ..src import HomepageURLRetriever
 
 # Run as module to make relative import work:
 # python -m chan_scraper.tests.TestHomepageURLRetriever
-# from web-scraper
+
+# Passes as of 2025-03-06
 
 class TestHomepageURLRetriever: 
     """Performs visual tests with prints on TestHomepageURLRetriever.

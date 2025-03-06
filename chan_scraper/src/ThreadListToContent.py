@@ -6,7 +6,7 @@ import re
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-from . import ThreadData
+from .ThreadData import ThreadData
 
 class ThreadListToContent:
     """Saves a list of thread's data into individual files."""

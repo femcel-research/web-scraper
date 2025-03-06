@@ -1,5 +1,5 @@
 # Imports
-from . import ScrapeData
+from .ScrapeData import ScrapeData
 
 class ThreadData:
     """Holds all of information associated with a given thread."""

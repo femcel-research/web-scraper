@@ -4,18 +4,20 @@ import json
 from datetime import datetime
 
 from ..src import HomepageURLRetriever
-from ..src import SoupListToThreadList
-from ..src import URLListToSoupList
+from ..src import ScrapeListToThreadList
+from ..src import URLListToScrapeList
 
 # Run as module to make relative import work:
-# python -m chan_scraper.tests.TestSoupListToThreadList
+# python -m chan_scraper.tests.TestScrapeListToThreadList
 
-class TestSoupListToThreadList:
-    """Performs a visual test with prints on SoupListToThreadList
+# Passes as of 2025-03-06
+
+class TestScrapeListToThreadList:
+    """Performs a visual test with prints on ScrapeListToThreadList
     
     Uses the __str__ override for ThreadData objects to confirm
-    the number of unique threads among soup_list and the number of
-    unique scan times. The outputted "number of tuples" for each thread
+    the number of unique threads among scrapes and the number of
+    unique scan times. The outputted "number of scrapes" for each thread
     should be 1, as every BeautifulSoup object was scraped simultaneously.
     """
     def __init__(self):
@@ -30,14 +32,14 @@ class TestSoupListToThreadList:
             self.params_data["container"])
         url_list: list[str] = homepage_url_retriever.urls_to_list()
 
-        self.soup_list = URLListToSoupList.url_list_to_soup_list(self.scan_time, url_list)
+        self.scrapes = URLListToScrapeList.url_list_to_scrape_list(self.scan_time, url_list)
 
     def test_thread_print(self):
-        soup_list_to_thread_list_object = SoupListToThreadList(self.soup_list)
-        thread_list = soup_list_to_thread_list_object.get_thread_list()
+        scrape_list_to_thread_list_object = ScrapeListToThreadList(self.scrapes)
+        thread_list = scrape_list_to_thread_list_object.get_thread_list()
         for thread in thread_list:
             print(thread)
 
 if __name__ == '__main__':
-    test = TestSoupListToThreadList()
+    test = TestScrapeListToThreadList()
     test.test_thread_print()

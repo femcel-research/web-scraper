@@ -1,8 +1,8 @@
 # Imports
 from datetime import datetime
 
-from . import ScrapeData
-from . import ThreadData
+from .ScrapeData import ScrapeData
+from .ThreadData import ThreadData
 
 class ScrapeListToThreadList:
     """Returns a list of ThreadData objects given a valid ScrapeData list."""
@@ -30,9 +30,9 @@ class ScrapeListToThreadList:
             thread: ThreadData = self.find_thread(thread_number)
             # If one doesn't exist, make a new one and add it to thread_list
             if thread is None:
-                new_thread = ThreadData(thread_number)
-                self.thread_list.append(new_thread)
-                thread = new_thread
+                self.new_thread = ThreadData(thread_number)
+                self.thread_list.append(self.new_thread)
+                thread = self.new_thread
             # Check if an identical ScrapeData object exists in ThreadData
             scan_time: datetime = scrape.get_scan_time()
             if self.can_add_to_thread(thread, scan_time):

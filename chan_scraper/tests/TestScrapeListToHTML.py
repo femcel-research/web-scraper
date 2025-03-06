@@ -5,13 +5,16 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 
 from ..src import HomepageURLRetriever
-from ..src import SoupListToHTML
-from ..src import URLListToSoupList
+from ..src import ScrapeData
+from ..src import ScrapeListToHTML
+from ..src import URLListToScrapeList
 
 # Run as module to make relative import work:
-# python -m chan_scraper.tests.TestSoupListToHTML
+# python -m chan_scraper.tests.TestScrapeListToHTML
 
-class TestSoupListToHTML: 
+# Passes as of 2025-03-06
+
+class TestScrapeListToHTML: 
     """Performs test with test directory on SoupListToHTML."""   
     def __init__(self):
         filepath_input = input("Enter params filepath \n")
@@ -27,13 +30,13 @@ class TestSoupListToHTML:
             self.params_data["container"])
         url_list: list[str] = homepage_url_retriever.urls_to_list()
 
-        soup_list: list[tuple[datetime, BeautifulSoup]] = URLListToSoupList.\
-            url_list_to_soup_list(self.scan_time, url_list)
+        scrapes: list[ScrapeData] = URLListToScrapeList.\
+            url_list_to_scrape_list(self.scan_time, url_list)
 
-        SoupListToHTML.soup_list_to_html(
-            soup_list,
-            self.params_data["site_dir"], self.params_data["id_class"])
+        ScrapeListToHTML.scrape_list_to_html(
+            scrapes,
+            self.params_data["site_dir"])
 
 if __name__ == '__main__':
-    test = TestSoupListToHTML()
+    test = TestScrapeListToHTML()
     test.test_html_outputs()

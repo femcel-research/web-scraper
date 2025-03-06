@@ -1,7 +1,7 @@
 # Imports
 import os
 
-from . import ScrapeData
+from .ScrapeData import ScrapeData
 
 class ScrapeListToHTML:
     """Saves a list of URL's HTML data into individual files."""
@@ -37,4 +37,4 @@ class ScrapeListToHTML:
                 os.makedirs(f"{site_dir}{thread_number}{os.sep}{scan_time}", exist_ok=True)
 
                 with open(html_file_path, "w") as file:
-                    file.write(tuple[1].prettify())
+                    file.write(scrape.get_soup().prettify())
