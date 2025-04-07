@@ -4,6 +4,7 @@ WIZ_MAIN = ./wizchan-scraper/main.py
 
 #TODO: Simplify once scraper becomes modular
 THREAD_PERCENTAGE ?= 10 #can be overwritten in command-line. i.e (make portion THREAD_PERCENTAGE = 15)
+RANDOMIZE ?= 1
 
 CC_PORTION_RETRIEVER = ./crystalcafe-scraper/utils/PortionRetriever.py
 CC_SITE_NAME = crystal.cafe
@@ -18,7 +19,7 @@ all: setup run portion
 run: crystal wiz
 
 # Retrieves portions from all sites
-portion: cc_portion wiz_portion
+portion: cc_portion
 
 # Installs dependencies
 setup:
@@ -28,9 +29,9 @@ setup:
 
 # Runs specific portion retrievers
 cc_portion:
-	python $(CC_PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(CC_SITE_NAME)
+	python $(CC_PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(CC_SITE_NAME) $(RANDOMIZE) 
 wiz_portion:
-	python $(WIZ_PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(WIZ_SITE_NAME)
+	python $(WIZ_PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(WIZ_SITE_NAME) $(RANDOMIZE) 
 
 # Runs specific scrapers
 crystal:
