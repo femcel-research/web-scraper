@@ -4,18 +4,21 @@ import os
 import requests
 import datetime
 import logging
+from pathlib import Path
 from bs4 import BeautifulSoup
-from utils import HTMLCollector
-from utils import MetaCollector
-from utils import TextCollector
-from utils import HomePageScraper
-from .MasterVersionGenerator import MasterVersionGenerator
 from datetime import datetime
 from htmldate import find_date
 
+#Utilities
+from utils.scraping_handling import HomePageScraper
+from .html_handling import HTMLCollector
+from .html_handling import TextCollector
+from .html_handling import MasterVersionGenerator
+from .meta_handling  import MetaCollector
+
+
 
 class Process:
-    # TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
     # TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
     """Takes in a homepage URL then loops through the links on it, 'processing' each one"""
 
@@ -33,24 +36,25 @@ class Process:
         self.url = url
         self.scan_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
 
+        # Logging
         log_dir = "./data/crystal.cafe/logs"
         os.makedirs(log_dir, exist_ok=True)
-        log_filename = os.path.join(log_dir, f"{self.scan_time}.log")
-      
+        log_filepath = os.path.join(log_dir, f"{self.scan_time}.log")
 
-        # Logging
+        #Creates logging object with the filepath above
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(
-            filename= log_filename,
+            filename= log_filepath,
             filemode="w",
             format=(
                 datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
                 + " %(levelname)s: %(message)s"
-            ),  # TODO: Make str literal?
+            ), 
             style="%",
             level=logging.INFO,
         )
 
+        #Make request from page
         page = requests.get(url, stream=True)
 
         try:
@@ -73,7 +77,8 @@ class Process:
 
     def log_processed_url(self, url):
         """Save list of processed URLs to txt file in data/processed"""
-        with open("./data/crystal.cafe/processed/processed.txt", "a") as file:
+        processed_txt_file = Path("./data/crystal.cafe/processed/processed.txt")
+        with open(processed_txt_file, "a") as file:
             file.write(url + "\n")
         logging.info(f"Logging {url} in processed.txt")
 

@@ -2,8 +2,6 @@ from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 import os
 
-
-#TODO no longer need to pass page
 class HTMLCollector:
     """Saves a URL's HTML into a file"""
     def __init__(self, soup, folder_path):
