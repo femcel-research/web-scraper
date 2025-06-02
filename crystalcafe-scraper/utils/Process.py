@@ -27,14 +27,21 @@ class Process:
     thread_folder_path = "./data/crystal.cafe/{}"  # Format with thread id
     scan_folder_path = "./data/crystal.cafe/{}/{}"  # Format with thread id, scan_time
 
-    scan_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
     successful_scans = 0
 
     def __init__(self, url):
+        self.url = url
+        self.scan_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
+
+        log_dir = "./data/crystal.cafe/logs"
+        os.makedirs(log_dir, exist_ok=True)
+        log_filename = os.path.join(log_dir, f"{self.scan_time}.log")
+      
+
         # Logging
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(
-            filename=(f"./data/crystal.cafe/logs/{self.scan_time}.log"),
+            filename= log_filename,
             filemode="w",
             format=(
                 datetime.today().strftime("%Y-%m-%dT%H:%M:%S")

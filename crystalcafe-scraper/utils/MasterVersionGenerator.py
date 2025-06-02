@@ -16,6 +16,7 @@ class MasterVersionGenerator:
         self.folder_path = folder_path
         self.file_name = f"master_version_{self.thread_number}.json"
         self.file_path = os.path.join(self.folder_path, self.file_name)
+        self.scan_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
 
         # Thread content
         self.thread_contents = thread_contents_json
@@ -29,16 +30,16 @@ class MasterVersionGenerator:
         self.lost_ids_set = set(lost_ids)
 
         # Master version generation logging
+        log_dir = "./data/crystal.cafe/logs/master-thread-logs"
+        os.makedirs(log_dir, exist_ok=True)
+        master_log_filename = os.path.join(log_dir, f"{self.scan_time}.log")
+
         self.master_logger = logging.getLogger('Master_Thread')
         self.master_logger.setLevel(logging.INFO)
         
         #TODO: fix logging for master vers gen.
         #File handler
-        master_log_filename = (
-            "./data/crystal.cafe/logs/master-thread-logs/"
-            + datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
-            + ".log"
-        )
+
         master_handler = logging.FileHandler(master_log_filename, mode='w')
 
         #Log formatter
