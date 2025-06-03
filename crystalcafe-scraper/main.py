@@ -1,4 +1,4 @@
-from utils import processing.Process
+from utils.processing.Process import Process
 from utils import PortionRetriever
 import sys
 

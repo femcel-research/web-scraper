@@ -2,21 +2,21 @@ from htmldate import find_date
 import datetime
 
 class DateFinder:
-    def __init__(self, soup):
-        self.soup = soup
+    def __init__(self, html):
+        self.html = html
 
     def date_to_JSON(self) -> dict:
         """Captures date published, date updated, and date scraped from a specified website"""
 
         # Uses htmldate lib to find original and update dates
         publish_Date = find_date(
-            self.html_content,
+            self.html,
             extensive_search=True,
             original_date=True,
             outputformat="%Y-%m-%dT%H:%M:%S",
         )
         update_Date = find_date(
-            self.html_content,
+            self.html,
             extensive_search=False,
             original_date=False,
             outputformat="%Y-%m-%dT%H:%M:%S",

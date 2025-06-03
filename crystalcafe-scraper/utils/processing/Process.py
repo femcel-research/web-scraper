@@ -4,21 +4,20 @@ import os
 import requests
 import datetime
 import logging
+from pathlib import Path
 from bs4 import BeautifulSoup
 from datetime import datetime
 from htmldate import find_date
 
-#Utilities
+# Utilities
 from utils.scraping_handling import HomePageScraper
-from .process_handling import HTMLCollector
-from .process_handling import TextCollector
-from .process_handling import MasterVersionGenerator
-from .meta_handling  import MetaCollector
-
+from .html_handling.HTMLCollector import HTMLCollector
+from .html_handling.TextCollector import TextCollector
+from .html_handling.MasterVersionGenerator import MasterVersionGenerator
+from .meta_handling.MetaCollector import MetaCollector
 
 
 class Process:
-    # TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
     # TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
     """Takes in a homepage URL then loops through the links on it, 'processing' each one"""
 
@@ -36,24 +35,25 @@ class Process:
         self.url = url
         self.scan_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
 
+        # Logging
         log_dir = "./data/crystal.cafe/logs"
         os.makedirs(log_dir, exist_ok=True)
-        log_filename = os.path.join(log_dir, f"{self.scan_time}.log")
-      
+        log_filepath = os.path.join(log_dir, f"{self.scan_time}.log")
 
-        # Logging
+        # Creates logging object with the filepath above
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(
-            filename= log_filename,
+            filename=log_filepath,
             filemode="w",
             format=(
                 datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
                 + " %(levelname)s: %(message)s"
-            ),  # TODO: Make str literal?
+            ),
             style="%",
             level=logging.INFO,
         )
 
+        # Make request from page
         page = requests.get(url, stream=True)
 
         try:
@@ -76,7 +76,8 @@ class Process:
 
     def log_processed_url(self, url):
         """Save list of processed URLs to txt file in data/processed"""
-        with open("./data/crystal.cafe/processed/processed.txt", "a") as file:
+        processed_txt_file = Path("./data/crystal.cafe/processed/processed.txt")
+        with open(processed_txt_file, "a") as file:
             file.write(url + "\n")
         logging.info(f"Logging {url} in processed.txt")
 
@@ -96,26 +97,26 @@ class Process:
         # JSON current scan metadata file
         meta = MetaCollector(
             url,
-            html,
             html_soup,
             self.scan_folder_path.format(id, self.scan_time),
-            False,
+            self.thread_folder_path.format(id)
         )
-        (meta.meta_dump(False))
+        meta.get_scan_meta()
         logging.info(f"Saved current scan metadata for thread #{id}")
 
         # JSON current scan thread content file
         content = TextCollector(
             html_soup, self.scan_folder_path.format(id, self.scan_time)
         )
-        thread_content = content.write_thread()
+        content.write_thread()
         logging.info(f"Saved current thread content for thread #{id}")
 
         # JSON thread scan metadata
-        thread_meta = MetaCollector(
-            url, html, html_soup, self.thread_folder_path.format(id), True
-        )
-        (thread_meta.meta_dump(True))
+        # thread_meta = MetaCollector(
+        #     url, html, html_soup, self.thread_folder_path.format(id), True
+        # )
+        # (thread_meta.meta_dump(True))
+        meta.get_thread_meta()
         logging.info(f"Saved/updated thread metadata for thread #{id}")
 
         # JSON master version file
@@ -220,7 +221,7 @@ class Process:
         directory = "./data/crystal.cafe"
         html_pattern = "*.html"  # Look for an html file
         meta_pattern = "meta_*.json"  # Look for a meta file
-        
+
         logging.info("Processing existing threads")  # Log message
         for thread_folder in os.listdir(directory):
             thread_folder_path = os.path.join(directory, thread_folder)
@@ -250,11 +251,11 @@ class Process:
 
     def process_current_list(self):
         """For each URL in the list, get thread HTML, metadata JSON, and content JSON"""
-        
-        logging.info("Processing the URLs") 
+
+        logging.info("Processing the URLs")
         working_urls = 0
         failed_urls = 0
-        
+
         for url in self.url_list:
             # Gets page from URL and makes a new directory for the thread
             logging.info(f"Processing {url}")  # Log message

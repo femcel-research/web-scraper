@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 from string import Template
 from bs4 import BeautifulSoup
-from utils import MetaStatHandler
+from utils.processing.meta_handling.MetaStatHandler import MetaStatHandler
 import logging
 import os
 
