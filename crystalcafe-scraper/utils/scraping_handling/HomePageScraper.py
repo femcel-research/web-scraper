@@ -1,11 +1,5 @@
-from logging import Logger
-from htmldate import find_date
 from bs4 import BeautifulSoup
-import json
 import requests
-import datetime
-import os
-from utils.processing.meta_handling.SiteMetaCollector import SiteMetaCollector
 
 class HomePageScraper:
     """Makes a list of urls from homepage"""
@@ -15,12 +9,7 @@ class HomePageScraper:
         self.page = requests.get(url, stream=True)  
         self.soup = BeautifulSoup(self.page.content, "html.parser")
         self.url_list = []
-        
-        # JSON sitewide metadata file
-        if(self.page.status_code == 200): # Only update site meta when the page is working
-            site_meta = SiteMetaCollector(self.url, self.soup, "./data/crystal.cafe/")
-            (site_meta.meta_dump())
-        
+               
     #TODO: abstract with params
     def urls_to_list(self) -> list[str]: 
         box_right = self.soup.find(class_="box right")

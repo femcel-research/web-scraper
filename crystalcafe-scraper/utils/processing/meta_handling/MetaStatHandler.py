@@ -1,12 +1,15 @@
 import json
 import os
 
+from bs4 import BeautifulSoup
+
 
 class MetaStatHandler:
-    def __init__(self, thread_meta):
+    def __init__(self, thread_meta_path: str, soup: BeautifulSoup):
         """Initializes with thread meta stats if it exists already; otherwise sets everything to 0"""
-        if os.path.exists(thread_meta):
-            with open(thread_meta) as json_file:
+        self.soup = soup
+        if os.path.exists(thread_meta_path):
+            with open(thread_meta_path) as json_file:
                 self.data = json.load(json_file)
 
             self.dist_post_ids = self.data["dist_post_ids"]  # []; all distinctive post_ids across all scans
@@ -21,19 +24,19 @@ class MetaStatHandler:
             self.num_total_posts = 0 
             self.num_lost_posts = 0 
 
-    def set_scan_and_thread_values(self, soup):
+    def set_scan_and_thread_values(self):
         """Sets the values for the current scan of the website and changes thread meta file values from initialized values
         accordingly"""
         # Get a masterlist of all posts
         self.all_post_ids = []
-        original_post = soup.find(class_="post op")
+        original_post = self.soup.find(class_="post op")
         self.all_post_ids.append(original_post.find(class_="intro").get("id"))
 
-        for reply in soup.find_all(class_="post reply"):
+        for reply in self.soup.find_all(class_="post reply"):
             self.all_post_ids.append(reply.find(class_="intro").get("id"))
 
         # Get the title of the website for any use in update_site_meta()
-        meta_keywords = soup.find("meta", attrs={"name": "keywords"})
+        meta_keywords = self.soup.find("meta", attrs={"name": "keywords"})
         if meta_keywords:
             keywords = meta_keywords["content"]
         else:
@@ -65,7 +68,7 @@ class MetaStatHandler:
         self.num_total_posts += self.num_all_posts
         self.num_lost_posts += self.num_new_lost_posts
     
-    def set_site_values(self, site_data, new_thread):
+    def set_site_values(self, site_data: dict, new_thread: bool):
         """If there is a site meta file already, it'll grab the appropriate values then update them using new numbers
         retrieved from set_scan_and_thread_values(); else set them to 0. If new_thread, num_sitewide_threads += 1"""
         if "num_sitewide_threads" in site_data:
@@ -115,7 +118,7 @@ class MetaStatHandler:
             "num_sitewide_dist_posts" : self.num_sitewide_dist_posts
         }
     
-    def update_site_meta(self, new_thread):
+    def update_site_meta(self, new_thread: bool):
         """Call after setting scan and thread values; accesses and updates site meta file with appropriate stats from
         get_site_meta()"""
         site_meta = "./data/crystal.cafe/" + self.site_title + "_meta.json"

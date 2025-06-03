@@ -38,8 +38,8 @@ class MasterVersionGenerator:
         self.master_logger.setLevel(logging.INFO)
         
         #TODO: fix logging for master vers gen.
+        
         #File handler
-
         master_handler = logging.FileHandler(master_log_filename, mode='w')
 
         #Log formatter

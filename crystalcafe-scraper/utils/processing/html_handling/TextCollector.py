@@ -31,7 +31,7 @@ class TextCollector:
         self.file_name = "content_" + self.threadNumber + ".json"
         self.file_path = os.path.join(self.scan_folder_path, self.file_name)
 
-    def extract_images(self, post):
+    def extract_images(self, post) -> list[str]:
         """Extracts image links from a given post and returns them as an array."""
         image_links = []
 
@@ -42,11 +42,11 @@ class TextCollector:
                 image_links.append("https://crystal.cafe" + src)
         return image_links
 
-    def extract_text(self, post):
+    def extract_text(self, post: str) -> str:
         """Extracts text from a given post and returns it as a string."""
         return post.get_text()
 
-    def extract_datetime(self, post):
+    def extract_datetime(self, post) -> str:
         """Extracts datetime from a given post"""
         post_date = post.find(class_="post_no date-link")
         datetime_str = post_date.find("time")["datetime"]
@@ -60,10 +60,10 @@ class TextCollector:
 
     def extract_original_post(self):
         """Outputs content from original post as a dictionary"""
-        date = self.extract_datetime(self.originalPost)
-        original_post_body = self.originalPost.find(class_="body")
-        links_to_other_posts = self.extract_replied_posts_ids(original_post_body)
-        links = []
+        date: str = self.extract_datetime(self.originalPost)
+        original_post_body: str = self.originalPost.find(class_="body")
+        links_to_other_posts: list[str] = self.extract_replied_posts_ids(original_post_body)
+        links: list[str] = []
 
         original_content = {
             "post_id": self.originalPost.find(class_="intro").get("id"),
@@ -83,7 +83,7 @@ class TextCollector:
         original_content["replied_thread_ids"] = links
         return original_content
 
-    def extract_replied_posts_ids(self, post):
+    def extract_replied_posts_ids(self, post: str) -> list[str]:
         """Extracts the ID of a post a user replies to."""
         links_to_other_posts = post.find_all("a", attrs={"href": re.compile("^/")})
         # Array that houses reply ids to other posts.
@@ -93,12 +93,12 @@ class TextCollector:
 
         return links
 
-    def extract_replies(self):
+    def extract_replies(self) -> dict:
         """Outputs replies as a dictionary"""
         replies = {}
         for reply in self.postReplies:
             date = self.extract_datetime(reply)
-            reply_body = reply.find("div", class_="body")
+            reply_body: str = reply.find("div", class_="body")
             links = self.extract_replied_posts_ids(reply_body)
 
             # If there is no link to another post, content is as usual. Otherwise, strip the link from the text.
@@ -124,7 +124,7 @@ class TextCollector:
 
         return replies
 
-    def get_thread_contents(self):
+    def get_thread_contents(self) -> dict:
         """Returns thread contents as a JSON"""
         original_post = self.extract_original_post()
         replies = self.extract_replies()
@@ -137,7 +137,7 @@ class TextCollector:
 
         return thread_contents
       
-    def write_thread(self):
+    def write_thread(self) -> None:
         """Opens a writeable text file, writes related headers and original post content on it and then closes file."""
         with open(self.file_path, "w", encoding="utf-8") as f:
             json.dump(self.get_thread_contents(), f, indent=3, ensure_ascii=False)

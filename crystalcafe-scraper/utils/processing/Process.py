@@ -101,6 +101,9 @@ class Process:
             self.scan_folder_path.format(id, self.scan_time),
             self.thread_folder_path.format(id)
         )
+        meta.get_site_meta()
+        logging.info(f"Updated current site metadata") #TODO: specify site name w params
+
         meta.get_scan_meta()
         logging.info(f"Saved current scan metadata for thread #{id}")
 
