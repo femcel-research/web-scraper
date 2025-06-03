@@ -28,6 +28,7 @@ class SnapshotMetaGenerator:
         self.original_post: dict = self.content_json["original_post"]
         self.replies: dict = self.content_json["replies"]
 
+    # Helper functions:
     def calculate_num_words(self) -> int:
         """
          Calculates total number of words in a thread.
@@ -90,6 +91,16 @@ class SnapshotMetaGenerator:
             all_post_dates.add(reply["date_posted"])
         return all_post_dates
 
+    def meta_dump(self, metadata: dict) -> None:
+        """Dumps website metadata into a JSON file.
+
+        Args:
+            metadata (dict): Dictionary containing metadata values.
+        """
+        with open(self.meta_file_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+
+    # Main method:
     def content_to_meta(self) -> None:
         """
         Transfers data from thread contents to a metafile.
@@ -129,12 +140,3 @@ class SnapshotMetaGenerator:
         }
 
         self.meta_dump(metadata)
-
-    def meta_dump(self, metadata: dict) -> None:
-        """Dumps website metadata into a JSON file.
-
-        Args:
-            metadata (dict): Dictionary containing metadata values.
-        """
-        with open(self.meta_file_path, "w", encoding="utf-8") as f:
-            json.dump(metadata, f, indent=2, ensure_ascii=False)
