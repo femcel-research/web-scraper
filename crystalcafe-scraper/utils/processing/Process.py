@@ -12,7 +12,7 @@ from htmldate import find_date
 # Utilities
 from utils.scraping_handling import HomePageScraper
 from .html_handling.HTMLCollector import HTMLCollector
-from .html_handling.TextCollector import TextCollector
+from .html_handling.ContentCollector import ContentCollector
 from .html_handling.MasterVersionGenerator import MasterVersionGenerator
 from .meta_handling.MetaCollector import MetaCollector
 
@@ -108,7 +108,7 @@ class Process:
         logging.info(f"Saved current scan metadata for thread #{id}")
 
         # JSON current scan thread content file
-        content = TextCollector(
+        content = ContentCollector(
             html_soup, self.scan_folder_path.format(id, self.scan_time)
         )
         content.write_thread()

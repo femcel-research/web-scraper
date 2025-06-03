@@ -24,30 +24,7 @@ class MetaStatHandler:
             self.num_total_posts = 0 
             self.num_lost_posts = 0 
 
-    def set_scan_and_thread_values(self):
-        """Sets the values for the current scan of the website and changes thread meta file values from initialized values
-        accordingly"""
-        # Get a masterlist of all posts
-        self.all_post_ids = []
-        original_post = self.soup.find(class_="post op")
-        self.all_post_ids.append(original_post.find(class_="intro").get("id"))
 
-        for reply in self.soup.find_all(class_="post reply"):
-            self.all_post_ids.append(reply.find(class_="intro").get("id"))
-
-        # Get the title of the website for any use in update_site_meta()
-        meta_keywords = self.soup.find("meta", attrs={"name": "keywords"})
-        if meta_keywords:
-            keywords = meta_keywords["content"]
-        else:
-            keywords = ""
-        # self.site_title = keywords.split(",")[0]
-        
-        self.site_title = "crystal.cafe"
-        
-        self.new_post_ids = []
-        self.new_lost_posts = []
-        self.num_new_lost_posts = 0
 
         # Make a list of all post_ids that aren't already in dist_post_ids in thread meta file
         for post_id in self.all_post_ids:
@@ -86,29 +63,7 @@ class MetaStatHandler:
 
         self.num_sitewide_total_posts += self.num_all_posts
         self.num_sitewide_dist_posts += self.num_dist_posts
-
-    def get_thread_meta(self):
-        """Returns a dictionary for a JSON file of dist_post_ids, lost_post_ids, num_dist_posts
-        num_total_posts, num_lost_posts"""
-        return {
-            "dist_post_ids" : self.dist_post_ids,
-            "lost_post_ids" : self.lost_post_ids,
-            "num_dist_posts" : self.num_dist_posts,
-            "num_total_posts" : self.num_total_posts,
-            "num_lost_posts" : self.num_lost_posts
-        }
-    
-    def get_scan_meta(self):
-        """Returns a dictionary for a JSON file of all_post_ids, new_post_ids, new_lost_posts
-        num_all_posts, num_new_posts, num_new_lost_posts"""
-        return {
-            "all_post_ids" : self.all_post_ids,
-            "new_post_ids" : self.new_post_ids,
-            "new_lost_posts" : self.new_lost_posts,
-            "num_all_posts" : self.num_all_posts,
-            "num_new_posts" : self.num_new_posts,
-            "num_new_lost_posts" : self.num_new_lost_posts
-        }
+ 
     
     def get_site_meta(self):
         """Returns a dictionary for a JSON file of num_sitewide_threads, num_sitewide_total_posts, num_sitewide_dist_posts"""

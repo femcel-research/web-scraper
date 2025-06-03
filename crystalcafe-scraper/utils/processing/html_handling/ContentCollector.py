@@ -1,34 +1,32 @@
 from datetime import datetime
 from bs4 import BeautifulSoup
-from .MasterVersionGenerator import MasterVersionGenerator
-import requests
 import json
 import os
 import re
 
 
-class TextCollector:
-    def __init__(self, soup, scan_folder_path):
+class ContentCollector:
+    def __init__(self, soup: BeautifulSoup, scan_folder_path: str):
 
         # Creates a soup object.
         self.soup = soup
 
         # Returns top portion of original post
-        self.threadIntro = soup.find(class_="intro")
-        self.threadNumber = soup.find(class_="intro").get("id")
+        self.thread_intro: str = soup.find(class_="intro")
+        self.thread_id: str = soup.find(class_="intro").get("id")
 
         # Returns original post.
-        self.originalPost = soup.find(class_="post op")
+        self.originalPost: str = soup.find(class_="post op")
 
         # Variable holds the ID of the original post.
-        self.originalPostID = self.threadIntro["id"]
+        self.originalPostID: str = self.thread_intro["id"]
 
         # Finds every page element with the class "post reply" and returns it in an array.
-        self.postReplies = soup.find_all(class_="post reply")
-        
+        self.postReplies: list[str] = soup.find_all(class_="post reply")
+
         # Directory variables
         self.scan_folder_path = scan_folder_path
-        self.file_name = "content_" + self.threadNumber + ".json"
+        self.file_name = "content_" + self.thread_id + ".json"
         self.file_path = os.path.join(self.scan_folder_path, self.file_name)
 
     def extract_images(self, post) -> list[str]:
@@ -58,7 +56,7 @@ class TextCollector:
         formatted_dt = dt_obj.strftime("%Y-%m-%dT%H:%M:%S")
         return formatted_dt
 
-    def extract_original_post(self):
+    def extract_original_post(self) -> dict:
         """Outputs content from original post as a dictionary"""
         date: str = self.extract_datetime(self.originalPost)
         original_post_body: str = self.originalPost.find(class_="body")
@@ -126,17 +124,19 @@ class TextCollector:
 
     def get_thread_contents(self) -> dict:
         """Returns thread contents as a JSON"""
-        original_post = self.extract_original_post()
-        replies = self.extract_replies()
+
+        # OP and replies
+        original_post: dict = self.extract_original_post()
+        replies: dict = self.extract_replies()
 
         thread_contents = {
-            "thread_number": self.threadNumber,
+            "thread_number": self.thread_id,
             "original_post": original_post,
             "replies": replies,
         }
 
         return thread_contents
-      
+
     def write_thread(self) -> None:
         """Opens a writeable text file, writes related headers and original post content on it and then closes file."""
         with open(self.file_path, "w", encoding="utf-8") as f:

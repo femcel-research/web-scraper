@@ -41,7 +41,7 @@ class MetaCollector:
         datefinder = DateFinder(html)
         return datefinder.date_to_JSON()
 
-    def page_info_to_JSON(self):
+    def page_info_to_JSON(self) -> dict:
         """Captures page URL, title, description, keywords, site info"""
 
         # Splits board and thread title
@@ -60,6 +60,11 @@ class MetaCollector:
         }
         return info
 
+    def meta_dump(self, metadata) -> None:
+        """Dumps website metadata into a JSON file; if is_thread_meta, dumps thread values, else updates site_meta and dumps scan values"""
+        with open(self.file_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+
     def get_scan_meta(self) -> None:
         """Dumps scan values into a JSON file"""
 
@@ -76,6 +81,8 @@ class MetaCollector:
         # Generates a dictionary containing the meta data of the thread scan
         scan_meta_stats: dict = self.stat_handler.get_scan_meta()
         metadata = {**self.page_info_to_JSON(), **dates, **scan_meta_stats}
+
+        # Dumps into meta_*.json
         self.meta_dump(metadata)
 
     def get_thread_meta(self) -> None:
@@ -101,9 +108,9 @@ class MetaCollector:
         """Captures site URL, description, keywords"""
 
         # Pathing
-        site_title = "crystal.cafe" #TODO: abstract site name
-        data_path = os.path.join("./data", site_title) 
-        self.file_name =  site_title + "_meta.json"
+        site_title = "crystal.cafe"  # TODO: abstract site name
+        data_path = os.path.join("./data", site_title)
+        self.file_name = site_title + "_meta.json"
         self.file_path = os.path.join(data_path, self.file_name)
 
         # If meta keywords has content create a variable with that content, otherwise set to empty string
@@ -129,8 +136,3 @@ class MetaCollector:
 
         # Dump into {site_title}_meta.json #TODO abstract with params
         self.meta_dump(metadata)
-
-    def meta_dump(self, metadata) -> None:
-        """Dumps website metadata into a JSON file; if is_thread_meta, dumps thread values, else updates site_meta and dumps scan values"""
-        with open(self.file_path, "w", encoding="utf-8") as f:
-            json.dump(metadata, f, indent=2, ensure_ascii=False)

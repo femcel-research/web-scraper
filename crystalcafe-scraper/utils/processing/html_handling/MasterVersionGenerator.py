@@ -1,15 +1,11 @@
 from datetime import datetime
 import json
-from string import Template
-from bs4 import BeautifulSoup
-from utils.processing.meta_handling.MetaStatHandler import MetaStatHandler
 import logging
 import os
 
 
 class MasterVersionGenerator:
-    # new version
-    #TODO move logging to diff part of pipeline or use logger as arg?
+    "Generates a master version containing OP and all replies, including deleted ones."
     def __init__(self, thread_contents_json, thread_meta, id, folder_path):
         # File directory info
         self.thread_number = id
@@ -34,32 +30,31 @@ class MasterVersionGenerator:
         os.makedirs(log_dir, exist_ok=True)
         master_log_filename = os.path.join(log_dir, f"{self.scan_time}.log")
 
-        self.master_logger = logging.getLogger('Master_Thread')
+        self.master_logger = logging.getLogger("Master_Thread")
         self.master_logger.setLevel(logging.INFO)
-        
-        #TODO: fix logging for master vers gen.
-        
-        #File handler
-        master_handler = logging.FileHandler(master_log_filename, mode='w')
 
-        #Log formatter
+        # TODO: fix logging for master vers gen.
+
+        # File handler
+        master_handler = logging.FileHandler(master_log_filename, mode="w")
+
+        # Log formatter
         formatter = logging.Formatter(
-            "%(asctime)s %(levelname)s: %(message)s", 
-            datefmt="%Y-%m-%dT%H:%M:%S"
+            "%(asctime)s %(levelname)s: %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"
         )
         master_handler.setFormatter(formatter)
 
-        #Log handler
+        # Log handler
         self.master_logger.addHandler(master_handler)
 
-    def check_if_post_lost(self, post_id):
+    def check_if_post_lost(self, post_id) -> bool:
         """Checks if given post was deleted"""
         if post_id in self.lost_ids_set:
             logging.info(f"Post ID {post_id} was deleted from the original thread")
             return True
         return False
 
-    def generate_dict(self):
+    def generate_dict(self) -> dict:
         """Generates a dictionary containing all posts on a given thread"""
         all_replies = {}
 
@@ -69,21 +64,29 @@ class MasterVersionGenerator:
             "thread_number": self.thread_number,
             "original_post": self.original_post,
         }
-        
-        # Updates scan times
+
+        # Previous scan time is updated to the date of last scan
         previous_scan_time = thread_contents["date_of_latest_scan"]
         thread_contents.update({"date_of_previous_scan": previous_scan_time})
-        self.master_logger.debug(f"Date of previous scan has been updated to: {previous_scan_time}")
+        self.master_logger.debug(
+            f"Date of previous scan has been updated to: {previous_scan_time}"
+        )
 
+        # Date of latest scan is updated to current time
         current_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
         thread_contents.update({"date_of_latest_scan": current_time})
-        self.master_logger.debug(f"Date of latest scan has been updated to: {current_time}")
-        
-        # Adds deletion marker if needed
+        self.master_logger.debug(
+            f"Date of latest scan has been updated to: {current_time}"
+        )
+
+        # For each reply, check if the id is lost, if so mark boolean as true
         for reply in self.replies.values():
             reply_id = reply.get("post_id")
             if self.check_if_post_lost(reply_id):
+                # Key-value pair only appears if this is true
                 reply.update({"post_lost": self.check_if_post_lost(reply_id)})
+
+            # Adds reply id and reply contents to a dictionary containing all replies
             all_replies[reply_id] = reply
             logging.info(f"Reply {reply_id} has been added to the master thread.")
 
@@ -92,7 +95,7 @@ class MasterVersionGenerator:
         self.master_logger.info("Updated replies.")
         return thread_contents
 
-    def write_master_thread(self):
+    def write_master_thread(self) -> None:
         """Opens a writeable text file, writes related headers and original post content on it and then closes file."""
         try:
             with open(self.file_path, "r") as f:
@@ -106,7 +109,9 @@ class MasterVersionGenerator:
                 f"Master thread does not exist for thread #{self.thread_number}"
             )
             existing_data = {"replies": {}}
-            self.master_logger.info(f"Master thread created for thread #{self.thread_number}")
+            self.master_logger.info(
+                f"Master thread created for thread #{self.thread_number}"
+            )
 
         # Generate the updated thread dictionary
         thread_contents = self.generate_dict()
