@@ -2,87 +2,36 @@ import json
 import os
 
 from bs4 import BeautifulSoup
+from .ThreadScanStats import ThreadScanStats
+from .SiteStats import SiteStats
 
 
 class MetaStatHandler:
     def __init__(self, thread_meta_path: str, soup: BeautifulSoup):
         """Initializes with thread meta stats if it exists already; otherwise sets everything to 0"""
         self.soup = soup
-        if os.path.exists(thread_meta_path):
-            with open(thread_meta_path) as json_file:
-                self.data = json.load(json_file)
+        self.thread_meta_path = thread_meta_path
+        self.site_title = "crystal.cafe"  # TODO: abstract w params
+        self.site_meta_file = os.path.join(
+            "./data", self.site_title, f"{self.site_title}_meta.json")
+        self.is_new_thread = not os.path.exists(thread_meta_path)
+        self.thread_stats = ThreadScanStats(self.thread_meta_path)
+        self.site_stats = SiteStats(self.site_meta_file, self.site_title)
 
-            self.dist_post_ids = self.data["dist_post_ids"]  # []; all distinctive post_ids across all scans
-            self.lost_post_ids = self.data["lost_post_ids"]  # []; everytime a post is in dist_post_ids but not all_post_ids && not in lost_post_ids already, add here
-            self.num_dist_posts = self.data["num_dist_posts"] # += w/ num_new_posts
-            self.num_total_posts = self.data["num_total_posts"]  # Posts across all scans; += w/ num_all_posts    
-            self.num_lost_posts = self.data["num_lost_posts"]  # Posts that formerly appeared, but did not in current scan
-        else: 
-            self.dist_post_ids = []
-            self.lost_post_ids = []
-            self.num_dist_posts = 0 
-            self.num_total_posts = 0 
-            self.num_lost_posts = 0 
+    def collect_thread_stats(self):
+        self.thread_stats.collect_scan_data(self.soup)
+        self.thread_stats.save_thread_stats()
 
+    def collect_site_stats(self):
+        self.site_stats.update_from_thread_scan(
+            self.thread_stats, self.is_new_thread)
+        self.site_stats.save_site_stats()
 
+    def get_scan_stats(self) -> dict:
+        return self.thread_stats.get_scan_stats()
 
-        # Make a list of all post_ids that aren't already in dist_post_ids in thread meta file
-        for post_id in self.all_post_ids:
-            if post_id not in self.dist_post_ids:
-                self.new_post_ids.append(post_id)
-                self.dist_post_ids.append(post_id)
-        
-        # Make a list/tally the post_ids that were once added to dist_post_ids, but aren't in the current scan
-        for post_id in self.dist_post_ids:
-            if post_id not in self.all_post_ids and post_id not in self.lost_post_ids: 
-                self.new_lost_posts.append(post_id)
-                self.lost_post_ids.append(post_id)
-                self.num_new_lost_posts += 1
+    def get_thread_stats(self) -> dict:
+        return self.thread_stats.get_thread_stats()
 
-        self.num_all_posts = len(self.all_post_ids)
-        self.num_new_posts = len(self.new_post_ids)
-        self.num_dist_posts += self.num_new_posts
-        self.num_total_posts += self.num_all_posts
-        self.num_lost_posts += self.num_new_lost_posts
-    
-    def set_site_values(self, site_data: dict, new_thread: bool):
-        """If there is a site meta file already, it'll grab the appropriate values then update them using new numbers
-        retrieved from set_scan_and_thread_values(); else set them to 0. If new_thread, num_sitewide_threads += 1"""
-        if "num_sitewide_threads" in site_data:
-            self.num_sitewide_threads = site_data["num_sitewide_threads"]
-            self.num_sitewide_total_posts = site_data["num_sitewide_total_posts"]
-            self.num_sitewide_dist_posts = site_data["num_sitewide_dist_posts"]
-
-        else: 
-            self.num_sitewide_threads = 0
-            self.num_sitewide_total_posts = 0
-            self.num_sitewide_dist_posts = 0
-        
-        if new_thread:
-            self.num_sitewide_threads += 1  
-
-        self.num_sitewide_total_posts += self.num_all_posts
-        self.num_sitewide_dist_posts += self.num_dist_posts
- 
-    
-    def get_site_meta(self):
-        """Returns a dictionary for a JSON file of num_sitewide_threads, num_sitewide_total_posts, num_sitewide_dist_posts"""
-        return {
-            "num_sitewide_threads" : self.num_sitewide_threads,
-            "num_sitewide_total_posts" : self.num_sitewide_total_posts,
-            "num_sitewide_dist_posts" : self.num_sitewide_dist_posts
-        }
-    
-    def update_site_meta(self, new_thread: bool):
-        """Call after setting scan and thread values; accesses and updates site meta file with appropriate stats from
-        get_site_meta()"""
-        site_meta = "./data/crystal.cafe/" + self.site_title + "_meta.json"
-
-        with open(site_meta, 'r+') as site_json_file:
-            site_data = json.load(site_json_file)
-            self.set_site_values(site_data, new_thread)
-            # Update existing values and add new ones
-            site_data.update(self.get_site_meta())
-            site_json_file.seek(0)
-            json.dump(site_data, site_json_file, indent=4)
-            site_json_file.truncate()
+    def get_site_stats(self) -> dict:
+        return self.site_stats.get_site_stats()

@@ -76,7 +76,8 @@ class Process:
 
     def log_processed_url(self, url):
         """Save list of processed URLs to txt file in data/processed"""
-        processed_txt_file = Path("./data/crystal.cafe/processed/processed.txt")
+        processed_txt_file = Path(
+            "./data/crystal.cafe/processed/processed.txt")
         with open(processed_txt_file, "a") as file:
             file.write(url + "\n")
         logging.info(f"Logging {url} in processed.txt")
@@ -102,7 +103,8 @@ class Process:
             self.thread_folder_path.format(id)
         )
         meta.get_site_meta()
-        logging.info(f"Updated current site metadata") #TODO: specify site name w params
+        # TODO: specify site name w params
+        logging.info(f"Updated current site metadata")
 
         meta.get_scan_meta()
         logging.info(f"Saved current scan metadata for thread #{id}")
@@ -121,6 +123,9 @@ class Process:
         # (thread_meta.meta_dump(True))
         meta.get_thread_meta()
         logging.info(f"Saved/updated thread metadata for thread #{id}")
+
+        meta.stat_handler.collect_site_stats()
+        logging.info(f"Updated site-wide stats based on thread #{id}")
 
         # JSON master version file
         # TODO: probably a cleaner way to do this
@@ -147,7 +152,8 @@ class Process:
         logging.info("Made folder for current scan")
 
         # HTML current scan file
-        thread = HTMLCollector(soup, self.scan_folder_path.format(id, self.scan_time))
+        thread = HTMLCollector(
+            soup, self.scan_folder_path.format(id, self.scan_time))
         (thread.saveHTML())
         logging.info(f"Saved HTML info for thread #{id}")
         thread_html = thread.getHTML()
@@ -186,7 +192,8 @@ class Process:
             logging.info(f"An thread_meta_{id}.json exists for thread #{id}")
             return True
         else:
-            logging.info(f"An thread_meta_{id}.json does not exist for thread #{id}")
+            logging.info(
+                f"An thread_meta_{id}.json does not exist for thread #{id}")
             return False
 
     def check_date_updated(self, page, id):
@@ -208,7 +215,8 @@ class Process:
 
         # Log message
         logging.info(f"Current update date for {id}: {str(update_date)}")
-        logging.info(f"Previous update date for {id}: {str(previous_update_date)}")
+        logging.info(
+            f"Previous update date for {id}: {str(previous_update_date)}")
 
         if update_date == previous_update_date:
             logging.info("update_dates match")  # Log message
@@ -216,7 +224,8 @@ class Process:
             return True
         else:
             logging.info("update_dates do not match")  # Log message
-            logging.info(f"The previous scan is not up to date for thread #{id}")
+            logging.info(
+                f"The previous scan is not up to date for thread #{id}")
             return False
 
     def process_existing_files(self):
@@ -231,16 +240,22 @@ class Process:
 
             # If the thread folder is a directory, find its newest .html and meta file and use that to reprocess the thread.
             if os.path.isdir(thread_folder_path):
-                html_search_path = os.path.join(thread_folder_path, "**", html_pattern)
-                matching_html_files = glob.glob(html_search_path, recursive=True)
+                html_search_path = os.path.join(
+                    thread_folder_path, "**", html_pattern)
+                matching_html_files = glob.glob(
+                    html_search_path, recursive=True)
 
-                meta_search_path = os.path.join(thread_folder_path, "**", meta_pattern)
-                matching_meta_files = glob.glob(meta_search_path, recursive=True)
+                meta_search_path = os.path.join(
+                    thread_folder_path, "**", meta_pattern)
+                matching_meta_files = glob.glob(
+                    meta_search_path, recursive=True)
 
                 # If the subfolder has an html file, process. Done to prevent processing of non-thread subfolders (i.e logs, processed, etc.)
                 if len(matching_html_files) > 0:
-                    newest_html = matching_html_files[len(matching_html_files) - 1]
-                    newest_meta = matching_meta_files[len(matching_meta_files) - 1]
+                    newest_html = matching_html_files[len(
+                        matching_html_files) - 1]
+                    newest_meta = matching_meta_files[len(
+                        matching_meta_files) - 1]
                     with open(newest_html, "r") as file:
                         html = file.read()
 
@@ -303,4 +318,5 @@ class Process:
         logging.info(
             f"Of the {str(len(self.url_list))} urls, {str(working_urls)} worked and {str(failed_urls)} did not"
         )
-        logging.info(f"{str(self.successful_scans)} succesful scans were performed")
+        logging.info(
+            f"{str(self.successful_scans)} succesful scans were performed")

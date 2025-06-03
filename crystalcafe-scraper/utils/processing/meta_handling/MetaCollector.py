@@ -6,7 +6,7 @@ import json
 import os
 import re
 from .DateFinder import DateFinder
-from .MetaStatHandler import MetaStatHandler
+from .statistics_handling.MetaStatHandler import MetaStatHandler
 
 
 # add automatic html, meta, thread folders
@@ -32,9 +32,9 @@ class MetaCollector:
         self.thread_folder_path = thread_folder_path
         self.id = soup.find(class_="intro").get("id")
 
-        json_path = self.THREAD_META_PATH.substitute(t=id)
+        json_path = self.THREAD_META_PATH.substitute(t=self.id)
         self.stat_handler = MetaStatHandler(json_path, self.soup)
-        self.stat_handler.set_scan_and_thread_values()
+        self.stat_handler.collect_thread_stats()
 
     def get_dates(self):
         html: str = str(self.soup)
@@ -72,14 +72,11 @@ class MetaCollector:
         file_name = f"meta_{self.id}.json"
         self.file_path = os.path.join(self.scan_folder_path, file_name)
 
-        # Not indicative of a new thread, thus number of sitewide threads is not incremented.
-        self.stat_handler.update_site_meta(new_thread=False)
-
         # Gathers date of publishing, date updated, and date scraped into a dict
         dates: dict = self.get_dates()
 
         # Generates a dictionary containing the meta data of the thread scan
-        scan_meta_stats: dict = self.stat_handler.get_scan_meta()
+        scan_meta_stats: dict = self.stat_handler.get_scan_stats()
         metadata = {**self.page_info_to_JSON(), **dates, **scan_meta_stats}
 
         # Dumps into meta_*.json
@@ -92,13 +89,10 @@ class MetaCollector:
         file_name = f"thread_meta_{self.id}.json"
         self.file_path = os.path.join(self.thread_folder_path, file_name)
 
-        # Indicative of a new thread, thus number of sitewide threads is incremented.
-        self.stat_handler.update_site_meta(new_thread=True)
-
         # Gathers date of publishing, date updated, and date scraped into a dict
         dates: dict = self.get_dates()
 
-        thread_meta_stats: dict = self.stat_handler.get_thread_meta()
+        thread_meta_stats: dict = self.stat_handler.get_thread_stats()
         metadata = {**self.page_info_to_JSON(), **dates, **thread_meta_stats}
 
         # Dumps into thread_meta*.json
@@ -121,7 +115,8 @@ class MetaCollector:
             keywords = ""
 
         # If meta description has content create a variable with that content, otherwise set to empty string
-        meta_description = self.soup.find("meta", attrs={"name": "description"})
+        meta_description = self.soup.find(
+            "meta", attrs={"name": "description"})
         if meta_description:
             description = meta_description["content"]
         else:
