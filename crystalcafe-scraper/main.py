@@ -1,8 +1,8 @@
-from utils.processing.Process import Process
+from utils.parsing.Parse import Parse
 from utils import PortionRetriever
 import sys
 
-process = Process("https://crystal.cafe/")
-process.process_existing_files()
-process.process_current_list()
+parse = Parse("https://crystal.cafe/")
+parse.process_existing_files()
+parse.process_current_list()
 print("Complete!")

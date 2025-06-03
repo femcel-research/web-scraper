@@ -14,10 +14,11 @@ from utils.scraping_handling import HomePageScraper
 from .html_handling.HTMLCollector import HTMLCollector
 from .html_handling.ContentCollector import ContentCollector
 from .html_handling.MasterVersionGenerator import MasterVersionGenerator
+from .SoupHandling import SoupHandling
 from .meta_handling.MetaCollector import MetaCollector
 
 
-class Process:
+class Parse:
     # TODO we are going to make the test file location a variable OR COMMAND LINE ARGUMENT!
     """Takes in a homepage URL then loops through the links on it, 'processing' each one"""
 
@@ -84,65 +85,13 @@ class Process:
 
     def make_soup_object(self, page):
         if type(page) == str:
-            soup = BeautifulSoup(page, "html.parser")
-            return soup
+            soup_handler = SoupHandling(page)
+            return soup_handler.get_soup()
         else:
-            soup = BeautifulSoup(page.content, "html.parser")
-            return soup
+            soup_content_handler = SoupHandling(page.content)
+            return soup_content_handler.get_soup()
 
-    def process_html(self, url, html):
-        # Meta and Content Scans are done via the local HTML file
-        html_soup = self.make_soup_object(html)
-        id = html_soup.find(class_="intro").get("id")
-
-        # JSON current scan metadata file
-        meta = MetaCollector(
-            url,
-            html_soup,
-            self.scan_folder_path.format(id, self.scan_time),
-            self.thread_folder_path.format(id)
-        )
-        meta.get_site_meta()
-        # TODO: specify site name w params
-        logging.info(f"Updated current site metadata")
-
-        meta.get_scan_meta()
-        logging.info(f"Saved current scan metadata for thread #{id}")
-
-        # JSON current scan thread content file
-        content = ContentCollector(
-            html_soup, self.scan_folder_path.format(id, self.scan_time)
-        )
-        content.write_thread()
-        logging.info(f"Saved current thread content for thread #{id}")
-
-        # JSON thread scan metadata
-        # thread_meta = MetaCollector(
-        #     url, html, html_soup, self.thread_folder_path.format(id), True
-        # )
-        # (thread_meta.meta_dump(True))
-        meta.get_thread_meta()
-        logging.info(f"Saved/updated thread metadata for thread #{id}")
-
-        meta.stat_handler.collect_site_stats()
-        logging.info(f"Updated site-wide stats based on thread #{id}")
-
-        # JSON master version file
-        # TODO: probably a cleaner way to do this
-        thread_meta_path = os.path.join(
-            self.thread_folder_path.format(id), f"thread_meta_{id}.json"
-        )
-        with open(thread_meta_path, "r") as f:
-            thread_meta = json.load(f)
-        generator = MasterVersionGenerator(
-            content.get_thread_contents(),
-            thread_meta,
-            id,
-            self.thread_folder_path.format(id),
-        )
-        generator.write_master_thread()
-        logging.info("Generated/updated master thread for thread #" + id)
-
+    
     def make_scan_files(self, soup, url, id):
         logging.info(f"Starting new scan for thread #{id}")
         # JSON thread metadata file
