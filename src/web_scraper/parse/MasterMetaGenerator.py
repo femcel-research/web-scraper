@@ -7,23 +7,23 @@ logger = logging.getLogger(__name__)
 
 
 class MasterMetaGenerator:
-    def __init__(self, list_of_snapshot_paths: list[str]):
+    def __init__(self, list_of_meta_paths: list[str]):
         """
-        Given a list of paths to snapshot meta JSONs (gathered through Glob), a meta master JSON is generated and returned.
+        Given a list of paths to snapshot meta JSONs (gathered through Glob), a master metadata JSON is generated and saved locally.
 
         Args:
-        list_of_snapshot_paths (list[str]): List containing filepaths to snapshot meta JSONs
+        list_of_meta_paths (list[str]): List containing filepaths to snapshot meta JSONs
 
         """
-        if len(list_of_snapshot_paths) > 0:
-            self.list_of_snapshot_paths: list[str] = list_of_snapshot_paths
-            logger.info("List of snapshot paths retrieved.")
+        if len(list_of_meta_paths) > 0:
+            self.list_of_meta_paths: list[str] = list_of_meta_paths
+            logger.info("List of snapshot meta paths retrieved.")
         else:
-            logger.error("No snapshot paths found.")
-            raise IndexError("No snapshot paths found.")
+            logger.error("No snapshot meta paths found.")
+            raise IndexError("No snapshot meta paths found.")
 
     def master_meta_dump(self, metadata: dict, master_meta_filepath: str) -> None:
-        """Dumps website metadata into a JSON file.
+        """Dumps thread metadata into a JSON file.
 
         Args:
             metadata (dict): Dictionary containing metadata values.
@@ -38,9 +38,10 @@ class MasterMetaGenerator:
         """
 
         master_metadata: dict = {}
+        snapshot_folder_path: str = ""
         thread_id: str = ""
 
-        for snapshot_meta_path in self.list_of_snapshot_paths:
+        for snapshot_meta_path in self.list_of_meta_paths:
             with open(snapshot_meta_path, "r") as file:
                 data = json.load(file)
             snapshot_meta = data
@@ -78,9 +79,10 @@ class MasterMetaGenerator:
                 "num_all_words": num_all_words,
             })
 
+            snapshot_folder_path = os.path.dirname(snapshot_meta_path)
+
         # Pathing: Finds thread directory by finding parent folder of snapshot directory
         file_name = f"thread_meta{thread_id}.json"
-        snapshot_folder_path = os.path.dirname(snapshot_meta_path)
         thread_folder_path = os.path.dirname(snapshot_folder_path)
         meta_file_path = os.path.join(thread_folder_path, file_name)
         
