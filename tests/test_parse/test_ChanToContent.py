@@ -10,7 +10,10 @@ from web_scraper.parse.HTMLToContent.ChanToContent import (
 )
 from web_scraper.parse.HTMLToContent.exceptions import (
     ContentInitError,
-    ThreadIDNotFoundError
+    ThreadIDNotFoundError,
+    BoardNameAndTitleNotFoundError,
+    BoardNameAndTitleUnsupportedError,
+    DateNotFoundError
 )
 
 def test_get_thread_id_no_replace_prefix(mocker):
@@ -67,9 +70,6 @@ def test_get_thread_id_thread_id_not_found_error(mocker):
 
     html_content = b"""
     <html>
-    <head>
-        <title>/scraping/ - ChanToContent Dev Thread</title> == $0
-    </head>
     <body>
         <div class='post op'>
             <p class='intro'>
@@ -86,129 +86,97 @@ def test_get_thread_id_thread_id_not_found_error(mocker):
     # Act & Assert
     with pytest.raises(ThreadIDNotFoundError) as excinfo:
         chan_to_content.get_thread_id()
-        
+
     assert isinstance(excinfo.value, ThreadIDNotFoundError)
 
-# def test_get_board_name_and_thread_title():
-#     """Test get_board_name_and_thread_title() captures data from a soup ob."""
-#     # Arrange
-#     html_content = b"""
-#     <html>
-#     <head>
-#         <title>/scraping/ - ChanToContent Dev Thread</title> == $0
-#     </head>
-#     <body>
-#         <div id='thread_101010'>
-#             <p class='intro' id='101010'>
-#             </p>
-#         </div>
-#     </body>
-#     </html>"""
-#     thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+def test_get_board_name_and_thread_title(mocker):
+    """Test get_board_name_and_thread_title() captures data from a soup ob."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
 
-#     # Act
-#     chan_to_content = ChanToContent(
-#         datetime.now(), thread_soup, "", "", "", "", "", "")
+    html_content = b"""
+    <html>
+    <head>
+        <title>/scraping/ - ChanToContent Dev Thread</title> == $0
+    </head>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
 
-#     # Assert the thread IDs in ChanToContent is correct
-#     assert chan_to_content.board_name == "/scraping/"
-#     assert chan_to_content.thread_title == "ChanToContent Dev Thread"
+    # Act & Assert
+    assert chan_to_content.get_board_name_and_thread_title()\
+        ["board"] == "/scraping/"
+    assert chan_to_content.get_board_name_and_thread_title()\
+        ["title"] == "ChanToContent Dev Thread"
 
-# def test_get_board_name_and_thread_title_not_found_error():
-#     """Test get_board_name_and_thread_title() raises ContentInitError.
-    
-#     A ContentInitError from a BoardNameAndTitleNotFoundError should be
-#     raised.
-#     """
-#     # Arrange
-#     html_content = b"""
-#     <html>
-#     <head>
-#     </head>
-#     <body>
-#         <div class='post op'>
-#             <p class='intro'>
-#                 <a class='post_no'>
-#                 </a>
-#             </p>
-#         </div>
-#     </body>
-#     </html>"""
-#     thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+def test_get_board_name_and_thread_title_not_found_error(mocker):
+    """Test get_board_name_and_thread_title() raises BoardNameAndTitleNotFoundError."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
 
-#     # Act & Assert
-#     with pytest.raises(ContentInitError) as excinfo:
-#         chan_to_content = ChanToContent(
-#         datetime.now(), thread_soup, "", "", "", "", "", "")
+    html_content = b"""
+    <html>
+    <head>
+    </head>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
 
-#     # Assert
-#     assert isinstance(excinfo.value, ContentInitError)
-#     # Check the original exception is chained
-#     assert "Page title unable to be located" in str(excinfo.value.__cause__)
+    # Act & Assert
+    with pytest.raises(BoardNameAndTitleNotFoundError) as excinfo:
+        chan_to_content.get_board_name_and_thread_title()
 
-# def test_get_board_name_and_thread_title_unsupported_error():
-#     """Test get_board_name_and_thread_title() raises ContentInitError.
-    
-#     A ContentInitError from a BoardNameAndTitleUnsupportedError should be
-#     raised.
-#     """
-#     # Arrange
-#     html_content = b"""
-#     <html>
-#     <head>
-#         <title>/scraping/ | ChanToContent Dev Thread</title>
-#     </head>
-#     <body>
-#         <div class='post op'>
-#             <p class='intro'>
-#                 <a class='post_no'>
-#                 </a>
-#             </p>
-#         </div>
-#     </body>
-#     </html>"""
-#     thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    assert isinstance(excinfo.value, BoardNameAndTitleNotFoundError)
 
-#     # Act & Assert
-#     with pytest.raises(ContentInitError) as excinfo:
-#         chan_to_content = ChanToContent(
-#         datetime.now(), thread_soup, "", "", "", "", "", "")
+def test_get_board_name_and_thread_title_unsupported_error(mocker):
+    """Test get_board_name_and_thread_title() raises BoardNameAndTitleUnsupportedError."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
 
-#     # Assert
-#     assert isinstance(excinfo.value, ContentInitError)
-#     # Check the original exception is chained
-#     assert "Board name/title unable to be parsed." in str(
-#         excinfo.value.__cause__)
+    html_content = b"""
+    <html>
+    <head>
+        <title>/scraping/ | ChanToContent Dev Thread</title>
+    </head>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
 
-# def test_get_date_published_and_updated_not_found_error():
-#     """Test get_date_published_and_updated() raises ContentInitError.
-    
-#     A ContentInitError from a DateNotFoundError should be raised.
-#     """
-#     # Arrange
-#     html_content = b"""
-#     <html>
-#     <head>
-#         <title>/scraping/ | ChanToContent Dev Thread</title>
-#     </head>
-#     <body>
-#         <div class='post op'>
-#             <p class='intro'>
-#                 <a class='post_no'>
-#                 </a>
-#             </p>
-#         </div>
-#     </body>
-#     </html>"""
-#     thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    # Act & Assert
+    with pytest.raises(BoardNameAndTitleUnsupportedError) as excinfo:
+        chan_to_content.get_board_name_and_thread_title()
 
-#     # Act & Assert
-#     with pytest.raises(ContentInitError) as excinfo:
-#         chan_to_content = ChanToContent(
-#         datetime.now(), thread_soup, "", "", "", "", "", "")
+    assert isinstance(excinfo.value, BoardNameAndTitleUnsupportedError)
 
-#     # Assert
-#     assert isinstance(excinfo.value, ContentInitError)
-#     # Check the original exception is chained
-#     assert "Date published not found." in str(
-#         excinfo.value.__cause__)
+# TODO: There's room to add some better tests for the htmldate that is used
+# TODO: in get_date_published_and_updated(), but I would need to spend more
+# TODO: time figuring out how to best test it
+
+def test_get_date_published_and_updated_not_found_error(mocker):
+    """Test get_date_published_and_updated() raises DateNotFoundError."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <head>
+    </head>
+    <body>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+
+    # Act & Assert
+    with pytest.raises(DateNotFoundError) as excinfo:
+        chan_to_content.get_date_published_and_updated()
+
+    assert isinstance(excinfo.value, DateNotFoundError)
