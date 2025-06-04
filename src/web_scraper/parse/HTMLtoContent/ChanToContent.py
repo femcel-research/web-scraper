@@ -5,17 +5,18 @@ import os
 import re
 
 from bs4 import BeautifulSoup
+from htmldate import find_date  # Used for finding date published and date updated
 from datetime import datetime
 
-from .exceptions import ThreadIDNotFoundError, ContentInitError
-
+from .exceptions import BoardNameAndTitleNotFoundError, ThreadIDNotFoundError, \
+    ContentInitError, BoardNameAndTitleUnsupportedError, DateNotFoundError
 
 class ChanToContent:
     """Takes HTML from a chan-style thread and formats it (to a JSON)."""
     def __init__(
             self, scrape_time: datetime,
-            thread_soup: BeautifulSoup, site_dir: str,
-            op_class: str, reply_class: str, url: str,
+            thread_soup: BeautifulSoup, snapshot_url: str, site_dir: str,
+            op_class: str, reply_class: str, root_domain: str,
             post_date_location: str):
         """Given the HTML for a chan-style thread, a formatted JSON is made.
         
@@ -35,52 +36,155 @@ class ChanToContent:
         Args:
             scrape_time (datetime): Time of scrape.
             thread_soup (BeautifulSoup): HTML from a thread in a soup object.
+            snapshot_url (str): NOT a parameter, URL of the thread snapshot.
             site_dir (str): Directory for content files.
             op_class (str): Name of class for original posts.
             reply_class (str): Name of class for post replies.
-            url (str): Used as a prefix in image URLs.
+            root_domain (str): Used as a prefix in image URLs.
             post_date_location (str): Class/label string for date and time.
         """
         self.logger = logging.getLogger(__name__)
 
         self.scrape_time = scrape_time
         self.thread_soup = thread_soup
+        self.snapshot_url = snapshot_url
         self.site_dir = site_dir
         self.op_class = op_class
         self.reply_class = reply_class
-        self.url = url
+        self.root_domain = root_domain
         self.post_date_location = post_date_location
 
         self.logger.info("Beginning the process of extracting content data " \
-            "from a soup object.")
+            "from this thread snapshot's soup object.")
+        try:
+            self.board_name: str = self.get_board_name_and_thread_title()\
+                ["board"]
+            self.thread_title: str = self.get_board_name_and_thread_title()\
+                ["title"]
+        except Exception as error:
+            self.logger.error(f"Error when trying to initialize: {error}")
+            raise ContentInitError(
+                f"Error when trying to initialize: {error}") from error
         try:
             self.thread_id: str = self.get_thread_id()
         except Exception as error:
             self.logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
                 f"Error when trying to initialize: {error}") from error
+        try:
+            self.date_published: str = self.get_date_published_and_updated()\
+                ["date_published"]
+            self.date_updated: str = self.get_date_published_and_updated()\
+                ["date_updated"]
+        except Exception as error:
+            self.logger.error(f"Error when trying to initialize: {error}")
+            raise ContentInitError(
+                f"Error when trying to initialize: {error}") from error
 
-    def get_thread_id(self):
-        """Extracts a thread ID from the soup object from initialization.
+        self.logger.info(
+            "Successfully extracted and collected all content data from the "\
+                f"snapshot of thread {self.thread_id}")
+
+    def get_board_name_and_thread_title(self) -> dict:
+        """Extracts a board name/title from the initialized soup object.
+        
+        The return dictionary values are strings.
+
+        Returns:
+            A dictionary with "board" and a "title" keys.
+
+        Raises:
+            BoardNameAndTitleNotFoundError: If a board name/title isn't found.
+        """
+        self.logger.debug(f"Searching for a board name/title")
+        try:
+            page_title: str = self.thread_soup.title.string
+        except:
+            self.logger.error("Page title unable to be located")
+            raise BoardNameAndTitleNotFoundError(
+                f"Page title unable to be located")
+        if page_title is None:
+            self.logger.error("Page title unable to be located")
+            raise BoardNameAndTitleNotFoundError(
+                f"Page title unable to be located")
+        else:
+            if "-" in page_title:
+                # Splits board and thread title
+                # The format is ubiquitously `/board/ - Title`
+                board_and_title = re.split("[-]", page_title)
+                for x in range(len(board_and_title)):
+                    board_and_title[x] = board_and_title[x].strip()
+                board = board_and_title[0]
+                title = board_and_title[1]
+                self.logger.debug("Board and title successfully found:"\
+                    f"{board}, {title}")
+                return {"board": board, "title": title}
+            else:
+                self.logger.error("Board name/title unable to be parsed.")
+                raise BoardNameAndTitleUnsupportedError(
+                    "Board name/title unable to be parsed.")
+
+    def get_thread_id(self) -> str:
+        """Extracts a thread ID from the initialized soup object.
         
         Raises:
             ThreadIDNotFoundError: If a thread ID cannot be found.
         """
-        self.logger.info(f"Searching for a thread ID")
-        thread_id = self.thread_soup.find(class_="intro").get("id")
+        self.logger.debug(f"Searching for a thread ID")
+        try:
+            thread_id = self.thread_soup.find(class_="intro").get("id")
+        except:
+                self.logger.error("Thread ID unable to be located")
+                raise ThreadIDNotFoundError("Thread ID unable to be located")
         if thread_id is None:
             try:
                 thread_id = self.thread_soup.find(class_="intro").find("a")\
                     .get("id").replace("post_no_", "")
-                self.logger.info(f"ID successfully found: {thread_id}")
+                self.logger.debug(f"ID successfully found: {thread_id}")
                 return thread_id
             except:
                 self.logger.error("Thread ID unable to be located")
                 raise ThreadIDNotFoundError("Thread ID unable to be located")
         else:
-            self.logger.info(f"ID successfully found: {thread_id}")
+            self.logger.debug(f"ID successfully found: {thread_id}")
             return thread_id
+        
+    def get_date_published_and_updated(self) -> dict:
+        """Captures date published and date updated from the HTML.
 
+        The return dictionary values are strings.
+        
+        Returns:
+            A dictionary with "date_published" and a "date_updated" keys.
+
+        Raises:
+            BoardNameAndTitleNotFoundError: If a board name/title isn't found.
+        """
+        self.logger.debug(f"Searching for publish and update dates")
+        html = str(self.thread_soup)  # Retrieves HTML from soup object
+        # Uses htmldate lib to find original and update dates
+        date_published = find_date(
+            html,
+            extensive_search=True,
+            original_date=True,
+            outputformat="%Y-%m-%dT%H:%M:%S",
+        )
+        if date_published is None:
+            self.logger.error("Date published not found.")
+            raise DateNotFoundError("Date published not found.")
+        date_updated = find_date(
+            html,
+            extensive_search=False,
+            original_date=False,
+            outputformat="%Y-%m-%dT%H:%M:%S",
+        )
+        if date_updated is None:
+            self.logger.error("Date updated not found.")
+            raise DateNotFoundError("Date updated not found.")
+        self.logger.debug("Date published and date updated successfully "\
+            f"found: {date_published}, {date_updated}")
+        return {"date_published": date_published, "date_updated": date_updated}
+    
     def extract_images(self, post, url):
             """Extracts image links from a given post and returns an array.
             
