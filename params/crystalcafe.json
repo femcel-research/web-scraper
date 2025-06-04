@@ -1,0 +1,12 @@
+{
+    "hp_url": "https://crystal.cafe",
+    "domain": "crystal.cafe",
+    "container": "box right",
+    "data_dir": "./data",
+    "site_dir": "./data/crystalcafe",
+    "id_class": "intro",
+    "op_class": "post op",
+    "reply_class": "post reply",
+    "url": "https://crystal.cafe",
+    "post_date_location": "post_no date-link"
+}
