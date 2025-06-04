@@ -5,10 +5,11 @@ import os
 import re
 
 from bs4 import BeautifulSoup
+from htmldate import find_date  # Used for finding date published and date updated
 from datetime import datetime
 
 from .exceptions import BoardNameAndTitleNotFoundError, ThreadIDNotFoundError, \
-    ContentInitError, BoardNameAndTitleUnsupportedError
+    ContentInitError, BoardNameAndTitleUnsupportedError, DateNotFoundError
 
 class ChanToContent:
     """Takes HTML from a chan-style thread and formats it (to a JSON)."""
@@ -70,6 +71,16 @@ class ChanToContent:
             self.logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
                 f"Error when trying to initialize: {error}") from error
+        try:
+            self.date_published: str = self.get_date_published_and_updated()\
+                ["date_published"]
+            self.date_updated: str = self.get_date_published_and_updated()\
+                ["date_updated"]
+        except Exception as error:
+            self.logger.error(f"Error when trying to initialize: {error}")
+            raise ContentInitError(
+                f"Error when trying to initialize: {error}") from error
+
         self.logger.info(
             "Successfully extracted and collected all content data from the "\
                 f"snapshot of thread {self.thread_id}")
@@ -77,8 +88,10 @@ class ChanToContent:
     def get_board_name_and_thread_title(self) -> dict:
         """Extracts a board name/title from the initialized soup object.
         
+        The return dictionary values are strings.
+
         Returns:
-            A dictionary with a "board" and a "title" key.
+            A dictionary with "board" and a "title" keys.
 
         Raises:
             BoardNameAndTitleNotFoundError: If a board name/title isn't found.
@@ -87,11 +100,11 @@ class ChanToContent:
         try:
             page_title: str = self.thread_soup.title.string
         except:
-            self.logger.error(f"Page title unable to be located")
+            self.logger.error("Page title unable to be located")
             raise BoardNameAndTitleNotFoundError(
                 f"Page title unable to be located")
         if page_title is None:
-            self.logger.error(f"Page title unable to be located")
+            self.logger.error("Page title unable to be located")
             raise BoardNameAndTitleNotFoundError(
                 f"Page title unable to be located")
         else:
@@ -111,7 +124,7 @@ class ChanToContent:
                 raise BoardNameAndTitleUnsupportedError(
                     "Board name/title unable to be parsed.")
 
-    def get_thread_id(self):
+    def get_thread_id(self) -> str:
         """Extracts a thread ID from the initialized soup object.
         
         Raises:
@@ -135,7 +148,43 @@ class ChanToContent:
         else:
             self.logger.debug(f"ID successfully found: {thread_id}")
             return thread_id
+        
+    def get_date_published_and_updated(self) -> dict:
+        """Captures date published and date updated from the HTML.
 
+        The return dictionary values are strings.
+        
+        Returns:
+            A dictionary with "date_published" and a "date_updated" keys.
+
+        Raises:
+            BoardNameAndTitleNotFoundError: If a board name/title isn't found.
+        """
+        self.logger.debug(f"Searching for publish and update dates")
+        html = str(self.thread_soup)  # Retrieves HTML from soup object
+        # Uses htmldate lib to find original and update dates
+        date_published = find_date(
+            html,
+            extensive_search=True,
+            original_date=True,
+            outputformat="%Y-%m-%dT%H:%M:%S",
+        )
+        if date_published is None:
+            self.logger.error("Date published not found.")
+            raise DateNotFoundError("Date published not found.")
+        date_updated = find_date(
+            html,
+            extensive_search=False,
+            original_date=False,
+            outputformat="%Y-%m-%dT%H:%M:%S",
+        )
+        if date_updated is None:
+            self.logger.error("Date updated not found.")
+            raise DateNotFoundError("Date updated not found.")
+        self.logger.debug("Date published and date updated successfully "\
+            f"found: {date_published}, {date_updated}")
+        return {"date_published": date_published, "date_updated": date_updated}
+    
     def extract_images(self, post, url):
             """Extracts image links from a given post and returns an array.
             

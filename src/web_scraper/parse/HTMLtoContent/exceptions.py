@@ -10,6 +10,9 @@ class ThreadIDNotFoundError(Exception):
     """Exception raised when a thread ID is unable to be located."""
     pass
 
+class DateNotFoundError(Exception):
+    """Exception raised when a date is not found from HTML data."""
+
 class ContentInitError(Exception):
     """Exception raised when a snapshot content file is unable to be made."""
     pass
