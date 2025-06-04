@@ -1,7 +1,10 @@
 from datetime import datetime
+
 import json
+import logging
 import os
 
+logger = logging.getLogger(__name__)
 
 class SnapshotMetaGenerator:
     def __init__(self, content_json_path: str):
@@ -16,17 +19,33 @@ class SnapshotMetaGenerator:
         with open(content_json_path, "r") as file:
             data = json.load(file)
         self.content_json = data
-        self.thread_id = self.content_json["thread_id"]
+        try:
+            self.thread_id = self.content_json["thread_id"]
+            logger.info(f"Thread ID located: {self.thread_id}")
+        except Exception as error:
+            logger.error(f"Error finding 'thread_id' in {content_json_path}: {error}")
+            raise KeyError(f"Error finding 'thread_id' in {content_json_path}: {error}")
 
-        # Pathing
+        # Pathing: Based on assumption that content and meta are stored in same directory
         file_name = f"meta_{self.thread_id}.json"
-        # Based on assumption that content and meta are stored in same directory
         thread_folder_path = os.path.dirname(content_json_path)
         self.meta_file_path = os.path.join(thread_folder_path, file_name)
+        logger.info(f"File path for meta is denoted as: {self.meta_file_path}")
 
         # Posts
-        self.original_post: dict = self.content_json["original_post"]
-        self.replies: dict = self.content_json["replies"]
+        try:
+            self.original_post: dict = self.content_json["original_post"]
+            logger.info(f"Original post located.")
+        except Exception as error:
+            logger.error(f"Error finding 'original_post' in {content_json_path}: {error}")
+            raise KeyError(f"Error finding 'original_post' in {content_json_path}: {error}")
+        
+        try:
+            self.replies: dict = self.content_json["replies"]
+            logger.info(f"Replies located.")
+        except Exception as error:
+            logger.error(f"Error finding 'replies' in {content_json_path}: {error}")
+            raise KeyError(f"Error finding 'replies' in {content_json_path}: {error}")
 
     # Helper functions:
     def calculate_num_words(self) -> int:
@@ -40,19 +59,34 @@ class SnapshotMetaGenerator:
         num_words: int = 0
 
         # Original post
-        original_post_content: str = self.original_post["post_content"]
-        original_post_words: list[str] = original_post_content.split()
-        original_post_word_count: int = len(original_post_words)
+        try: 
+            original_post_content: str = self.original_post["post_content"]
+            original_post_words: list[str] = original_post_content.split()
+            original_post_word_count: int = len(original_post_words)
+            logger.info(f"Word count for original post calculated: {original_post_word_count} word(s)")
 
-        # Adds word count of OP to total word count of thread
-        num_words += original_post_word_count
+            # Adds word count of OP to total word count of thread
+            num_words += original_post_word_count
 
+        except Exception as error:
+            logger.error(f"Error finding 'post_content' in original post: {error}")
+            raise KeyError(f"Error finding 'post_content' in original post: {error}")
+
+        
         # For each reply, calculate its word count and add it to the total word count of the thread.
         for reply in self.replies.values():
-            reply_content: str = reply["post_content"]
-            reply_words: list[str] = reply_content.split()
-            reply_word_count: int = len(reply_words)
-            num_words += reply_word_count
+            try: 
+                reply_content: str = reply["post_content"]
+                reply_words: list[str] = reply_content.split()
+                reply_word_count: int = len(reply_words)
+                logger.info(f"Word count for reply calculated: {reply_word_count} word(s)")
+                
+                # Adds word count of reply to total word count of thread
+                num_words += reply_word_count
+            
+            except Exception as error:
+                logger.error(f"Error finding 'post_content' in reply: {error}")
+                raise KeyError(f"Error finding 'post_content' in reply: {error}")
 
         return num_words
 
@@ -68,10 +102,22 @@ class SnapshotMetaGenerator:
         all_post_ids: set[str] = set()
 
         # Adds OP post id and reply post ids to a set
-        all_post_ids.add(self.original_post["post_id"])
+        try:
+            original_post_id: str = self.original_post["post_id"]
+            all_post_ids.add(original_post_id)
+            logger.info(f"Original post ID {original_post_id} added to all_post_ids set.")
+        except Exception as error:
+            logger.error(f"Error finding 'post_id' in original post: {error}")
+            raise KeyError(f"Error finding 'post_id' in original post: {error}")
 
         for reply in self.replies.values():
-            all_post_ids.add(reply["post_id"])
+            try:
+                reply_id: str = reply["post_id"]
+                all_post_ids.add(reply_id)
+                logger.info(f"Reply ID {reply_id} added to all_post_ids set.")
+            except Exception as error:
+                logger.error(f"Error finding 'post_id' in reply: {error}")
+                raise KeyError(f"Error finding 'post_id' in reply: {error}")
 
         return all_post_ids
 
@@ -85,10 +131,23 @@ class SnapshotMetaGenerator:
         """
         all_post_dates: set[str] = set()
 
-        # Adds OP post date and reply post dates to a set
-        all_post_dates.add(self.original_post["date_posted"])
+        # Adds OP post date to all_post_dates set
+        try:
+            original_post_date_posted = self.original_post["date_posted"]
+            all_post_dates.add(original_post_date_posted)
+            logger.info(f"OP post date {original_post_date_posted} added to all_post_dates set.")
+        except Exception as error:
+            logger.error(f"Error finding 'date_posted' in original post: {error}")
+            raise KeyError(f"Error finding 'date_posted' in original post: {error}")
+
+        # Adds post date of all replies to all_post_dates set
         for reply in self.replies.values():
-            all_post_dates.add(reply["date_posted"])
+            try:
+                reply_date_posted = reply["date_posted"]
+                all_post_dates.add(reply_date_posted)
+            except Exception as error:
+                logger.error(f"Error finding 'date_posted' in reply: {error}")
+                raise KeyError(f"Error finding 'date_posted' in reply: {error}")
         return all_post_dates
 
     def meta_dump(self, metadata: dict) -> None:
