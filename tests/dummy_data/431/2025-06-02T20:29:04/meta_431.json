@@ -1,11 +1,12 @@
 {
-  "URL": "https://crystal.cafe/hb/res/431.html#21821",
-  "board": "/hb/",
+  "url": "https://crystal.cafe/hb/res/431.html#21821",
+  "board_name": "/hb/",
   "thread_title": "Skincare General",
-  "thread_number": "431",
+  "thread_id": "431",
   "date_published": "2017-05-27T11:31:22",
   "date_updated": "2025-06-01T18:07:52",
   "date_scraped": "2025-06-02T20:29:18",
+  "all_post_dates": ["2017-05-27T11:31:22"],
   "all_post_ids": [
     "431",
     "432",
@@ -969,7 +970,8 @@
     "21821"
   ],
   "new_lost_posts": [],
-  "num_all_posts": 479,
+  "num_all_post_ids": 479,
   "num_new_posts": 479,
-  "num_new_lost_posts": 0
+  "num_new_lost_posts": 0,
+  "num_all_words": 20000
 }
