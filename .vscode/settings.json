@@ -1,5 +1,7 @@
 {
-    "python.analysis.extraPaths": [
-        "./utils"
-    ]
+    "python.analysis.extraPaths": ["./src"],
+    "python.testing.pytestArgs": ["."],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    
 }

@@ -29,7 +29,7 @@ class MasterContentGenerator:
         self.all_replies: dict = {}
 
         # Establishes sets for all post ids and lost post ids
-        self.all_post_ids: set = {}
+        self.all_post_ids: set = set()
 
         # Populates master thread content with data
         self.master_contents = {
