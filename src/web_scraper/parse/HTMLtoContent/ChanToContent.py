@@ -34,6 +34,9 @@ class ChanToContent:
             post_date_location: str):
         """Given the HTML for a chan-style thread snapshot, data is collected.
 
+        The ChanToContent object collects all data-to-be-used from the soup
+        object on initialization, ready to be written out to a JSON.
+
         Args:
             scrape_time (datetime): Time of scrape.
             thread_soup (BeautifulSoup): HTML from a thread in a soup object.
@@ -43,9 +46,13 @@ class ChanToContent:
             reply_class (str): Name of class for post replies.
             root_domain (str): Used as a prefix in image URLs.
             post_date_location (str): Class/label string for date and time.
+
+        Raises: 
+            ContentInitError: If an error occurs during initialization.
         """
         self.logger = logging.getLogger(__name__)
 
+        # TODO: Maybe scrape_time should be a pre-formatted string?
         self.scrape_time = scrape_time
         self.thread_soup = thread_soup
         self.snapshot_url = snapshot_url
@@ -65,16 +72,12 @@ class ChanToContent:
             self.thread_title: str = self.get_board_name_and_thread_title()\
                 ["title"]
         except Exception as error:
-            self.logger.error(f"Error when trying to initialize: {error}")
-            raise ContentInitError(
-                f"Error when trying to initialize: {error}") from error
+            self.init_error_log_raise(error)
         # Extracting the thread ID
         try:
             self.thread_id: str = self.get_thread_id()
         except Exception as error:
-            self.logger.error(f"Error when trying to initialize: {error}")
-            raise ContentInitError(
-                f"Error when trying to initialize: {error}") from error
+            self.init_error_log_raise(error)
         # Extracting the date published (when the page was created) 
         # and date updated (when the page was most recently changed)
         try:
@@ -83,13 +86,33 @@ class ChanToContent:
             self.date_updated: str = self.get_date_published_and_updated()\
                 ["date_updated"]
         except Exception as error:
-            self.logger.error(f"Error when trying to initialize: {error}")
-            raise ContentInitError(
-                f"Error when trying to initialize: {error}") from error
+            self.init_error_log_raise(error)
+        # Extracting the original post Tag
+        try:
+            self.original_post_tag: Tag = self.get_original_post()
+        except Exception as error:
+            self.init_error_log_raise(error)
+        # Extracting the list of reply post Tags
+        try:
+            self.reply_post_tag_list: list[Tag] = self.get_reply_posts()
+        except Exception as error:
+            self.init_error_log_raise(error)
         # End of initialization
         self.logger.info(
             "Successfully extracted and collected all content data from the "\
                 f"snapshot of thread {self.thread_id}")
+    
+    def init_error_log_raise(self, error: Exception):
+        """Posts the passed exception in log as an error, and raises it.
+        
+        Used to reduce repetition in __init__().
+
+        Raises:
+            ContentInitError: When an error occurs during initializaton.
+        """
+        self.logger.error(f"Error when trying to initialize: {error}")
+        raise ContentInitError(
+            f"Error when trying to initialize: {error}") from error
 
     def get_board_name_and_thread_title(self) -> dict:
         """Extracts a board name/title from the initialized soup object.
@@ -169,7 +192,7 @@ class ChanToContent:
             return thread_id
         
     def get_date_published_and_updated(self) -> dict:
-        """Captures date published and date updated from the HTML.
+        """Extracts date published and date updated from the HTML.
 
         The return dictionary values are strings.
         
@@ -258,6 +281,109 @@ class ChanToContent:
             self.logger.error(f"Reply post(s) not found: {error}")
             raise TagNotFoundError (f"Reply post(s) not found: {error}")
         pass
+
+    # def get_original_post_data(self) -> dict:
+    #     """Extracts all necessary data from an original post.
+        
+    #     Collects the `date_posted`, `post_id`, `post_content`,
+    #     `image_links`, `username`, `tripcode` (if available), and 
+    #     `replied_to_ids` data from an original post, using the parameters
+    #     from initialization. For further information on what each tag
+    #     represents, check the documentation associated with this project.
+
+    #     If a tripcode isn't available, it is assigned an empty string.
+
+    #     Returns:
+    #         A dictionary of the tags above and their corresponding data.
+    #     """
+    #     try:
+    #         date_posted: str = 
+    #     original_post_data = {
+    #         "date_posted":
+    #             ,
+    #         "post_id": 
+    #             ,
+    #         "post_content":
+    #             ,
+    #         "image_links": 
+    #             ,
+    #         "username":
+    #             ,
+    #         "tripcode":
+    #             ,
+    #         "replied_to_ids":
+
+    #     }
+    #     pass
+
+    # def get_reply_post_data(self) -> dict:
+    #     """Extracts all necessary data from a reply post.
+        
+    #     Collects the `date_posted`, `post_id`, `post_content`,
+    #     `image_links`, `username`, `tripcode` (if available), and 
+    #     `replied_to_ids` data from a reply post, using the parameters
+    #     from initialization. For further information on what each tag
+    #     represents, check the documentation associated with this project.
+
+    #     If a tripcode isn't available, it is assigned an empty string.
+
+    #     Returns:
+    #         A dictionary of the tags above and their corresponding data.
+    #     """
+    #     reply_post_data = {
+    #         "date_posted":
+    #             ,
+    #         "post_id": 
+    #             ,
+    #         "post_content":
+    #             ,
+    #         "image_links": 
+    #             ,
+    #         "username":
+    #             ,
+    #         "tripcode":
+    #             ,
+    #         "replied_to_ids":
+            
+    #     }
+    #     pass
+
+    def get_post_date(self, post_tag: Tag) -> str:
+        """Extracts the date and time from a given post.
+        
+        The date and time is formatted according to the formatting standards
+        used elsewhere throughout the project: `%Y-%m-%dT%H:%M:%S`
+
+        Utilizes the `post_date_location` parameter.
+
+        Arguments:
+            post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
+
+        Returns:
+            The date and time from a post formatted as a string.
+
+        Raises
+            TagNotFoundError: If replies can't be found with a parameter.
+        """
+        self.logger.debug(f"Searching for post date")
+        try:
+            date_posted: Tag = post_tag.find(self.post_date_location)
+            if date_posted is None:
+                self.logger.error("Post date found, but empty")
+                raise TagNotFoundError("Post date found, but empty")
+            else:
+                date_string = date_posted["datetime"]
+                # Converts post date to a datetime object
+                date_datetime = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ")
+                # Formats object to be more uniform
+                date_formatted = date_datetime.strftime("%Y-%m-%dT%H:%M:%S")
+                self.logger.debug(
+                    f"Post date successfully found: {date_formatted}")
+                
+                return date_formatted
+        except Exception as error:
+            self.logger.error(f"Post date not found: {error}")
+            raise TagNotFoundError (f"Post date not found: {error}")
     
     def extract_images(self, post, url):
             """Extracts image links from a given post and returns an array.
@@ -275,9 +401,9 @@ class ChanToContent:
                     image_links.append(f"{url}{src}")
             return image_links    
 
-    def extract_text(self, post):
-        """Extracts text from a given post and returns it as a string."""
-        return post.get_text() 
+    # def extract_text(self, post):
+    #     """Extracts text from a given post and returns it as a string."""
+    #     return post.get_text() 
 
     def extract_datetime(self, post, post_date_location):
         """Extracts datetime from a given post."""
@@ -382,21 +508,21 @@ class ChanToContent:
 
         return replies
     
-    def get_thread_contents(
-            self, thread_number, original_post, post_replies, 
-            url, post_date_location):
-        """Returns thread contents as a JSON"""
-        op = self.extract_original_post(
-            original_post, url, post_date_location, thread_number)
-        replies = self.extract_replies(post_replies, url, post_date_location)
+    # def get_thread_contents(
+    #         self, thread_number, original_post, post_replies, 
+    #         url, post_date_location):
+    #     """Returns thread contents as a JSON"""
+    #     op = self.extract_original_post(
+    #         original_post, url, post_date_location, thread_number)
+    #     replies = self.extract_replies(post_replies, url, post_date_location)
 
-        thread_contents = {
-            "thread_number": 
-                thread_number,
-            "original_post": 
-                op,
-            "replies": 
-                replies,
-        }
+    #     thread_contents = {
+    #         "thread_number": 
+    #             thread_number,
+    #         "original_post": 
+    #             op,
+    #         "replies": 
+    #             replies,
+    #     }
 
-        return thread_contents
+    #     return thread_contents

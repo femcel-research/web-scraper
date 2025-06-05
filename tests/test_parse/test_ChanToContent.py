@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from bs4 import BeautifulSoup, Tag
-from datetime import datetime
+# from datetime import datetime
 
 from web_scraper.parse.HTMLtoContent.ChanToContent import ChanToContent
 from web_scraper.parse.HTMLtoContent.exceptions import *
@@ -269,7 +269,7 @@ def test_get_reply_posts(mocker):
 
     assert isinstance(chan_to_content.get_reply_posts(), list)
 
-def test_get_reply_posts_not_found_error(mocker):
+def test_get_reply_posts_no_not_found_error(mocker):
     """Test get_reply_posts() doesn't raise an error if no replies."""
     # Arrange
     chan_to_content = ChanToContent.__new__(ChanToContent)
@@ -295,3 +295,102 @@ def test_get_reply_posts_not_found_error(mocker):
     assert len(replies) == 0
 
     assert isinstance(chan_to_content.get_reply_posts(), list)
+
+def test_get_post_date(mocker):
+    """Test get_post_date() returns the correct post date."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id= 101010'>
+                    <span>
+                        <a class='date' title='06/05/25 (Thu) 02:30:01 PM'>
+                            <time datetime='2025-06-05T14:30:01Z'>
+                            </time>
+                        </a>
+                    </span>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    post_date_location: str = "time"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+    chan_to_content.post_date_location = post_date_location
+
+    # Act & Assert 
+    post: Tag = chan_to_content.get_original_post()
+    post_date: str = chan_to_content.get_post_date(post)
+
+    assert post_date == "2025-06-05T14:30:01"
+
+def test_get_post_date_alternative(mocker):
+    """Test get_post_date() returns the correct post date."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op' id='101010'>
+                <p class='intro'>
+                    <label for='post_op'>
+                        <time datetime='2025-06-05T14:30:02Z'>
+                        </time>
+                    </label>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    post_date_location: str = "time"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+    chan_to_content.post_date_location = post_date_location
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    post_date: str = chan_to_content.get_post_date(post)
+
+def test_get_post_date_not_found_error(mocker):
+    """Test get_post_date() raises a TagNotFoundError."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_reply'>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    reply_class: str = "post_op"
+    post_date_location: str = "time"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.reply_class = reply_class
+    chan_to_content.post_date_location = post_date_location
+
+    # Act & Assert
+    with pytest.raises(TagNotFoundError) as excinfo:
+        chan_to_content.get_post_date(reply_class)
+
+    assert isinstance(excinfo.value, TagNotFoundError)
