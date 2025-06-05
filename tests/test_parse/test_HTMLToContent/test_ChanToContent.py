@@ -366,6 +366,8 @@ def test_get_post_date_alternative(mocker):
     post: Tag = chan_to_content.get_original_post()
     post_date: str = chan_to_content.get_post_date(post)
 
+    assert post_date == "2025-06-05T14:30:02"
+
 def test_get_post_date_not_found_error(mocker):
     """Test get_post_date() raises a TagNotFoundError."""
     # Arrange
@@ -392,5 +394,116 @@ def test_get_post_date_not_found_error(mocker):
     # Act & Assert
     with pytest.raises(TagNotFoundError) as excinfo:
         chan_to_content.get_post_date(reply_class)
+
+    assert isinstance(excinfo.value, TagNotFoundError)
+
+def test_get_post_id(mocker):
+    """Test get_post_id() returns the correct post ID."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    post_id: str = chan_to_content.get_post_id(post)
+
+    assert post_id == "101010"
+
+def test_get_post_id_replace_reply_prefix(mocker):
+    """Test get_post_id() returns the correct post ID."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post reply' id='reply_010101'>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    reply_class: str = "post reply"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.reply_class = reply_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_reply_posts()[0]
+    post_id: str = chan_to_content.get_post_id(post)
+
+    assert post_id == "010101"
+
+def test_get_post_id_no_replace_reply_prefix(mocker):
+    """Test get_post_id() returns the correct post ID."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post reply' id='010101'>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    reply_class: str = "post reply"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.reply_class = reply_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_reply_posts()[0]
+    post_id: str = chan_to_content.get_post_id(post)
+
+    assert post_id == "010101"
+
+def test_get_post_id_not_found_error(mocker):
+    """Test get_post_id() raises a TagNotFoundError."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post reply'>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    reply_class: str = "post reply"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.reply_class = reply_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_reply_posts()[0]
+    with pytest.raises(TagNotFoundError) as excinfo:
+        post_id: str = chan_to_content.get_post_id(post)
 
     assert isinstance(excinfo.value, TagNotFoundError)
