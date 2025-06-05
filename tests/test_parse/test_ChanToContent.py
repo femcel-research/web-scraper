@@ -5,8 +5,8 @@ import pytest
 from bs4 import BeautifulSoup, Tag
 # from datetime import datetime
 
-from web_scraper.parse.HTMLtoContent.ChanToContent import ChanToContent
-from web_scraper.parse.HTMLtoContent.exceptions import *
+from web_scraper.parse.HTMLToContent import ChanToContent
+from web_scraper.parse.HTMLToContent.exceptions import *
 
 def test_get_thread_id_no_replace_prefix(mocker):
     """Test get_thread_id() captures a thread ID from a soup's HTML."""
