@@ -107,6 +107,9 @@ class ChanToContent:
         
         Used to reduce repetition in __init__().
 
+        Arguments:
+            error (Exception): An exception from another method.
+
         Raises:
             ContentInitError: When an error occurs during initializaton.
         """
@@ -236,7 +239,7 @@ class ChanToContent:
         Returns:
             The original post as a Tag (from the bs4 lib).
 
-        Raises
+        Raises:
             TagNotFoundError: If an OP can't be found with a parameter.
         """
         self.logger.debug(f"Searching for original post")
@@ -263,7 +266,7 @@ class ChanToContent:
         Returns:
             The reply posts as a list of Tags (from the bs4 lib).
 
-        Raises
+        Raises:
             TagNotFoundError: If replies can't be found with a parameter.
         """
         self.logger.debug(f"Searching for reply posts")
@@ -282,71 +285,89 @@ class ChanToContent:
             raise TagNotFoundError (f"Reply post(s) not found: {error}")
         pass
 
-    # def get_original_post_data(self) -> dict:
-    #     """Extracts all necessary data from an original post.
+    def get_original_post_data(self, original_post: Tag) -> dict:
+        """Extracts all necessary data from an original post.
         
-    #     Collects the `date_posted`, `post_id`, `post_content`,
-    #     `image_links`, `username`, `tripcode` (if available), and 
-    #     `replied_to_ids` data from an original post, using the parameters
-    #     from initialization. For further information on what each tag
-    #     represents, check the documentation associated with this project.
+        Collects the `date_posted`, `post_id`, `post_content`,
+        `image_links`, `username`, `tripcode` (if available), and 
+        `replied_to_ids` data from an original post, using the parameters
+        from initialization. For further information on what each tag
+        represents, check the documentation associated with this project.
 
-    #     If a tripcode isn't available, it is assigned an empty string.
+        If a tripcode isn't available, it is assigned an empty string.
 
-    #     Returns:
-    #         A dictionary of the tags above and their corresponding data.
-    #     """
-    #     try:
-    #         date_posted: str = 
-    #     original_post_data = {
-    #         "date_posted":
-    #             ,
-    #         "post_id": 
-    #             ,
-    #         "post_content":
-    #             ,
-    #         "image_links": 
-    #             ,
-    #         "username":
-    #             ,
-    #         "tripcode":
-    #             ,
-    #         "replied_to_ids":
+        Arguments:
+            original_post (Tag): Where the post data should originate from.
 
-    #     }
-    #     pass
+        Returns:
+            A dictionary of the tags above and their corresponding data.
+        """
+        try:
+            date_posted: str = self.get_post_date(original_post)
+            try:
+                post_id: str = self.get_post_id(original_post)
+            except:
+                # The OP ID should match the overall thread ID
+                post_id: str = self.thread_id
+            post_content: str
+        # original_post_data = {
+        #     "date_posted":
+        #         ,
+        #     "post_id": 
+        #         ,
+        #     "post_content":
+        #         ,
+        #     "image_links": 
+        #         ,
+        #     "username":
+        #         ,
+        #     "tripcode":
+        #         ,
+        #     "replied_to_ids":
 
-    # def get_reply_post_data(self) -> dict:
-    #     """Extracts all necessary data from a reply post.
+        # }
+        except:
+            pass
+
+    def get_reply_post_data(self, reply_post: Tag) -> dict:
+        """Extracts all necessary data from an individual reply post.
         
-    #     Collects the `date_posted`, `post_id`, `post_content`,
-    #     `image_links`, `username`, `tripcode` (if available), and 
-    #     `replied_to_ids` data from a reply post, using the parameters
-    #     from initialization. For further information on what each tag
-    #     represents, check the documentation associated with this project.
+        Collects the `date_posted`, `post_id`, `post_content`,
+        `image_links`, `username`, `tripcode` (if available), and 
+        `replied_to_ids` data from a reply post, using the parameters
+        from initialization. For further information on what each tag
+        represents, check the documentation associated with this project.
 
-    #     If a tripcode isn't available, it is assigned an empty string.
+        If a tripcode isn't available, it is assigned an empty string.
 
-    #     Returns:
-    #         A dictionary of the tags above and their corresponding data.
-    #     """
-    #     reply_post_data = {
-    #         "date_posted":
-    #             ,
-    #         "post_id": 
-    #             ,
-    #         "post_content":
-    #             ,
-    #         "image_links": 
-    #             ,
-    #         "username":
-    #             ,
-    #         "tripcode":
-    #             ,
-    #         "replied_to_ids":
-            
-    #     }
-    #     pass
+        Arguments:
+            reply_post (Tag): Where the post data should originate from.
+
+        Returns:
+            A dictionary of the tags above and their corresponding data.
+        """
+        try:
+            date_posted: str = self.get_post_date(reply_post)
+            post_id: str = self.get_post_id(reply_post)
+            post_content: str
+        # reply_post_data = {
+        #     "date_posted":
+        #         ,
+        #     "post_id": 
+        #         ,
+        #     "post_content":
+        #         ,
+        #     "image_links": 
+        #         ,
+        #     "username":
+        #         ,
+        #     "tripcode":
+        #         ,
+        #     "replied_to_ids":
+
+        # }
+        except:
+            pass
 
     def get_post_date(self, post_tag: Tag) -> str:
         """Extracts the date and time from a given post.
@@ -362,7 +383,7 @@ class ChanToContent:
         Returns:
             The date and time from a post formatted as a string.
 
-        Raises
+        Raises:
             TagNotFoundError: If replies can't be found with a parameter.
         """
         self.logger.debug(f"Searching for post date")
@@ -374,7 +395,8 @@ class ChanToContent:
             else:
                 date_string = date_posted["datetime"]
                 # Converts post date to a datetime object
-                date_datetime = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ")
+                date_datetime = datetime.strptime(
+                    date_string, "%Y-%m-%dT%H:%M:%SZ")
                 # Formats object to be more uniform
                 date_formatted = date_datetime.strftime("%Y-%m-%dT%H:%M:%S")
                 self.logger.debug(
@@ -384,6 +406,51 @@ class ChanToContent:
         except Exception as error:
             self.logger.error(f"Post date not found: {error}")
             raise TagNotFoundError (f"Post date not found: {error}")
+        
+    def get_post_id(self, post_tag: Tag) -> str:
+        """Extracts the ID from a given post.
+        
+        Arguments:
+            post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
+
+        Returns:
+            The ID from a post as a string.
+
+        Raises:
+            TagNotFoundError: If an ID can't be found.    
+        """
+        self.logger.debug(f"Searching for post ID")
+        try:
+            # Get the attribute of the 'id' tag
+            try: 
+                post_id: str = post_tag.find(class_="intro").get("id")
+                if post_id is None:
+                    # Alternative structure seen for reply posts, specifically
+                    post_id: str = post_tag.get("id").replace("reply_", "")
+                    if post_id is None:
+                        self.logger.error("Post ID found, but empty")
+                        raise TagNotFoundError("Post ID found, but empty")
+                    else:
+                        
+                        return post_id
+            # If the 'id' tag doesn't exist, then catch the Exception
+            except:
+                # Alternative structure seen for reply posts, specifically
+                post_id: str = post_tag.get("id").replace("reply_", "")
+                if post_id is None:
+                    self.logger.error("Post ID found, but empty")
+                    raise TagNotFoundError("Post ID found, but empty")
+                else:
+                    
+                    return post_id
+            else:
+                self.logger.debug(
+                    f"Post ID successfully found: {post_id}")
+                
+                return post_id
+        except Exception as error:
+            self.logger.error(f"Post ID not found: {error}")
+            raise TagNotFoundError (f"Post ID not found: {error}")
     
     def extract_images(self, post, url):
             """Extracts image links from a given post and returns an array.
@@ -404,19 +471,6 @@ class ChanToContent:
     # def extract_text(self, post):
     #     """Extracts text from a given post and returns it as a string."""
     #     return post.get_text() 
-
-    def extract_datetime(self, post, post_date_location):
-        """Extracts datetime from a given post."""
-        # TODO: May not work as intended, maybe modify
-        post_date = post.find(class_=post_date_location)
-        datetime_str = post_date.find("time")["datetime"]
-
-        # Converts post date to a datetime object
-        dt_obj = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%SZ")
-
-        # Formats object to be more uniform
-        formatted_dt = dt_obj.strftime("%Y-%m-%dT%H:%M:%S")
-        return formatted_dt
     
     def extract_replied_posts_ids(self, post):
         """Extracts the ID of a post a user replies to."""
@@ -435,7 +489,7 @@ class ChanToContent:
         op_id = original_post.find(class_="intro").get("id")
         if op_id is None:
             op_id = thread_number
-        date = self.extract_datetime(original_post, post_date_location)
+        # date = self.extract_datetime(original_post, post_date_location)
         original_post_body = original_post.find(class_="body")
         links_to_other_posts = self.extract_replied_posts_ids(
             original_post_body)
@@ -474,7 +528,7 @@ class ChanToContent:
             reply_id = reply.find(class_="intro").get("id")
             if reply_id is None:
                 reply_id = reply.get("id").replace("reply_", "")
-            date = self.extract_datetime(reply, post_date_location)
+            # date = self.extract_datetime(reply, post_date_location)
             reply_body = reply.find("div", class_="body")
             links = self.extract_replied_posts_ids(reply_body)
 
