@@ -308,6 +308,7 @@ class ChanToContent:
                 post_id: str = self.get_post_id(original_post)
             except:
                 # The OP ID should match the overall thread ID
+                # so this is a sufficient backup
                 post_id: str = self.thread_id
             post_content: str
         # original_post_data = {
@@ -451,116 +452,151 @@ class ChanToContent:
         except Exception as error:
             self.logger.error(f"Post ID not found: {error}")
             raise TagNotFoundError (f"Post ID not found: {error}")
-    
-    def extract_images(self, post, url):
-            """Extracts image links from a given post and returns an array.
-            
-            Args:
-                post            
-            """
-            image_links = []
+        
+    def get_post_content(self, post_tag: Tag) -> str:
+        """Extracts the content from a given post.
 
-            # For each image tag in a given post, get it's source and 
-            # add it to the list of image links
-            for image in post.find_all("img", class_="post-image"):
-                src = image.get("src")
-                if src:
-                    image_links.append(f"{url}{src}")
-            return image_links    
+        The content of any given post is extracted from the post body.
+        Line breaks are preserved, and weird formatting is preserved as well
+        as possible.
+
+        'Content' in this context refers to the content of the post, not the
+        file type which contains all of the data from a particular snapshot
+        of a thread.
+        
+        Arguments:
+            post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
+
+        Returns:
+            The content from a post as a formatted string.
+
+        Raises:
+            TagNotFoundError: If a post body can't be found.    
+        """
+        self.logger.debug(f"Searching for post content")
+        try:
+            post_body: Tag = post_tag.find(class_="body")
+            if post_body is None:
+                self.logger.error("Post content (body) found, but empty")
+                raise TagNotFoundError("Post content (body) found, but empty")
+            else:
+                post_text: str = post_body.get_text('\n', True)
+                self.logger.debug("Post content successfully found")
+
+                return post_text
+        except Exception as error:
+            self.logger.error(f"Post content not found: {error}")
+            raise TagNotFoundError (f"Post content not found: {error}")
+    
+    # def extract_images(self, post, url):
+    #         """Extracts image links from a given post and returns an array.
+            
+    #         Args:
+    #             post            
+    #         """
+    #         image_links = []
+
+    #         # For each image tag in a given post, get it's source and 
+    #         # add it to the list of image links
+    #         for image in post.find_all("img", class_="post-image"):
+    #             src = image.get("src")
+    #             if src:
+    #                 image_links.append(f"{url}{src}")
+    #         return image_links    
 
     # def extract_text(self, post):
     #     """Extracts text from a given post and returns it as a string."""
     #     return post.get_text() 
     
-    def extract_replied_posts_ids(self, post):
-        """Extracts the ID of a post a user replies to."""
-        links_to_other_posts = post.find_all(
-            "a", attrs={"href": re.compile("^/")})
-        # Array that houses reply ids to other posts
-        links = []
-        for link in links_to_other_posts:
-            links.append(link.text.strip().replace(">>", ""))
+    # def extract_replied_posts_ids(self, post):
+    #     """Extracts the ID of a post a user replies to."""
+    #     links_to_other_posts = post.find_all(
+    #         "a", attrs={"href": re.compile("^/")})
+    #     # Array that houses reply ids to other posts
+    #     links = []
+    #     for link in links_to_other_posts:
+    #         links.append(link.text.strip().replace(">>", ""))
 
-        return links
+    #     return links
     
-    def extract_original_post(
-            self, original_post, url, post_date_location, thread_number):
-        """Outputs content from original post as a dictionary."""
-        op_id = original_post.find(class_="intro").get("id")
-        if op_id is None:
-            op_id = thread_number
-        # date = self.extract_datetime(original_post, post_date_location)
-        original_post_body = original_post.find(class_="body")
-        links_to_other_posts = self.extract_replied_posts_ids(
-            original_post_body)
-        links = []
+    # def extract_original_post(
+    #         self, original_post, url, post_date_location, thread_number):
+    #     """Outputs content from original post as a dictionary."""
+    #     op_id = original_post.find(class_="intro").get("id")
+    #     if op_id is None:
+    #         op_id = thread_number
+    #     # date = self.extract_datetime(original_post, post_date_location)
+    #     original_post_body = original_post.find(class_="body")
+    #     links_to_other_posts = self.extract_replied_posts_ids(
+    #         original_post_body)
+    #     links = []
 
-        original_content = {
-            "post_id": 
-                op_id,
-            "username": 
-                original_post.find(class_="name").get_text()
-                .strip().replace("\n", ""),
-            "reply_to_another_thread?": 
-                True if links_to_other_posts else False,
-            "date_posted": 
-                date,
-            "image_links": 
-                self.extract_images(original_post, url),
-            "post_content": 
-                " ".join(self.extract_text(original_post_body).split()),
-        }
+    #     original_content = {
+    #         "post_id": 
+    #             op_id,
+    #         "username": 
+    #             original_post.find(class_="name").get_text()
+    #             .strip().replace("\n", ""),
+    #         "reply_to_another_thread?": 
+    #             True if links_to_other_posts else False,
+    #         "date_posted": 
+    #             date,
+    #         "image_links": 
+    #             self.extract_images(original_post, url),
+    #         "post_content": 
+    #             " ".join(self.extract_text(original_post_body).split()),
+    #     }
 
-        # Removes double arrows from in-post reference to replied post
-        if links_to_other_posts:
-            for link in links_to_other_posts:
-                links.append(link.strip().replace(">>", ""))
+    #     # Removes double arrows from in-post reference to replied post
+    #     if links_to_other_posts:
+    #         for link in links_to_other_posts:
+    #             links.append(link.strip().replace(">>", ""))
 
-        # If the original post is a reply to a different thread, 
-        # add new dictionary entry
-        original_content["replied_thread_ids"] = links
-        return original_content
+    #     # If the original post is a reply to a different thread, 
+    #     # add new dictionary entry
+    #     original_content["replied_thread_ids"] = links
+    #     return original_content
     
-    def extract_replies(self, post_replies, url, post_date_location):
-        """Outputs replies as a dictionary"""
-        replies = {}
-        for reply in post_replies:
-            reply_id = reply.find(class_="intro").get("id")
-            if reply_id is None:
-                reply_id = reply.get("id").replace("reply_", "")
-            # date = self.extract_datetime(reply, post_date_location)
-            reply_body = reply.find("div", class_="body")
-            links = self.extract_replied_posts_ids(reply_body)
+    # def extract_replies(self, post_replies, url, post_date_location):
+    #     """Outputs replies as a dictionary"""
+    #     replies = {}
+    #     for reply in post_replies:
+    #         reply_id = reply.find(class_="intro").get("id")
+    #         if reply_id is None:
+    #             reply_id = reply.get("id").replace("reply_", "")
+    #         # date = self.extract_datetime(reply, post_date_location)
+    #         reply_body = reply.find("div", class_="body")
+    #         links = self.extract_replied_posts_ids(reply_body)
 
-            # If there is no link to another post, content is as usual. 
-            # Otherwise, strip the link from the text
-            if links is not None:
-                text = self.extract_text(reply_body)
-                for link in links:
-                    text = text.replace(">>" + link, "")
-                content = " ".join(text.split())
-            else:
-                content = " ".join(self.extract_text(reply_body).split())
+    #         # If there is no link to another post, content is as usual. 
+    #         # Otherwise, strip the link from the text
+    #         if links is not None:
+    #             text = self.extract_text(reply_body)
+    #             for link in links:
+    #                 text = text.replace(">>" + link, "")
+    #             content = " ".join(text.split())
+    #         else:
+    #             content = " ".join(self.extract_text(reply_body).split())
 
-            # Dictionary housing reply content
-            reply_content = {
-                "post_id": 
-                    reply_id,
-                "ids_of_replied_posts": 
-                    links,
-                "username": 
-                    reply.find(class_="name").get_text()
-                    .replace("\n", "").strip(),
-                "date_posted": 
-                    date,
-                "image_links": 
-                    self.extract_images(reply, url),
-                "post_content": 
-                    content,
-            }
-            replies[reply["id"]] = reply_content
+    #         # Dictionary housing reply content
+    #         reply_content = {
+    #             "post_id": 
+    #                 reply_id,
+    #             "ids_of_replied_posts": 
+    #                 links,
+    #             "username": 
+    #                 reply.find(class_="name").get_text()
+    #                 .replace("\n", "").strip(),
+    #             "date_posted": 
+    #                 date,
+    #             "image_links": 
+    #                 self.extract_images(reply, url),
+    #             "post_content": 
+    #                 content,
+    #         }
+    #         replies[reply["id"]] = reply_content
 
-        return replies
+    #     return replies
     
     # def get_thread_contents(
     #         self, thread_number, original_post, post_replies, 

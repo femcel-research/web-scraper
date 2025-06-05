@@ -507,3 +507,44 @@ def test_get_post_id_not_found_error(mocker):
         post_id: str = chan_to_content.get_post_id(post)
 
     assert isinstance(excinfo.value, TagNotFoundError)
+
+def test_get_post_content(mocker):
+    """Test get_post_content() returns the correct text."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                <div class='body'>
+                    I am developing an 
+                    <span style='color: #FF0404'>incredible</span>
+                    piece of technology which...
+                    <br>
+                    you aren't gonna believe.
+                </body>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    post_content: str = chan_to_content.get_post_content(post)
+
+    assert post_content == (
+    "I am developing an\n"
+    "incredible\n"
+    "piece of technology which...\n"
+    "you aren't gonna believe."
+    )
