@@ -13,6 +13,9 @@ class ThreadIDNotFoundError(Exception):
 class DateNotFoundError(Exception):
     """Exception raised when a date is not found from HTML data."""
 
+class TagNotFoundError(Exception):
+    """Exception raised when an tag from a parameter is not found."""
+
 class ContentInitError(Exception):
     """Exception raised when a snapshot content file is unable to be made."""
     pass

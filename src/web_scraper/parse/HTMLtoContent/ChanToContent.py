@@ -4,34 +4,35 @@ import logging
 import os
 import re
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from htmldate import find_date  # Used for finding date published and date updated
 from datetime import datetime
 
-from .exceptions import BoardNameAndTitleNotFoundError, ThreadIDNotFoundError, \
-    ContentInitError, BoardNameAndTitleUnsupportedError, DateNotFoundError
+from .exceptions import *
 
 class ChanToContent:
-    """Takes HTML from a chan-style thread and formats it (to a JSON)."""
+    """Takes HTML from a chan-style thread and formats it (for a JSON).
+    
+    All of the data which will be needed to calculate statistics,
+    generate/track metadata, and create a readable and annotate-able text
+    document is extracted from the HTML for a chan-style thread snapshot
+    (which is passed on initialization). That data is formatted according
+    to the "Snapshot Content File Data" standards in this project's 
+    documentation.
+
+    To ensure compatibility with various chan-style website threads,
+    parameters are used to locate different information.
+
+    Expect the parameters for different chan-style websites to be located
+    in the params/ directory within the web-scraper project.
+    """
+
     def __init__(
             self, scrape_time: datetime,
             thread_soup: BeautifulSoup, snapshot_url: str, site_dir: str,
             op_class: str, reply_class: str, root_domain: str,
             post_date_location: str):
-        """Given the HTML for a chan-style thread, a formatted JSON is made.
-        
-        All of the data which will be needed to calculate statistics,
-        generate/track metadata, and create a readable and annotate-able text
-        document is extracted from the HTML for a chan-style thread snapshot
-        (which is passed on initialization). That data is formatted according
-        to the "Snapshot Content File Data" standards in this project's 
-        documentation.
-
-        To ensure compatibility with various chan-style website threads,
-        parameters are used to locate different information.
-
-        Expect the parameters for different chan-style websites to be located
-        in the params/ directory within the web-scraper project.
+        """Given the HTML for a chan-style thread snapshot, data is collected.
 
         Args:
             scrape_time (datetime): Time of scrape.
@@ -48,14 +49,16 @@ class ChanToContent:
         self.scrape_time = scrape_time
         self.thread_soup = thread_soup
         self.snapshot_url = snapshot_url
-        self.site_dir = site_dir
-        self.op_class = op_class
-        self.reply_class = reply_class
-        self.root_domain = root_domain
-        self.post_date_location = post_date_location
+        self.site_dir = site_dir  # Parameter
+        self.op_class = op_class  # Parameter
+        self.reply_class = reply_class  # Parameter
+        self.root_domain = root_domain  # Parameter
+        self.post_date_location = post_date_location  # Parameter
 
+        # Initialization: Extracting all data from the thread_soup
         self.logger.info("Beginning the process of extracting content data " \
-            "from this thread snapshot's soup object.")
+            "from this thread snapshot's soup object")
+        # Extracting the board name and thread title
         try:
             self.board_name: str = self.get_board_name_and_thread_title()\
                 ["board"]
@@ -65,12 +68,15 @@ class ChanToContent:
             self.logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
                 f"Error when trying to initialize: {error}") from error
+        # Extracting the thread ID
         try:
             self.thread_id: str = self.get_thread_id()
         except Exception as error:
             self.logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
                 f"Error when trying to initialize: {error}") from error
+        # Extracting the date published (when the page was created) 
+        # and date updated (when the page was most recently changed)
         try:
             self.date_published: str = self.get_date_published_and_updated()\
                 ["date_published"]
@@ -80,7 +86,7 @@ class ChanToContent:
             self.logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
                 f"Error when trying to initialize: {error}") from error
-
+        # End of initialization
         self.logger.info(
             "Successfully extracted and collected all content data from the "\
                 f"snapshot of thread {self.thread_id}")
@@ -97,19 +103,21 @@ class ChanToContent:
             BoardNameAndTitleNotFoundError: If a board name/title isn't found.
         """
         self.logger.debug(f"Searching for a board name/title")
+        # Search for a <title> tag in the HTML and extract
         try:
             page_title: str = self.thread_soup.title.string
         except:
             self.logger.error("Page title unable to be located")
             raise BoardNameAndTitleNotFoundError(
                 f"Page title unable to be located")
+        # If it's empty, then it's unsupported, otherwise parse it
         if page_title is None:
             self.logger.error("Page title unable to be located")
             raise BoardNameAndTitleNotFoundError(
                 f"Page title unable to be located")
         else:
             if "-" in page_title:
-                # Splits board and thread title
+                # Splits board name and thread title...
                 # The format is ubiquitously `/board/ - Title`
                 board_and_title = re.split("[-]", page_title)
                 for x in range(len(board_and_title)):
@@ -118,19 +126,28 @@ class ChanToContent:
                 title = board_and_title[1]
                 self.logger.debug("Board and title successfully found:"\
                     f"{board}, {title}")
+                
                 return {"board": board, "title": title}
             else:
-                self.logger.error("Board name/title unable to be parsed.")
+                # Unsupported format
+                self.logger.error("Board name/title unable to be parsed")
                 raise BoardNameAndTitleUnsupportedError(
-                    "Board name/title unable to be parsed.")
+                    "Board name/title unable to be parsed")
 
     def get_thread_id(self) -> str:
         """Extracts a thread ID from the initialized soup object.
+        
+        Returns:
+            The thread ID as a string.
         
         Raises:
             ThreadIDNotFoundError: If a thread ID cannot be found.
         """
         self.logger.debug(f"Searching for a thread ID")
+        # Every chan-style site we've seen has an intro class, under
+        # the op_class (parameter) in the HTML. If there is no "id" in
+        # the intro class, then `None` is returned, and a different
+        # method is used to search for the "id"
         try:
             thread_id = self.thread_soup.find(class_="intro").get("id")
         except:
@@ -141,12 +158,14 @@ class ChanToContent:
                 thread_id = self.thread_soup.find(class_="intro").find("a")\
                     .get("id").replace("post_no_", "")
                 self.logger.debug(f"ID successfully found: {thread_id}")
+
                 return thread_id
             except:
                 self.logger.error("Thread ID unable to be located")
                 raise ThreadIDNotFoundError("Thread ID unable to be located")
         else:
             self.logger.debug(f"ID successfully found: {thread_id}")
+
             return thread_id
         
     def get_date_published_and_updated(self) -> dict:
@@ -183,7 +202,62 @@ class ChanToContent:
             raise DateNotFoundError("Date updated not found.")
         self.logger.debug("Date published and date updated successfully "\
             f"found: {date_published}, {date_updated}")
+        
         return {"date_published": date_published, "date_updated": date_updated}
+    
+    def get_original_post(self) -> Tag:
+        """Extracts the original post from the HTML.
+
+        Utilizes the parameter `op_class` to find the original post.
+
+        Returns:
+            The original post as a Tag (from the bs4 lib).
+
+        Raises
+            TagNotFoundError: If an OP can't be found with a parameter.
+        """
+        self.logger.debug(f"Searching for original post")
+        try:
+            original_post: Tag = self.thread_soup.find(class_=self.op_class)
+            if original_post is None:
+                self.logger.error("Original post found, but empty")
+                raise TagNotFoundError("Original post found, but empty")
+            else:
+                self.logger.debug("Original post successfully found")
+
+                return original_post
+        except Exception as error:
+            self.logger.error(f"Original post not found: {error}")
+            raise TagNotFoundError (f"Original post not found: {error}")
+
+
+    def get_reply_posts(self) -> list[Tag]: 
+        """Extracts the reply posts from the HTML.
+
+        Utilizes the parameter `reply_class` to find the reply posts.
+        If there are no replies, an empty list is returned.
+
+        Returns:
+            The reply posts as a list of Tags (from the bs4 lib).
+
+        Raises
+            TagNotFoundError: If replies can't be found with a parameter.
+        """
+        self.logger.debug(f"Searching for reply posts")
+        try:
+            reply_posts: list[Tag] = self.thread_soup.find_all(
+                class_=self.reply_class)
+            if reply_posts is None:
+                self.logger.debug("No reply post(s) found")
+            else:
+                self.logger.debug(
+                    f"Reply post(s) successfully found: {len(reply_posts)}")
+
+                return reply_posts
+        except Exception as error:
+            self.logger.error(f"Reply post(s) not found: {error}")
+            raise TagNotFoundError (f"Reply post(s) not found: {error}")
+        pass
     
     def extract_images(self, post, url):
             """Extracts image links from a given post and returns an array.
