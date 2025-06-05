@@ -1,2 +1,2 @@
-from .HTMLToContent.ChanToContent import ChanToContent
-from .HTMLToContent.exceptions import *
+from HTMLtoContent.ChanToContent import ChanToContent
+from HTMLtoContent.exceptions import *

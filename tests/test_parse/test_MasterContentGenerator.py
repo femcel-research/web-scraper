@@ -1,12 +1,13 @@
+from pathlib import Path
 import pytest
 
 
 from web_scraper.parse.MasterContentGenerator import MasterContentGenerator
 
 
-def test_MetaContentGenerator_generation():
-    dummy_data_dir = "./tests/dummy_data"
-    list_of_snapshot_paths: list[str] = dummy_data_dir.glob("content_*.json")
+def test_MetaContentGenerator():
+    dummy_data_dir = Path("./tests/dummy_data")
+    list_of_snapshot_paths: list[str] = list(dummy_data_dir.glob("content_*.json"))
     master_content_generator = MasterContentGenerator(list_of_snapshot_paths)
     master_content = master_content_generator.get_master_content()
     
