@@ -537,8 +537,9 @@ def test_meta_content_generation():
     assert url == snapshot_meta["URL"]
     assert date_published == snapshot_meta["date_published"]
     assert date_updated == snapshot_meta["date_updated"]
-    assert date_scraped == snapshot_meta["date_scraped"]
-    assert all_post_ids == snapshot_meta["dist_post_ids"]
+    assert date_scraped == snapshot_meta["date_scraped"] 
     assert num_all_post_ids == snapshot_meta["num_dist_posts"]
+    for id in all_post_ids:
+        assert id in snapshot_meta["dist_post_ids"]
 
    

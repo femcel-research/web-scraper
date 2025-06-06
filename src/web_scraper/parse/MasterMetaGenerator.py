@@ -61,63 +61,83 @@ class MasterMetaGenerator:
         Transfers data from snapshot meta contents to a master metafile.
         """
 
-        for snapshot_meta_path in self.list_of_meta_paths:
+        for i, snapshot_meta_path in enumerate(self.list_of_meta_paths):
             with open(snapshot_meta_path, "r") as file:
                 data = json.load(file)
             snapshot_meta = data
 
             # General board/thread info
-            board_name: str = snapshot_meta["board_name"]
-            thread_title: str = snapshot_meta["thread_title"]
-            self.thread_id: str = snapshot_meta["thread_id"]
-            url: str = snapshot_meta["url"]
+            if i == 0:
+                self.master_metadata["board_name"] = snapshot_meta["board_name"]
+                self.master_metadata["thread_title"] = snapshot_meta["thread_title"]
+                self.thread_id: str = snapshot_meta["thread_id"]
+                self.master_metadata["thread_id"] = self.thread_id
+                self.master_metadata["url"] = snapshot_meta["url"]
+                self.master_metadata["date_published"] = snapshot_meta["date_published"]
 
             # Data relating to dates/time:
             format_string = "%Y-%m-%dT%H:%M:%S"
-            date_published: str = snapshot_meta["date_published"]
-            date_updated: str = snapshot_meta["date_updated"]
-            date_scraped: str = snapshot_meta["date_scraped"]
-            all_post_dates: set = set(snapshot_meta["all_post_dates"])
+            snapshot_date_updated: str = snapshot_meta["date_updated"]
+            snapshot_date_scraped: str = snapshot_meta["date_scraped"]
 
-            # Data relating to post ids
-            all_post_ids: set = set(snapshot_meta["all_post_ids"])
-            num_all_post_ids: int = snapshot_meta["num_all_post_ids"]
+            # Convert snapshot dates to datetime objs for comparison
+            snapshot_updated_datetime_obj = datetime.strptime(
+                snapshot_date_updated, format_string
+            )
+            snapshot_scraped_datetime_obj = datetime.strptime(
+                snapshot_date_scraped, format_string
+            )
 
-            # Data relating to word count
-            num_all_words: int = snapshot_meta["num_all_words"]
-
-            # Updating update/scrape dates if there exists a newer one:
-            updated_datetime_obj = datetime.strptime(date_updated, format_string)
-            current_updated = datetime.strptime(
+            # Convert master dates to datetime objs for comparison
+            master_updated_datetime_obj = datetime.strptime(
                 self.master_metadata["date_updated"], format_string
             )
-            # If there was a later update, replace the update date
-            if updated_datetime_obj > current_updated:
-                self.master_metadata.update({"date_updated": date_updated})
-
-            scraped_datetime_obj = datetime.strptime(date_scraped, format_string)
-            current_scraped = datetime.strptime(
+            master_scraped_datetime_obj = datetime.strptime(
                 self.master_metadata["date_scraped"], format_string
             )
-            # If there was a later scrape, replace the scrape date
-            if scraped_datetime_obj > current_scraped:
-                self.master_metadata.update({"date_scraped": date_scraped})
 
-            # This should be the same throughout all snapshots
-            self.master_metadata.update(
-                {
-                    "board_name": board_name,
-                    "thread_title": thread_title,
-                    "thread_id": self.thread_id,
-                    "url": url,
-                    "date_published": date_published,
-                    "date_updated": date_updated,
-                    "date_scraped": date_updated,
-                    "all_post_dates": all_post_dates,
-                    "all_post_ids": all_post_ids,
-                    "num_all_post_ids": num_all_post_ids,
-                    "num_all_words": num_all_words,
-                }
-            )
+            if snapshot_updated_datetime_obj > master_updated_datetime_obj:
+                self.master_metadata["date_updated"] = snapshot_meta["date_updated"]
+                logger.debug(
+                    f"Updated master date_updated to {snapshot_date_updated} from: {snapshot_meta_path}"
+                )
+
+            if snapshot_scraped_datetime_obj > master_scraped_datetime_obj:
+                self.master_metadata["date_scraped"] = snapshot_meta["date_scraped"]
+                logger.debug(
+                    f"Updated master date_scraped to {snapshot_date_scraped} from: {snapshot_meta_path}"
+                )
+                # Aggregate sets
+                self.master_metadata["all_post_dates"].update(
+                    snapshot_meta["all_post_dates"]
+                )
+                logger.debug(
+                    f"Updated master all_post_dates to {snapshot_meta["all_post_dates"]} from: {snapshot_meta_path}"
+                )
+                self.master_metadata["all_post_ids"].update(
+                    snapshot_meta["all_post_ids"]
+                )
+                logger.debug(
+                    f"Updated master all_post_ids to {snapshot_meta["all_post_ids"]} from: {snapshot_meta_path}"
+                )
+
+                # Update counts: compares current master & snapshot and takes the max
+                latest_post_count: int = max(
+                    self.master_metadata["num_all_post_ids"],
+                    snapshot_meta["num_all_post_ids"],
+                )
+                self.master_metadata["num_all_post_ids"] = latest_post_count
+                logger.debug(
+                    f"Updated master num_all_post_ids to {latest_post_count} from: {snapshot_meta_path}"
+                )
+
+                latest_num_count: int = max(
+                    self.master_metadata["num_all_words"],
+                    snapshot_meta["num_all_words"],
+                )
+                self.master_metadata["num_all_words"] = latest_num_count
+                logger.debug(
+                    f"Updated master num_all_words to {latest_num_count} from: {snapshot_meta_path}"
+                )
 
         return self.master_metadata
