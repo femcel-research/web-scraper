@@ -1,6 +1,84 @@
-# web-scraper
-## How to read the log files/general behavior  
-### Typical output  
+Terminology
+========
+**Post**- an original post in a thread/a reply to a post in a thread  
+
+**Thread folder**- a folder within a website subfolder that corresponds to a thread on the website; all links
+regardless of highighted comment data will correlate to the same thread folder if they link to the same thread. 
+
+**Snapshot**- a collection of an HTML file, metadata JSON file, and content JSON file that was collected at a specific date/time
+(with the three files sharing a folder named after the scan date/time)  
+
+## General thread information
+**Board name/["board_name"]**- Name of the board the thread was posted on
+
+**Thread title/["thread_title"]**- Title of thread
+
+**Thread number/["thread_id"]**- Thread identifier derived from its source website
+
+**URL/["url"]**- URL of the thread
+
+## Dates 
+**Date published/["date_published"]**- the date a page was published
+
+**Update date/["date_updated"]**- the date a page was last updated
+
+**Date scraped/["date_scraped"]**- the date a page was last scraped
+
+**All post dates/["all_post_dates"]**- set containing dates of when a post was added to the thread
+
+## Post IDs 
+**All post IDs/["all_post_ids"]**- set containing IDs from all posts on a thread
+
+**# Posts scanned/["num_all_posts_ids"]**- number of all distinct posts saved in an HTML file/content JSON file  
+
+## Tokens
+**Word count of thread/["num_all_words"]**- number of words across all posts
+
+General behavior
+========
+### Scraping
+**Scraping** scrapes a specified website and parses the data from that scrape.
+
+Scraping is enacted through the make target:
+
+    make scrape SITE_NAME="crystal.cafe"
+
+or:
+
+    make scrape
+
+*SITE_NAME is crystal.cafe by default, so override if you want to use a different site.*
+
+### Reparsing
+**Reparsing** reparses existing data from their saved HTMLs and saves them in the most up-to-date format.
+
+Reparsing is enacted through the make target:
+
+    make reparse SITE_NAME="crystal.cafe" 
+
+or:
+
+    make reparse
+
+*If SITE_NAME is empty all site data subfolders are reparsed.*
+
+### Portioning thread .txt files
+**Portioning** looks through a specified data subfolder or through all subfolders and selects a percentage of the data.
+
+Portioning is enacted through the make target:
+
+    make portion THREAD_PERCENTAGE=10 SITE_NAME="crystal.cafe" RANDOMIZE=1
+
+or:
+
+    make portion
+
+*THREAD_PERCENTAGE, SITE_NAME, and RANDOMIZE are optional. 
+If SITE_NAME is empty all site data subfolders are portioned. If RANDOMIZE=0 then randomization is disabled.*
+
+
+How to read the log files
+========
 Each log file is named after the scan time and date.  
 
 The log first prints the URLs which have been retrieved into the scan list.  
@@ -22,61 +100,6 @@ Once all URLs have been processed, the number of functional and broken URLs is p
 
 A message indicating the scan is complete should finally be printed in the terminal.  
 
-### Scan terminology  
-**scan** a collection of an html file, metadata file, and content file that was collected at a specific date/time
-(with the three files sharing a folder named after the scan date/time)  
-**post** an original post in a thread/a reply to a post in a thread  
-**# posts scanned** number of posts saved in an html file/content file  
-**thread folder** a folder within a website subfolder that corresponds to a thread on the website; all links
-regardless of highighted comment data will correlate to the same thread folder if they link to the same thread.  
-**update date/["update_date"]** the date a page was last updated, according to its html file  
-
-### Errors you may come across  
+## Errors you may come across  
 A critical message "URL list is empty" will print if there are no URLs to scan.  
 A warning displaying the webpage's error code will print if there is not content available to scan.  
-
-## How to read different meta values  
-### thread_meta file  
-**["dist_post_ids"]** is the list of distinctive post_ids accross all scans for a single thread  
-**["lost_post_ids"]** (untested) is a list of post_ids that are in ["dist_post_ids"], but not a subsequent scan (also needs to not alread be in ["lost_post_ids"] already)  
-**["num_dist_posts"]** is a count that gets added to using ["num_new_posts"] on every scan  
-**["num_total_posts"]** is a count that gets added to using ["num_all_posts"] on every scan  
-**["num_lost_posts"]** is a count of every post that was formerly scanned for the current thread, but was not in a subsequent scan  
-### scan_meta file  
-**["all_post_ids"]** is a list of all post_ids (including post_ids that were in prior scans) that were scanned  
-**["new_post_ids"]** is a list of post_ids that were scanned and didn't already exist in ["dist_post_ids"]  
-**["new_lost_posts"]** (untested) is a list of post_ids that are in ["dist_post_ids"], but not this scan (also needs to not alread be in ["lost_post_ids"] already)  
-**["num_all_posts"]** is a count of all posts that were scanned  
-**["num_new_posts"]** is a count of all posts that were scanned and didn't already exist in ["dist_post_ids"]  
-**["num_new_lost_posts"]** is a count of all posts that are in ["dist_post_ids"], but not this scan (also needs to not alread be in ["lost_post_ids"] already)  
-### site_meta file  
-(WIP) **["num_sitewide_threads"]** is a count of all threads (Can't confirm implementation due to 504)  
-**["num_sitewide_total_posts"]** is a count of all posts across all scans (including duplicates) across all threads  
-(WIP) **["num_sitewide_dist_posts"]** is a count of all posts across all scans across all threads (only counting 1 per set of duplicates) (Can't confirm implementation due to 504)  
-
-## Other data collected  
-In addition to the statistics above, a complete scan of each webpage's HTML is collected with each processing. Additional metadata regarding thread number, etc. is also saved alongside the above statistics in the associated meta JSON files with each scan — as well as a parsed JSON file containing the posts in the scanned thread.  
-
-Each thread can be scanned multiple times, depending on when previous scans were/if a scan was already performed at a specified update_date. As scans are performed using homepage URLs in descending order, each scan of a particular thread will be performed using the most up-to-date version of the thread.
-
-## JSON Parameters for different imageboard homepages (WIP)
-Note that not all homepages have a keywords and/or description attribute in their meta information.  
-At this point the scraper only works with homepages, but we always have the option of adding other parameters to
-make it easier to toss in catalogs.  
-**["file_name"]** name of the folder website data will be found in, as well as the prefix for the sitewide meta file  
-**["url"]** website url  
-**["domain"]** used to append to relative urls  
-**["container"]** name of class for location of links on the homepage ("box right")  
-**["op"]** name of class for original posts ("post op")  
-**["op_id_prefix"]** prefix for ids of original posts (""(crystal, lolcow) and "op_"(wizchan))  
-**["reply"]** name of class for post replies ("post reply")  
-**["reply_id_prefix"]** prefix for ids of post replies ("reply_")  
-**["post_date_location"]** class/label "time datetime= " is in ("label for= delete_**op_id**" and "class_="post_no date-link"")  
-**["highlighted_post"]** name of class for highlighted post ("post reply  highlighted"[sic] and "post reply highlighted") **May be not be needed if the highlight is parsed from the url**
-
-## Makefile Targets
-**["setup"]** installs project dependencies  
-**["run"]** runs scrapers for Crystal.cafe and Wizchan  
-**["portion"]** retrieves portions of overall threads from Crystal.cafe and Wizchan. Default thread percentage is 10%, however this can be overwitten in the command line (i.e make THREAD_PERCENTAGE=15 portion)  
-**["all"]** sets up project dependencies, runs scrapers, outputs a portion of the collected threads.  
-**["clean"]** cleans pycache, and thread portion folders.
