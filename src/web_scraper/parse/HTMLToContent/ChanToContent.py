@@ -58,7 +58,6 @@ class ChanToContent:
         self.date_scraped = date_scraped
         self.thread_soup = thread_soup
         self.snapshot_url = snapshot_url
-        # self.site_dir = site_dir  # Parameter
         self.op_class = op_class  # Parameter
         self.reply_class = reply_class  # Parameter
         self.root_domain = root_domain  # Parameter
@@ -95,6 +94,13 @@ class ChanToContent:
             
             # Final assignment of everything to tags in a dictionary
             self.data: dict = self.collect_all_data()
+
+            # Final check to see if URL recreation from HTML is necessary
+            # TODO: Write tests for the recreation
+            if not self.snapshot_url:
+                self.snapshot_url = (
+                    f"https://{self.root_domain}/{self.data["board_name"]}\
+                        /res/{self.data["thread_number"]}")
         except Exception as error:
             self.logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
