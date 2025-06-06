@@ -25,13 +25,14 @@ class ChanToContent:
 
     Expect the parameters for different chan-style websites to be located
     in the params/ directory within the web-scraper project.
+
+    TODO: Add tripcode collection functionality
     """
 
     def __init__(
             self, scrape_time: datetime,
             thread_soup: BeautifulSoup, snapshot_url: str, site_dir: str,
-            op_class: str, reply_class: str, root_domain: str,
-            post_date_location: str):
+            op_class: str, reply_class: str, root_domain: str):
         """Given the HTML for a chan-style thread snapshot, data is collected.
 
         The ChanToContent object collects all data-to-be-used from the soup
@@ -60,7 +61,6 @@ class ChanToContent:
         self.op_class = op_class  # Parameter
         self.reply_class = reply_class  # Parameter
         self.root_domain = root_domain  # Parameter
-        self.post_date_location = post_date_location  # Parameter
 
         # Initialization: Extracting all data from the thread_soup
         self.logger.info("Beginning the process of extracting content data " \
@@ -128,7 +128,7 @@ class ChanToContent:
         Raises:
             BoardNameAndTitleNotFoundError: If a board name/title isn't found.
         """
-        self.logger.debug(f"Searching for a board name/title")
+        self.logger.debug("Searching for a board name/title")
         # Search for a <title> tag in the HTML and extract
         try:
             page_title: str = self.thread_soup.title.string
@@ -167,9 +167,9 @@ class ChanToContent:
             The thread ID as a string.
         
         Raises:
-            ThreadIDNotFoundError: If a thread ID cannot be found.
+            TagNotFoundError: If a thread ID cannot be found.
         """
-        self.logger.debug(f"Searching for a thread ID")
+        self.logger.debug("Searching for a thread ID")
         # Every chan-style site we've seen has an intro class, under
         # the op_class (parameter) in the HTML. If there is no "id" in
         # the intro class, then `None` is returned, and a different
@@ -178,7 +178,7 @@ class ChanToContent:
             thread_id = self.thread_soup.find(class_="intro").get("id")
         except:
                 self.logger.error("Thread ID unable to be located")
-                raise ThreadIDNotFoundError("Thread ID unable to be located")
+                raise TagNotFoundError("Thread ID unable to be located")
         if thread_id is None:
             try:
                 thread_id = self.thread_soup.find(class_="intro").find("a")\
@@ -188,7 +188,7 @@ class ChanToContent:
                 return thread_id
             except:
                 self.logger.error("Thread ID unable to be located")
-                raise ThreadIDNotFoundError("Thread ID unable to be located")
+                raise TagNotFoundError("Thread ID unable to be located")
         else:
             self.logger.debug(f"ID successfully found: {thread_id}")
 
@@ -205,7 +205,7 @@ class ChanToContent:
         Raises:
             BoardNameAndTitleNotFoundError: If a board name/title isn't found.
         """
-        self.logger.debug(f"Searching for publish and update dates")
+        self.logger.debug("Searching for publish and update dates")
         html = str(self.thread_soup)  # Retrieves HTML from soup object
         # Uses htmldate lib to find original and update dates
         date_published = find_date(
@@ -242,7 +242,7 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If an OP can't be found with a parameter.
         """
-        self.logger.debug(f"Searching for original post")
+        self.logger.debug("Searching for original post")
         try:
             original_post: Tag = self.thread_soup.find(class_=self.op_class)
             if original_post is None:
@@ -269,7 +269,7 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If replies can't be found with a parameter.
         """
-        self.logger.debug(f"Searching for reply posts")
+        self.logger.debug("Searching for reply posts")
         try:
             reply_posts: list[Tag] = self.thread_soup.find_all(
                 class_=self.reply_class)
@@ -294,7 +294,8 @@ class ChanToContent:
         from initialization. For further information on what each tag
         represents, check the documentation associated with this project.
 
-        If a tripcode isn't available, it is assigned an empty string.
+        TODO: Add tripcode collection functionality
+        TODO: If a tripcode isn't available, it is assigned an empty string.
 
         Arguments:
             original_post (Tag): Where the post data should originate from.
@@ -317,22 +318,24 @@ class ChanToContent:
             # beyond the scope of the original post tag)
             img_links: list[str] = self.get_thread_image_link
             img_links.append(self.get_post_image_links(original_post))
-        # original_post_data = {
-        #     "date_posted":
-        #         date_posted,
-        #     "post_id": 
-        #         post_id,
-        #     "post_content":
-        #         post_content,
-        #     "img_links": 
-        #         img_links,
-        #     "username":
-        #         ,
-        #     "tripcode":
-        #         ,
-        #     "replied_to_ids":
-
-        # }
+            username: str = self.get_post_username(original_post)
+            replied_to_ids: list[str] = self.get_post_replied_to_ids(
+                original_post)
+            original_post_data = {
+                "date_posted":
+                    date_posted,
+                "post_id": 
+                    post_id,
+                "post_content":
+                    post_content,
+                "img_links": 
+                    img_links,
+                "username":
+                    username,
+                # "tripcode":
+                #     ,
+                "replied_to_ids":
+                    replied_to_ids}
         except:
             pass
 
@@ -345,7 +348,8 @@ class ChanToContent:
         from initialization. For further information on what each tag
         represents, check the documentation associated with this project.
 
-        If a tripcode isn't available, it is assigned an empty string.
+        TODO: Add tripcode collection functionality
+        TODO: If a tripcode isn't available, it is assigned an empty string.
 
         Arguments:
             reply_post (Tag): Where the post data should originate from.
@@ -358,22 +362,24 @@ class ChanToContent:
             post_id: str = self.get_post_id(reply_post)
             post_content: str = self.get_post_content(reply_post)
             img_links: list[str] = self.get_post_image_links(reply_post)
-        # reply_post_data = {
-        #     "date_posted":
-        #         date_posted,
-        #     "post_id": 
-        #         post_id,
-        #     "post_content":
-        #         post_content,
-        #     "img_links": 
-        #         img_links,
-        #     "username":
-        #         ,
-        #     "tripcode":
-        #         ,
-        #     "replied_to_ids":
-        
-        # }
+            username: str = self.get_post_username(reply_post)
+            replied_to_ids: list[str] = self.get_post_replied_to_ids(
+                reply_post)
+            reply_post_data = {
+                "date_posted":
+                    date_posted,
+                "post_id": 
+                    post_id,
+                "post_content":
+                    post_content,
+                "img_links": 
+                    img_links,
+                "username":
+                    username,
+                # "tripcode":
+                #     ,
+                "replied_to_ids":
+                    replied_to_ids}
         except:
             pass
 
@@ -382,8 +388,6 @@ class ChanToContent:
         
         The date and time is formatted according to the formatting standards
         used elsewhere throughout the project: `%Y-%m-%dT%H:%M:%S`
-
-        Utilizes the `post_date_location` parameter.
 
         Arguments:
             post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
@@ -394,9 +398,9 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If replies can't be found with a parameter.
         """
-        self.logger.debug(f"Searching for post date")
+        self.logger.debug("Searching for post date")
         try:
-            date_posted: Tag = post_tag.find(self.post_date_location)
+            date_posted: Tag = post_tag.find("time")
             if date_posted is None:
                 self.logger.error("Post date found, but empty")
                 raise TagNotFoundError("Post date found, but empty")
@@ -427,7 +431,7 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If an ID can't be found.    
         """
-        self.logger.debug(f"Searching for post ID")
+        self.logger.debug("Searching for post ID")
         try:
             # Get the attribute of the 'id' tag
             try: 
@@ -480,7 +484,7 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If a post body can't be found.    
         """
-        self.logger.debug(f"Searching for post content")
+        self.logger.debug("Searching for post content")
         try:
             post_body: Tag = post_tag.find(class_="body")
             if post_body is None:
@@ -510,6 +514,7 @@ class ChanToContent:
 
         Does not raise a TagNotFoundError because it is normal for a post to
         have no image attached to it.
+        An empty list is returned if no image links are found.
         
         Arguments:
             post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
@@ -520,7 +525,7 @@ class ChanToContent:
         Raises:
             Exception: A generic exception for unanticipated errors.
         """
-        self.logger.debug(f"Searching for image links within post")
+        self.logger.debug("Searching for image links within post")
         image_links: list[str] = []
         try:
             image_tag: Tag
@@ -534,10 +539,10 @@ class ChanToContent:
 
             return image_links
         except Exception as error:
-            self.logger.debug(
-                f"Unexpected error when fetching images: {error}")
+            self.logger.error(
+                f"Unexpected error when collecting images: {error}")
             raise Exception(
-                f"Unexpected error when fetching images: {error}")
+                f"Unexpected error when collecting images: {error}")
         
     def get_thread_image_link(self) -> str:
         """Extracts the image link used to start a thread.
@@ -557,7 +562,7 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If a thread image can't be found. 
         """
-        self.logger.debug(f"Searching for a thread image link")
+        self.logger.debug("Searching for a thread image link")
         try:
             thread_tag: Tag = (
                 # This remains consistent across all chan-style sites observed
@@ -575,100 +580,68 @@ class ChanToContent:
         except Exception as error:
             self.logger.error(f"Thread image link not found: {error}")
             raise TagNotFoundError (f"Thread image link not found: {error}")
+        
+    def get_post_username(self, post_tag: Tag) -> str:
+        """Extracts a username from a given post.
+        
+        Returns:
+            A username as a string.
 
-    # def extract_text(self, post):
-    #     """Extracts text from a given post and returns it as a string."""
-    #     return post.get_text() 
+        Raises:
+            TagNotFoundError: If a username cannot be found.
+        """
+        self.logger.debug("Searching for a post username")
+        try:
+            post_username: str = post_tag.find(class_="name").get_text()
+            if not post_username:
+                self.logger.error("Post username found, but empty")
+                raise TagNotFoundError("Post username found, but empty")
+            else: 
+                formatted_post_username: str = post_username.strip().replace(
+                    "\n", "")
+                self.logger.debug("Post username successfully found")
+
+                return formatted_post_username
+        except Exception as error:
+            self.logger.error(f"Post username not found: {error}")
+            raise TagNotFoundError (f"Post username not found: {error}")
+
+    def get_post_replied_to_ids(self, post_tag: Tag) -> list[str]:
+        """Extracts a list of posts being replied to from a given post.
+
+        Does not raise a TagNotFoundError because it is normal for a post to
+        not be a reply to another post.
+        An empty list is returned if there are no replied-to posts.
+        
+        Returns:
+            A list of posts ID strings being replied to.
+
+        Raises:
+            Exception: A generic exception for unanticipated errors.
+        """
+        self.logger.debug("Searching for replied-to post IDs")
+        try:
+            post_body: Tag = post_tag.find(class_="body")
+            links_to_other_posts: str
+            links_to_other_posts = post_body.find_all(
+                # Prevents external links from being added
+                "a", attrs={"href": re.compile("^/")})
+            post_links: list[str] = []
+            if links_to_other_posts:
+                self.logger.debug("Replied-to post IDs sucessfully found")
+                link: Tag
+                for link in links_to_other_posts:
+                    post_links.append(link.text.strip().replace(">", ""))
+            else:
+                self.logger.debug("No replied-to post IDs found")
+
+            return post_links
+        except Exception as error:
+            self.logger.error(
+                f"Unexpected error when extracting replied-to IDs: {error}")
+            raise Exception(
+                f"Unexpected error when extracting replied-to IDs: {error}")
     
-    # def extract_replied_posts_ids(self, post):
-    #     """Extracts the ID of a post a user replies to."""
-    #     links_to_other_posts = post.find_all(
-    #         "a", attrs={"href": re.compile("^/")})
-    #     # Array that houses reply ids to other posts
-    #     links = []
-    #     for link in links_to_other_posts:
-    #         links.append(link.text.strip().replace(">>", ""))
-
-    #     return links
-    
-    # def extract_original_post(
-    #         self, original_post, url, post_date_location, thread_number):
-    #     """Outputs content from original post as a dictionary."""
-    #     op_id = original_post.find(class_="intro").get("id")
-    #     if op_id is None:
-    #         op_id = thread_number
-    #     # date = self.extract_datetime(original_post, post_date_location)
-    #     original_post_body = original_post.find(class_="body")
-    #     links_to_other_posts = self.extract_replied_posts_ids(
-    #         original_post_body)
-    #     links = []
-
-    #     original_content = {
-    #         "post_id": 
-    #             op_id,
-    #         "username": 
-    #             original_post.find(class_="name").get_text()
-    #             .strip().replace("\n", ""),
-    #         "reply_to_another_thread?": 
-    #             True if links_to_other_posts else False,
-    #         "date_posted": 
-    #             date,
-    #         "image_links": 
-    #             self.extract_images(original_post, url),
-    #         "post_content": 
-    #             " ".join(self.extract_text(original_post_body).split()),
-    #     }
-
-    #     # Removes double arrows from in-post reference to replied post
-    #     if links_to_other_posts:
-    #         for link in links_to_other_posts:
-    #             links.append(link.strip().replace(">>", ""))
-
-    #     # If the original post is a reply to a different thread, 
-    #     # add new dictionary entry
-    #     original_content["replied_thread_ids"] = links
-    #     return original_content
-    
-    # def extract_replies(self, post_replies, url, post_date_location):
-    #     """Outputs replies as a dictionary"""
-    #     replies = {}
-    #     for reply in post_replies:
-    #         reply_id = reply.find(class_="intro").get("id")
-    #         if reply_id is None:
-    #             reply_id = reply.get("id").replace("reply_", "")
-    #         # date = self.extract_datetime(reply, post_date_location)
-    #         reply_body = reply.find("div", class_="body")
-    #         links = self.extract_replied_posts_ids(reply_body)
-
-    #         # If there is no link to another post, content is as usual. 
-    #         # Otherwise, strip the link from the text
-    #         if links is not None:
-    #             text = self.extract_text(reply_body)
-    #             for link in links:
-    #                 text = text.replace(">>" + link, "")
-    #             content = " ".join(text.split())
-    #         else:
-    #             content = " ".join(self.extract_text(reply_body).split())
-
-    #         # Dictionary housing reply content
-    #         reply_content = {
-    #             "post_id": 
-    #                 reply_id,
-    #             "ids_of_replied_posts": 
-    #                 links,
-    #             "username": 
-    #                 reply.find(class_="name").get_text()
-    #                 .replace("\n", "").strip(),
-    #             "date_posted": 
-    #                 date,
-    #             "image_links": 
-    #                 self.extract_images(reply, url),
-    #             "post_content": 
-    #                 content,
-    #         }
-    #         replies[reply["id"]] = reply_content
-
-    #     return replies
     
     # def get_thread_contents(
     #         self, thread_number, original_post, post_replies, 

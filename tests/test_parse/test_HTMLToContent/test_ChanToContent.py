@@ -54,8 +54,8 @@ def test_get_thread_id_yes_replace_prefix(mocker):
     # Act & Assert the thread IDs in ChanToContent is correct
     assert chan_to_content.get_thread_id() == "101010"
 
-def test_get_thread_id_thread_id_not_found_error(mocker):
-    """Test get_thread_id() raises ThreadIDNotFoundError properly."""
+def test_get_thread_id_thread_not_found_error(mocker):
+    """Test get_thread_id() raises TagNotFoundError properly."""
     # Arrange
     chan_to_content = ChanToContent.__new__(ChanToContent)
     mocker.patch.object(ChanToContent, "__init__", return_value=None)
@@ -76,10 +76,10 @@ def test_get_thread_id_thread_id_not_found_error(mocker):
     chan_to_content.thread_soup = thread_soup
 
     # Act & Assert
-    with pytest.raises(ThreadIDNotFoundError) as excinfo:
+    with pytest.raises(TagNotFoundError) as excinfo:
         chan_to_content.get_thread_id()
 
-    assert isinstance(excinfo.value, ThreadIDNotFoundError)
+    assert isinstance(excinfo.value, TagNotFoundError)
 
 def test_get_board_name_and_thread_title(mocker):
     """Test get_board_name_and_thread_title() captures data from a soup ob."""
@@ -321,11 +321,13 @@ def test_get_post_date(mocker):
     </html>"""
     thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
     op_class: str = "post_op"
-    post_date_location: str = "time"
+    # Likely no longer needed
+    # post_date_location: str = "time"
     chan_to_content.logger = logging.getLogger(__name__)
     chan_to_content.thread_soup = thread_soup
     chan_to_content.op_class = op_class
-    chan_to_content.post_date_location = post_date_location
+    # Likely no longer needed
+    # chan_to_content.post_date_location = post_date_location  
 
     # Act & Assert 
     post: Tag = chan_to_content.get_original_post()
@@ -356,11 +358,13 @@ def test_get_post_date_alternative(mocker):
     </html>"""
     thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
     op_class: str = "post_op"
-    post_date_location: str = "time"
+    # Likely no longer needed
+    # post_date_location: str = "time"
     chan_to_content.logger = logging.getLogger(__name__)
     chan_to_content.thread_soup = thread_soup
     chan_to_content.op_class = op_class
-    chan_to_content.post_date_location = post_date_location
+    # Likely no longer needed
+    # chan_to_content.post_date_location = post_date_location
 
     # Act & Assert
     post: Tag = chan_to_content.get_original_post()
@@ -385,11 +389,13 @@ def test_get_post_date_not_found_error(mocker):
     </html>"""
     thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
     reply_class: str = "post_op"
-    post_date_location: str = "time"
+    # Likely no longer needed
+    # post_date_location: str = "time"
     chan_to_content.logger = logging.getLogger(__name__)
     chan_to_content.thread_soup = thread_soup
     chan_to_content.reply_class = reply_class
-    chan_to_content.post_date_location = post_date_location
+    # Likely no longer needed
+    # chan_to_content.post_date_location = post_date_location
 
     # Act & Assert
     with pytest.raises(TagNotFoundError) as excinfo:
@@ -722,3 +728,167 @@ def test_get_thread_image_link_not_found_error(mocker):
         thread_img_link: str = chan_to_content.get_thread_image_link()
 
     assert isinstance(excinfo.value, TagNotFoundError)
+
+def test_get_post_username(mocker):
+    """Test get_post_username() returns the correct username."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010></p>
+                    <span class='name'>Dorothy Ashby</span>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    post_username: str = chan_to_content.get_post_username(post)
+
+    assert post_username == "Dorothy Ashby"
+
+def test_get_post_username_not_found_error(mocker):
+    """Test get_post_username() raises a TagNotFoundError."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010></p>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    with pytest.raises(TagNotFoundError) as excinfo:
+        post_username: str = chan_to_content.get_post_username(post)
+
+    assert isinstance(excinfo.value, TagNotFoundError)
+
+def test_get_replied_to_ids_op(mocker):
+    """Test get_replied_to_ids() returns the correct IDs from OP."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                    <a href="/b/101010">101010</a>
+                </p>
+                <div class='body'>
+                    <a href='/b/t/01.html'>>>>/b/01</a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    replied_to_ids: list[str] = chan_to_content.get_post_replied_to_ids(post)
+
+    assert replied_to_ids == ["/b/01"]
+
+def test_get_replied_to_ids_reply(mocker):
+    """Test get_replied_to_ids() returns the correct IDs from a reply."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+            </div>
+            <div class='post_reply'>
+                <p class='intro' id='000001'></p>
+                <div class='body'>
+                    <a href='/b/t/000000'>>>000000</a>
+                </div>
+            </div>
+            <div class='post_reply'>
+                <p class='intro' id='000002'></p>
+                <div class='body'>
+                    <a href='/b/t/000001'>>>000001</a>
+                    Here's a quick test
+                    <a href="https://google.com">https://google.com</a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    reply_class: str = "post_reply"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.reply_class = reply_class
+
+    # Act & Assert
+    replies: list[Tag] = chan_to_content.get_reply_posts()
+
+    assert chan_to_content.get_post_replied_to_ids(replies[0])[0] == "000000"
+    assert chan_to_content.get_post_replied_to_ids(replies[1])[0] == "000001"
+    assert len(chan_to_content.get_post_replied_to_ids(replies[1])) == 1
+
+def test_get_replied_to_ids_no_not_found_error(mocker):
+    """Test get_replied_to_ids() doesn't return an error when no links."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                </p>
+                <div class='body'>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    replied_to_ids: list[str] = chan_to_content.get_post_replied_to_ids(post)
+
+    assert replied_to_ids == []
