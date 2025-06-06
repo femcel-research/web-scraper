@@ -34,7 +34,7 @@ class ChanToContent:
 
     def __init__(
             self, date_scraped: str,
-            thread_soup: BeautifulSoup, snapshot_url: str, site_dir: str,
+            thread_soup: BeautifulSoup, snapshot_url: str,
             op_class: str, reply_class: str, root_domain: str):
         """Given the HTML for a chan-style thread snapshot, data is collected.
 
@@ -45,7 +45,6 @@ class ChanToContent:
             scrape_time (str): Formatted time of scrape.
             thread_soup (BeautifulSoup): HTML from a thread in a soup object.
             snapshot_url (str): NOT a parameter, URL of the thread snapshot.
-            site_dir (str): Directory for content files.
             op_class (str): Name of class for original posts.
             reply_class (str): Name of class for post replies.
             root_domain (str): Used as a prefix in image URLs.
@@ -59,7 +58,7 @@ class ChanToContent:
         self.date_scraped = date_scraped
         self.thread_soup = thread_soup
         self.snapshot_url = snapshot_url
-        self.site_dir = site_dir  # Parameter
+        # self.site_dir = site_dir  # Parameter
         self.op_class = op_class  # Parameter
         self.reply_class = reply_class  # Parameter
         self.root_domain = root_domain  # Parameter
@@ -207,7 +206,7 @@ class ChanToContent:
             raise DateNotFoundError("Date published not found.")
         date_updated = find_date(
             html,
-            extensive_search=False,
+            extensive_search=True,
             original_date=False,
             outputformat="%Y-%m-%dT%H:%M:%S",
         )

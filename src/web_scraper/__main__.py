@@ -5,30 +5,35 @@ import json
 import logging
 import sys
 
+from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
+
+from fetch import fetch_html_content
+from scrape import HomepageScraper
+from parse import ChanToContent
 
 scan_time_str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")  # ISO format
 
 # Ensure the logs directory exists
-log_dir = Path("./logs")
+log_dir = Path("./data/logs")
 log_dir.mkdir(parents=True, exist_ok=True)
 
 # Root logger config
 logging.basicConfig(
-    filename=(f"./logs/{scan_time_str}.log"),
+    filename=(f"./data/logs/{scan_time_str}.log"),
     filemode="w",
     format=("%(asctime)s %(levelname)s : %(message)s"),  
     datefmt="%Y-%m-%dT%H:%M:%S",
     style="%",
-    level=logging.DEBUG,  # We can make a lot of the spam-y logs DEBUG
+    level=logging.INFO,  # We can make a lot of the spam-y logs DEBUG
 )
 logger = logging.getLogger(__name__)
 logger.info("Root logger configured")
 
 # Arguments
 parser = argparse.ArgumentParser(
-    prog="web-scraper",
+    prog="web_scraper",
     description=("A web scraper and parser for (currently) chan-style "
         "websites, built around a passed parameters file.\n"
         "By default, URLs are pulled from the homepage specified "
@@ -46,7 +51,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 # Parameters
-params_file_list = glob.glob(f"./params/{args.params_name}*.json")
+params_file_list = glob.glob(f"./data/params/{args.params_name}*.json")
 
 params_file = params_file_list[0] if params_file_list else None
 
@@ -59,7 +64,7 @@ else:
     logger.debug("Choosing the first file containing the name")
 
 params_path = Path(params_file)
-
+params: dict
 try:
     with open(params_path, "r") as params_file:
         params = json.load(params_file)
@@ -78,3 +83,15 @@ except Exception as error:
         f"An unexpected error occurred while loading parameters: {error}")
     logger.critical("Aborting")
     sys.exit(1)
+
+homepage: bytes = fetch_html_content(params["hp_url"])
+scraper: HomepageScraper = HomepageScraper(
+    homepage, params["domain"], params["container"])
+url_list: list[str] = scraper.homepage_to_list()
+for url in url_list:
+    soup = BeautifulSoup(fetch_html_content(url))
+    content_parser: ChanToContent = ChanToContent(
+        scan_time_str, soup, url, params["op_class"],
+        params["reply_class"], params["root_domain"])
+    print(content_parser.data)
+    

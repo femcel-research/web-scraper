@@ -22,7 +22,7 @@ class HomepageScraper:
             relative URLs.
         container_param (str): Class URLs are stored in.
     """
-    def __init__(self, html_content: bytes, url: str, container: str):
+    def __init__(self, html_content: bytes, root_domain: str, container: str):
             """Retrieves and returns a list of URLs.
 
             Args:
@@ -33,7 +33,7 @@ class HomepageScraper:
             Raises:
                 SoupError: If a BeautifulSoup object can't be initialized.
             """
-            self.domain_param: str = url
+            self.domain_param: str = root_domain
             self.container_param: str = container
             try:
                 self.soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
