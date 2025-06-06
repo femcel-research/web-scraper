@@ -575,6 +575,31 @@ class ChanToContent:
         except Exception as error:
             self.logger.error(f"Thread image link not found: {error}")
             raise TagNotFoundError (f"Thread image link not found: {error}")
+        
+    def get_post_username(self, post_tag: Tag) -> str:
+        """Extracts a username from a given post.
+        
+        Returns:
+            A username as a string.
+
+        Raises:
+            TagNotFoundError: If a username cannot be found.
+        """
+        self.logger.debug(f"Searching for a post username")
+        try:
+            post_username: str = post_tag.find(class_="name").get_text()
+            if not post_username:
+                self.logger.error("Post username found, but empty")
+                raise TagNotFoundError("Post username found, but empty")
+            else: 
+                formatted_post_username: str = post_username.strip().replace(
+                    "\n", "")
+                self.logger.debug("Post username successfully found")
+
+                return formatted_post_username
+        except Exception as error:
+            self.logger.error(f"Post username not found: {error}")
+            raise TagNotFoundError (f"Post username not found: {error}")
 
     # def extract_text(self, post):
     #     """Extracts text from a given post and returns it as a string."""
