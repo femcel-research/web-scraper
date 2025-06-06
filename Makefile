@@ -18,13 +18,13 @@ setup:
 	@echo "Dependencies installed."
 
 # Scrapes and parses new data
-scrape:
+scrape: test_all
 	@echo "Scraping and parsing new data for $(SITE_NAME)..."
 	python $(MAIN) $(SITE_NAME)
 	@echo "Scraping and parsing complete!"
 
 # Reparses existing data from their saved HTMLs
-reparse:
+reparse: test_all
 	ifeq ($(SITE_NAME),)
 		@echo "No site name entered. Reparsing all data."
 	else
@@ -37,6 +37,27 @@ reparse:
 portion: 
 	@echo "Portioning threads"
 	python $(PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(SITE_NAME) $(RANDOMIZE) 
+
+# Testing
+test_all:
+	@echo "Running automatic tests..."
+	pytest 
+	@echo "Tests complete!"
+
+test_fetch:
+	@echo "Running fetching tests..."
+	pytest ./tests/test_fetch
+	@echo "Tests complete!"
+
+test_parse:
+	@echo "Running parsing tests..."
+	pytest ./tests/test_parse
+	@echo "Tests complete!"
+
+test_scrape:
+	@echo "Running scraping tests..."
+	pytest ./tests/test_scrape
+	@echo "Tests complete!"
 
 clean:
 	@echo "Cleaning up..."
