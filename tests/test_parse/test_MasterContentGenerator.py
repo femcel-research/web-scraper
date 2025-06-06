@@ -16,7 +16,7 @@ def test_meta_content_generation():
 
     # Generates master content
     master_content_generator = MasterContentGenerator(list_of_snapshot_paths)
-    master_content = master_content_generator.get_master_content()
+    master_content = master_content_generator.generate_master_content()
 
     # Original post & replies in the generated master
     master_original_post = master_content["original_post"]

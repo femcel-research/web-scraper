@@ -150,17 +150,17 @@ class SnapshotMetaGenerator:
                 raise KeyError(f"Error finding 'date_posted' in reply: {error}")
         return all_post_dates
 
-    def meta_dump(self, metadata: dict) -> None:
+    def meta_dump(self) -> None:
         """Dumps website metadata into a JSON file.
 
         Args:
             metadata (dict): Dictionary containing metadata values.
         """
         with open(self.meta_file_path, "w", encoding="utf-8") as f:
-            json.dump(metadata, f, indent=2, ensure_ascii=False)
+            json.dump(self.metadata, f, indent=2, ensure_ascii=False)
 
     # Main method:
-    def content_to_meta(self) -> None:
+    def generate_meta(self) -> dict:
         """
         Transfers data from thread contents to a metafile.
         """
@@ -184,7 +184,7 @@ class SnapshotMetaGenerator:
         # Data relating to word count
         num_all_words: int = self.calculate_num_words()
 
-        metadata = {
+        self.metadata = {
             "board_name": board_name,
             "thread_title": thread_title,
             "thread_id": thread_id,
@@ -198,4 +198,6 @@ class SnapshotMetaGenerator:
             "num_all_words": num_all_words,
         }
 
-        self.meta_dump(metadata)
+        return self.metadata
+
+    

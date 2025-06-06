@@ -40,7 +40,7 @@ class MasterContentGenerator:
             "replies": self.all_replies,
         }
 
-    def get_master_content(self) -> dict:
+    def generate_master_content(self) -> dict:
         """
         Converts all snapshot content JSONs into a single master content JSON.
         """

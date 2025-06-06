@@ -56,7 +56,7 @@ class MasterMetaGenerator:
 
         logger.info(f"Master metadata for thread {self.thread_id} has been updated.")
 
-    def get_master_meta(self) -> dict:
+    def generate_master_meta(self) -> dict:
         """
         Transfers data from snapshot meta contents to a master metafile.
         """

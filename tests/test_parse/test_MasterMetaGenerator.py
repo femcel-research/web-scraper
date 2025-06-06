@@ -16,7 +16,7 @@ def test_meta_content_generation():
 
     # Generates master content
     master_meta_generator = MasterMetaGenerator(list_of_snapshot_paths)
-    master_content = master_meta_generator.get_master_meta()
+    master_content = master_meta_generator.generate_master_meta()
 
     # General board/thread info
     board_name: str = master_content["board_name"]
