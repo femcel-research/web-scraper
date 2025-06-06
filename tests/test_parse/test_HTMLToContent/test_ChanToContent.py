@@ -892,3 +892,340 @@ def test_get_replied_to_ids_no_not_found_error(mocker):
     replied_to_ids: list[str] = chan_to_content.get_post_replied_to_ids(post)
 
     assert replied_to_ids == []
+    
+def test_get_original_post_data(mocker):
+    "Test get_original_post_data() returns properly formatted data."
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <a href='b/t/11.jpg'>
+                <img class='post-image' src='/b/t/11.jpg' alt>
+            </a>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                    <span class='name'>Dorothy Ashby</span>
+                    <span>
+                        <a class='date' title='06/05/25 (Thu) 02:30:01 PM'>
+                            <time datetime='2025-06-05T14:30:01Z'>
+                            </time>
+                        </a>
+                    </span>
+                </p>
+                <div class='body'>
+                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    The quick brown fox jumps over the lazy dog.
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    thread_id: str = "101010"
+    op_class: str = "post_op"
+    root_domain: str = "ex.com"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_id = thread_id
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+    chan_to_content.root_domain = root_domain
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    original_post_data: dict = chan_to_content.get_original_post_data(post)
+
+    assert original_post_data == {
+        "date_posted":
+            "2025-06-05T14:30:01",
+        "post_id": 
+            "101010",
+        "post_content":
+            "The quick brown fox jumps over the lazy dog.",
+        "img_links": 
+            ["ex.com/b/t/11.jpg"],
+        "username":
+            "Dorothy Ashby",
+        "replied_to_ids":
+            ["/b/01"]}
+    
+
+def test_get_reply_post_data(mocker):
+    "Test get_reply_post_data() returns properly formatted data."
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post reply' id='reply_101010'>
+                <p class='intro'>
+                    <div class='file'>
+                        <a href='b/t/11.jpg'>
+                            <img class='post-image' src='/b/t/11.jpg' alt>
+                        </a>
+                    </div>
+                    <span class='name'>Dorothy Ashby</span>
+                    <span>
+                        <a class='date' title='06/05/25 (Thu) 02:30:01 PM'>
+                            <time datetime='2025-06-05T14:30:01Z'>
+                            </time>
+                        </a>
+                    </span>
+                </p>
+                <div class='body'>
+                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    The quick brown fox jumps over the lazy dog.
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    thread_id: str = "101010"
+    reply_class: str = "post reply"
+    root_domain: str = "ex.com"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_id = thread_id
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.reply_class = reply_class
+    chan_to_content.root_domain = root_domain
+
+    # Act & Assert
+    posts: list[Tag] = chan_to_content.get_reply_posts()
+    reply_post_data: dict = chan_to_content.get_reply_post_data(posts[0])
+
+    assert reply_post_data == {
+        "date_posted":
+            "2025-06-05T14:30:01",
+        "post_id": 
+            "101010",
+        "post_content":
+            "The quick brown fox jumps over the lazy dog.",
+        "img_links": 
+            ["ex.com/b/t/11.jpg"],
+        "username":
+            "Dorothy Ashby",
+        "replied_to_ids":
+            ["/b/01"]}
+
+def test_get_all_post_data(mocker):
+    """Test get_all_post_data() returns properly formatted data."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <a href='b/t/11.jpg'>
+                <img class='post-image' src='/b/t/11.jpg' alt>
+            </a>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                    <span class='name'>Dorothy Ashby</span>
+                    <span>
+                        <a class='date' title='06/05/25 (Thu) 02:30:01 PM'>
+                            <time datetime='2025-06-05T14:30:01Z'>
+                            </time>
+                        </a>
+                    </span>
+                </p>
+                <div class='body'>
+                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    The quick brown fox jumps over the lazy dog.
+                </div>
+            </div>
+            <div class='post reply' id='reply_010101'>
+                <p class='intro'>
+                    <div class='file'>
+                        <a href='b/t/11.jpg'>
+                            <img class='post-image' src='/b/t/11.jpg' alt>
+                        </a>
+                    </div>
+                    <span class='name'>Dorothy Ashby</span>
+                    <span>
+                        <a class='date' title='06/05/25 (Thu) 02:30:01 PM'>
+                            <time datetime='2025-06-05T14:30:01Z'>
+                            </time>
+                        </a>
+                    </span>
+                </p>
+                <div class='body'>
+                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    The quick brown fox jumps over the lazy dog.
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    thread_id: str = "101010"
+    op_class: str = "post_op"
+    reply_class: str = "post reply"
+    root_domain: str = "ex.com"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_id = thread_id
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+    chan_to_content.reply_class = reply_class
+    chan_to_content.root_domain = root_domain
+
+    # Act & Assert
+    original_post: Tag = chan_to_content.get_original_post()
+    reply_posts: list[Tag] = chan_to_content.get_reply_posts()
+
+    assert chan_to_content.get_all_post_data(original_post, reply_posts) == {
+        "original_post":
+            {
+            "date_posted":
+                "2025-06-05T14:30:01",
+            "post_id": 
+                "101010",
+            "post_content":
+                "The quick brown fox jumps over the lazy dog.",
+            "img_links": 
+                ["ex.com/b/t/11.jpg"],
+            "username":
+                "Dorothy Ashby",
+            "replied_to_ids":
+                ["/b/01"]},
+        "reply_010101":
+            {
+            "date_posted":
+                "2025-06-05T14:30:01",
+            "post_id": 
+                "010101",
+            "post_content":
+                "The quick brown fox jumps over the lazy dog.",
+            "img_links": 
+                ["ex.com/b/t/11.jpg"],
+            "username":
+                "Dorothy Ashby",
+            "replied_to_ids":
+                ["/b/01"]}}
+    
+def test_get_all_post_data_op_only(mocker):
+    """Test get_all_post_data() returns data when no replies."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <a href='b/t/11.jpg'>
+                <img class='post-image' src='/b/t/11.jpg' alt>
+            </a>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                    <span class='name'>Dorothy Ashby</span>
+                    <span>
+                        <a class='date' title='06/05/25 (Thu) 02:30:01 PM'>
+                            <time datetime='2025-06-05T14:30:01Z'>
+                            </time>
+                        </a>
+                    </span>
+                </p>
+                <div class='body'>
+                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    The quick brown fox jumps over the lazy dog.
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    thread_id: str = "101010"
+    op_class: str = "post_op"
+    reply_class: str = "post reply"
+    root_domain: str = "ex.com"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_id = thread_id
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+    chan_to_content.reply_class = reply_class
+    chan_to_content.root_domain = root_domain
+
+    # Act & Assert
+    original_post: Tag = chan_to_content.get_original_post()
+    reply_posts: list[Tag] = chan_to_content.get_reply_posts()
+
+    assert chan_to_content.get_all_post_data(original_post, reply_posts) == {
+        "original_post":
+            {
+            "date_posted":
+                "2025-06-05T14:30:01",
+            "post_id": 
+                "101010",
+            "post_content":
+                "The quick brown fox jumps over the lazy dog.",
+            "img_links": 
+                ["ex.com/b/t/11.jpg"],
+            "username":
+                "Dorothy Ashby",
+            "replied_to_ids":
+                ["/b/01"]}}
+    
+def test_collect_all_data(mocker):
+    """Test collect_all_data() formats all data from initialization."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+    board_name: str = "Test"
+    thread_title: str = "Scraper"
+    thread_id: str = "101010"
+    url: str = "example.com"
+    date_published: str = "2025-06-06T16:00:01"
+    date_updated: str = "2025-06-06T16:00:02"
+    date_scraped: str = "2025-06-06T16:00:03"
+    posts: dict = {
+        "original_post":
+            {
+            "date_posted":
+                "2025-06-05T14:30:01",
+            "post_id": 
+                "101010",
+            "post_content":
+                "The quick brown fox jumps over the lazy dog.",
+            "img_links": 
+                ["ex.com/b/t/11.jpg"],
+            "username":
+                "Dorothy Ashby",
+            "replied_to_ids":
+                ["/b/01"]}}
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.board_name = board_name
+    chan_to_content.thread_title = thread_title
+    chan_to_content.thread_id = thread_id
+    chan_to_content.snapshot_url = url
+    chan_to_content.date_published = date_published
+    chan_to_content.date_updated = date_updated
+    chan_to_content.date_scraped = date_scraped
+    chan_to_content.all_post_data = posts
+    
+    # Act & Assert
+    assert chan_to_content.collect_all_data() == {
+        "board_name":
+            board_name,
+        "thread_title":
+            thread_title,
+        "thread_id":
+            thread_id,
+        "url":
+            url,
+        "date_published":
+            date_published,
+        "date_updated":
+            date_updated,
+        "date_scraped":
+            date_scraped,
+        "posts":
+            posts}
