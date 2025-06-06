@@ -157,7 +157,10 @@ class SnapshotMetaGenerator:
             metadata (dict): Dictionary containing metadata values.
         """
         with open(self.meta_file_path, "w", encoding="utf-8") as f:
-            json.dump(self.metadata, f, indent=2, ensure_ascii=False)
+            json.dump(self.generate_meta, f, indent=2, ensure_ascii=False)
+    
+    def get_path(self) -> str:
+        return self.meta_file_path
 
     # Main method:
     def generate_meta(self) -> dict:

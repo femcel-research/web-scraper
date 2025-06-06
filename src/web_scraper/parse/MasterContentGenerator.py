@@ -46,27 +46,27 @@ class MasterContentGenerator:
         """
 
         for snapshot_content_path in self.list_of_content_paths:
-            logger.info(f"Snapshot path: {snapshot_content_path}")
+            logger.debug(f"Snapshot path: {snapshot_content_path}")
             with open(snapshot_content_path, "r") as file:
                 data = json.load(file)
             snapshot_content = data
 
             # Retrieves OP and replies from snapshot and adds their ids to a set
             original_post: dict = snapshot_content["original_post"]
-            logger.info(f"Original post retrieved.")
+            logger.debug(f"Original post retrieved.")
 
             replies: dict = snapshot_content["replies"]
-            logger.info(f"Replies retrieved.")
+            logger.debug(f"Replies retrieved.")
 
             self.gather_all_post_ids(original_post, replies)
-            logger.info(f"All post ids gathered from snapshot.")
+            logger.debug(f"All post ids gathered from snapshot.")
 
             # Update master posts with any new snapshot posts
             self.original_post.update(original_post)
-            logger.info(f"Master original post updated to snapshot original post.")
+            logger.debug(f"Master original post updated to snapshot original post.")
 
             self.all_replies.update(replies)
-            logger.info(f"Master replies updated with snapshot replies.")
+            logger.debug(f"Master replies updated with snapshot replies.")
 
         original_post_id: str = self.original_post["post_id"]
 
@@ -130,7 +130,11 @@ class MasterContentGenerator:
         thread_folder_path = os.path.dirname(snapshot_folder_path)
 
         # File path of master content
-        master_content_filepath = os.path.join(thread_folder_path, file_name)
+        self.master_content_filepath = os.path.join(thread_folder_path, file_name)
+        contents = self.generate_master_content()
+        
+        with open(self.master_content_filepath, "w", encoding="utf-8") as f:
+            json.dump(contents, f, indent=2, ensure_ascii=False)
 
-        with open(master_content_filepath, "w", encoding="utf-8") as f:
-            json.dump(self.master_contents, f, indent=2, ensure_ascii=False)
+    def get_path(self) -> str:
+        return self.master_content_filepath
