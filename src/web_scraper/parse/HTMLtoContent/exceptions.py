@@ -20,3 +20,6 @@ class TagNotFoundError(Exception):
 class ContentInitError(Exception):
     """Exception raised when a snapshot content file is unable to be made."""
     pass
+
+class DataArrangementError(Exception):
+    """Exception raised when a post's content data doesn't come together."""

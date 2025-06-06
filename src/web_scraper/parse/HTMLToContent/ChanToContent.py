@@ -26,11 +26,14 @@ class ChanToContent:
     Expect the parameters for different chan-style websites to be located
     in the params/ directory within the web-scraper project.
 
+    Attributes:
+        self.data (dict): A dictionary of all data for a thread snapshot.
+
     TODO: Add tripcode collection functionality
     """
 
     def __init__(
-            self, scrape_time: datetime,
+            self, date_scraped: str,
             thread_soup: BeautifulSoup, snapshot_url: str, site_dir: str,
             op_class: str, reply_class: str, root_domain: str):
         """Given the HTML for a chan-style thread snapshot, data is collected.
@@ -39,7 +42,7 @@ class ChanToContent:
         object on initialization, ready to be written out to a JSON.
 
         Args:
-            scrape_time (datetime): Time of scrape.
+            scrape_time (str): Formatted time of scrape.
             thread_soup (BeautifulSoup): HTML from a thread in a soup object.
             snapshot_url (str): NOT a parameter, URL of the thread snapshot.
             site_dir (str): Directory for content files.
@@ -53,8 +56,7 @@ class ChanToContent:
         """
         self.logger = logging.getLogger(__name__)
 
-        # TODO: Maybe scrape_time should be a pre-formatted string?
-        self.scrape_time = scrape_time
+        self.date_scraped = date_scraped
         self.thread_soup = thread_soup
         self.snapshot_url = snapshot_url
         self.site_dir = site_dir  # Parameter
@@ -65,58 +67,44 @@ class ChanToContent:
         # Initialization: Extracting all data from the thread_soup
         self.logger.info("Beginning the process of extracting content data " \
             "from this thread snapshot's soup object")
-        # Extracting the board name and thread title
         try:
+            # Extracting the board name and thread title
             self.board_name: str = self.get_board_name_and_thread_title()\
                 ["board"]
             self.thread_title: str = self.get_board_name_and_thread_title()\
                 ["title"]
-        except Exception as error:
-            self.init_error_log_raise(error)
-        # Extracting the thread ID
-        try:
+            
+            # Extracting the thread ID
             self.thread_id: str = self.get_thread_id()
-        except Exception as error:
-            self.init_error_log_raise(error)
-        # Extracting the date published (when the page was created) 
-        # and date updated (when the page was most recently changed)
-        try:
+
+            # Extracting the date published (when the page was created) 
+            # and date updated (when the page was most recently changed)
             self.date_published: str = self.get_date_published_and_updated()\
                 ["date_published"]
             self.date_updated: str = self.get_date_published_and_updated()\
                 ["date_updated"]
+            
+            # Extracting the original post Tag
+            original_post_tag: Tag = self.get_original_post()
+
+            # Extracting the list of reply post Tags
+            reply_post_tag_list: list[Tag] = self.get_reply_posts()
+            
+            # Collecting the data from each post (OP and each reply post)
+            self.all_post_data: dict = self.get_all_post_data(
+                original_post_tag, reply_post_tag_list)
+            
+            # Final assignment of everything to tags in a dictionary
+            self.data: dict = self.collect_all_data()
         except Exception as error:
-            self.init_error_log_raise(error)
-        # Extracting the original post Tag
-        try:
-            self.original_post_tag: Tag = self.get_original_post()
-        except Exception as error:
-            self.init_error_log_raise(error)
-        # Extracting the list of reply post Tags
-        try:
-            self.reply_post_tag_list: list[Tag] = self.get_reply_posts()
-        except Exception as error:
-            self.init_error_log_raise(error)
+            self.logger.error(f"Error when trying to initialize: {error}")
+            raise ContentInitError(
+                f"Error when trying to initialize: {error}") from error
         # End of initialization
         self.logger.info(
             "Successfully extracted and collected all content data from the "\
                 f"snapshot of thread {self.thread_id}")
-    
-    def init_error_log_raise(self, error: Exception):
-        """Posts the passed exception in log as an error, and raises it.
         
-        Used to reduce repetition in __init__().
-
-        Arguments:
-            error (Exception): An exception from another method.
-
-        Raises:
-            ContentInitError: When an error occurs during initializaton.
-        """
-        self.logger.error(f"Error when trying to initialize: {error}")
-        raise ContentInitError(
-            f"Error when trying to initialize: {error}") from error
-
     def get_board_name_and_thread_title(self) -> dict:
         """Extracts a board name/title from the initialized soup object.
         
@@ -283,7 +271,6 @@ class ChanToContent:
         except Exception as error:
             self.logger.error(f"Reply post(s) not found: {error}")
             raise TagNotFoundError (f"Reply post(s) not found: {error}")
-        pass
 
     def get_original_post_data(self, original_post: Tag) -> dict:
         """Extracts all necessary data from an original post.
@@ -302,6 +289,9 @@ class ChanToContent:
 
         Returns:
             A dictionary of the tags above and their corresponding data.
+
+        Raises:
+            DataArrangementError: When there is a problem with a post's data.
         """
         try:
             date_posted: str = self.get_post_date(original_post)
@@ -336,8 +326,12 @@ class ChanToContent:
                 #     ,
                 "replied_to_ids":
                     replied_to_ids}
+            
+            return original_post_data
         except:
-            pass
+            self.logger.error(f"Error in post data: {original_post}")
+            raise DataArrangementError (
+                f"Error in post data: {original_post}")
 
     def get_reply_post_data(self, reply_post: Tag) -> dict:
         """Extracts all necessary data from an individual reply post.
@@ -356,6 +350,9 @@ class ChanToContent:
 
         Returns:
             A dictionary of the tags above and their corresponding data.
+
+        Raises:
+            DataArrangementError: When there is a problem with a post's data.
         """
         try:
             date_posted: str = self.get_post_date(reply_post)
@@ -380,8 +377,12 @@ class ChanToContent:
                 #     ,
                 "replied_to_ids":
                     replied_to_ids}
+            
+            return reply_post_data
         except:
-            pass
+            self.logger.error(f"Error in post data: {reply_post}")
+            raise DataArrangementError (
+                f"Error in post data: {reply_post}")
 
     def get_post_date(self, post_tag: Tag) -> str:
         """Extracts the date and time from a given post.
@@ -642,22 +643,74 @@ class ChanToContent:
             raise Exception(
                 f"Unexpected error when extracting replied-to IDs: {error}")
     
+    def get_all_post_data(self, op: Tag, replies: list[Tag]) -> dict:
+        """Collects a formatted dictionary of all data from every post.
+        
+        The original post and every reply is contained within the returned
+        dictionary, along with each post's post date, post ID, post
+        content, image links, username, and replied-to posts.
+
+        Arguments:
+            op (Tag): The original_post Tag.
+            replies (list[Tag]): The list of reply_post Tags.
+
+        Returns:
+            A dictionary of every post (and its data) from the thread.
+
+        Raises:
+            DataArrangementError: When putting it all together goes wrong.
+        """
+        self.logger.debug("Collecting data from every post in the thread")
+        try:
+            all_post_data: dict = {}
+
+            all_post_data["original_post"] = self.get_original_post_data(op)
+
+            reply: Tag
+            for reply in replies:
+                all_post_data[f"reply_{self.get_post_id(reply)}"] = (
+                    self.get_reply_post_data(reply))
+            self.logger.debug("Data from every post successfully collected")
+
+            return all_post_data
+        except Exception as error:
+            self.logger.error("Error while collecting all post data")
+            raise DataArrangementError("Error while collecting all post data")
     
-    # def get_thread_contents(
-    #         self, thread_number, original_post, post_replies, 
-    #         url, post_date_location):
-    #     """Returns thread contents as a JSON"""
-    #     op = self.extract_original_post(
-    #         original_post, url, post_date_location, thread_number)
-    #     replies = self.extract_replies(post_replies, url, post_date_location)
+    def collect_all_data(self) -> dict:
+        """The final call during initialization; collects all data to dict.
+        
+        Depends on every other initialization process being complete.
 
-    #     thread_contents = {
-    #         "thread_number": 
-    #             thread_number,
-    #         "original_post": 
-    #             op,
-    #         "replies": 
-    #             replies,
-    #     }
-
-    #     return thread_contents
+        Returns:
+            The final dictionary of all data, ready to be written to a JSON.
+        
+        Raises:
+            DataArrangementError: When something goes wrong?
+        """
+        self.logger.debug(
+            "Collecting all data from thread snapshot into a dictionary")
+        try:
+            all_snapshot_data: dict = {
+                "board_name":
+                    self.board_name,
+                "thread_title":
+                    self.thread_title,
+                "thread_id":
+                    self.thread_id,
+                "url":
+                    self.snapshot_url,
+                "date_published":
+                    self.date_published,
+                "date_updated":
+                    self.date_updated,
+                "date_scraped":
+                    self.date_scraped,
+                "posts":
+                    self.all_post_data}
+            
+            return all_snapshot_data
+        except:
+            self.logger.error("Error during final collection of thread data")
+            raise DataArrangementError(
+                "Error during final collection of thread data")
