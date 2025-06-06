@@ -308,18 +308,24 @@ class ChanToContent:
                 post_id: str = self.get_post_id(original_post)
             except:
                 # The OP ID should match the overall thread ID
-                # so this is a sufficient backup
+                # so this is a sufficient backup (and behavior
+                # that doesn't need to be replicated for reply posts)
                 post_id: str = self.thread_id
-            post_content: str
+            post_content: str = self.get_post_content(original_post)
+            # Include the thread image as OP image (unlikely to cause
+            # duplicates because the thread image has only been seen
+            # beyond the scope of the original post tag)
+            img_links: list[str] = self.get_thread_image_link
+            img_links.append(self.get_post_image_links(original_post))
         # original_post_data = {
         #     "date_posted":
-        #         ,
+        #         date_posted,
         #     "post_id": 
-        #         ,
+        #         post_id,
         #     "post_content":
-        #         ,
-        #     "image_links": 
-        #         ,
+        #         post_content,
+        #     "img_links": 
+        #         img_links,
         #     "username":
         #         ,
         #     "tripcode":
@@ -350,22 +356,23 @@ class ChanToContent:
         try:
             date_posted: str = self.get_post_date(reply_post)
             post_id: str = self.get_post_id(reply_post)
-            post_content: str
+            post_content: str = self.get_post_content(reply_post)
+            img_links: list[str] = self.get_post_image_links(reply_post)
         # reply_post_data = {
         #     "date_posted":
-        #         ,
+        #         date_posted,
         #     "post_id": 
-        #         ,
+        #         post_id,
         #     "post_content":
-        #         ,
-        #     "image_links": 
-        #         ,
+        #         post_content,
+        #     "img_links": 
+        #         img_links,
         #     "username":
         #         ,
         #     "tripcode":
         #         ,
         #     "replied_to_ids":
-
+        
         # }
         except:
             pass
@@ -487,22 +494,87 @@ class ChanToContent:
         except Exception as error:
             self.logger.error(f"Post content not found: {error}")
             raise TagNotFoundError (f"Post content not found: {error}")
-    
-    # def extract_images(self, post, url):
-    #         """Extracts image links from a given post and returns an array.
-            
-    #         Args:
-    #             post            
-    #         """
-    #         image_links = []
+        
+    def get_post_image_links(self, post_tag: Tag) -> list[str]:
+        """Extracts the image links from a given post.
 
-    #         # For each image tag in a given post, get it's source and 
-    #         # add it to the list of image links
-    #         for image in post.find_all("img", class_="post-image"):
-    #             src = image.get("src")
-    #             if src:
-    #                 image_links.append(f"{url}{src}")
-    #         return image_links    
+        For each <image> tag in a given post, its source is retrieved
+        and added to a list of image links. Depends on the class for
+        the <image> tag being `post-image`.
+
+        Utilizes the parameter `root_domain` to generate absolute URLs.
+
+        A post with multiple image links in it has not been observed,
+        but this implementation utilizes a list to account for any posts
+        that may not have been observed before.
+
+        Does not raise a TagNotFoundError because it is normal for a post to
+        have no image attached to it.
+        
+        Arguments:
+            post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
+
+        Returns:
+            List of (absolute) image URLs from a post as a list of strings.
+
+        Raises:
+            Exception: A generic exception for unanticipated errors.
+        """
+        self.logger.debug(f"Searching for image links within post")
+        image_links: list[str] = []
+        try:
+            image_tag: Tag
+            for image_tag in post_tag.find_all("img", class_="post-image"):
+                image_source: str = image_tag.get("src")
+                if image_source:
+                    image_links.append(f"{self.root_domain}{image_source}")
+                    self.logger.debug(
+                        "Image link within post successfully found: "
+                        f"{self.root_domain}{image_source}")
+
+            return image_links
+        except Exception as error:
+            self.logger.debug(
+                f"Unexpected error when fetching images: {error}")
+            raise Exception(
+                f"Unexpected error when fetching images: {error}")
+        
+    def get_thread_image_link(self) -> str:
+        """Extracts the image link used to start a thread.
+        
+        Utilizes the parameter `root_domain` to generate absolute URLs.
+
+        Depends on a thread ID having already been extracted.
+
+        The thread image is stored outside of the original post tag,
+        so this method should be used in conjunction with
+        `get_post_image_links()` to gather all images that may be
+        associated with the original post.
+
+        Returns:
+            An absolute image URL from the thread.
+
+        Raises:
+            TagNotFoundError: If a thread image can't be found. 
+        """
+        self.logger.debug(f"Searching for a thread image link")
+        try:
+            thread_tag: Tag = (
+                # This remains consistent across all chan-style sites observed
+                self.thread_soup.find("div", id=f"thread_{self.thread_id}"))
+            # First image always appears to be the thread image
+            image_source: str = thread_tag.find("img").get("src")
+            if image_source is None:
+                self.logger.error("Thread image link found, but empty")
+                raise TagNotFoundError("Thread image link found, but empty")
+            else:
+                image_link: str = f"{self.root_domain}{image_source}"
+                self.logger.debug("Thread image link successfully found")
+
+                return image_link
+        except Exception as error:
+            self.logger.error(f"Thread image link not found: {error}")
+            raise TagNotFoundError (f"Thread image link not found: {error}")
 
     # def extract_text(self, post):
     #     """Extracts text from a given post and returns it as a string."""
