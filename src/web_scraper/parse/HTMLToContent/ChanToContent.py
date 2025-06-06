@@ -89,7 +89,7 @@ class ChanToContent:
 
             # Extracting the list of reply post Tags
             reply_post_tag_list: list[Tag] = self.get_reply_posts()
-            
+
             # Collecting the data from each post (OP and each reply post)
             self.all_post_data: dict = self.get_all_post_data(
                 original_post_tag, reply_post_tag_list)
@@ -242,7 +242,7 @@ class ChanToContent:
                 return original_post
         except Exception as error:
             self.logger.error(f"Original post not found: {error}")
-            raise TagNotFoundError (f"Original post not found: {error}")
+            raise TagNotFoundError(f"Original post not found: {error}")
 
 
     def get_reply_posts(self) -> list[Tag]: 
@@ -270,7 +270,7 @@ class ChanToContent:
                 return reply_posts
         except Exception as error:
             self.logger.error(f"Reply post(s) not found: {error}")
-            raise TagNotFoundError (f"Reply post(s) not found: {error}")
+            raise TagNotFoundError(f"Reply post(s) not found: {error}")
 
     def get_original_post_data(self, original_post: Tag) -> dict:
         """Extracts all necessary data from an original post.
@@ -306,11 +306,18 @@ class ChanToContent:
             # Include the thread image as OP image (unlikely to cause
             # duplicates because the thread image has only been seen
             # beyond the scope of the original post tag)
-            img_links: list[str] = self.get_thread_image_link
-            img_links.append(self.get_post_image_links(original_post))
+            img_link: str = self.get_thread_image_link()
             username: str = self.get_post_username(original_post)
             replied_to_ids: list[str] = self.get_post_replied_to_ids(
                 original_post)
+            
+            # Clean up any replied to posts from content tag
+            for reply in replied_to_ids:
+                if reply in post_content:
+                    post_content = post_content.replace(f">>>{reply}\n", "")
+                if (f">>{reply}") in post_content:
+                    post_content = post_content.replace(f">>{reply}\n", "")
+
             original_post_data = {
                 "date_posted":
                     date_posted,
@@ -319,7 +326,7 @@ class ChanToContent:
                 "post_content":
                     post_content,
                 "img_links": 
-                    img_links,
+                    [img_link],  # A list for consistency with replies
                 "username":
                     username,
                 # "tripcode":
@@ -328,10 +335,10 @@ class ChanToContent:
                     replied_to_ids}
             
             return original_post_data
-        except:
-            self.logger.error(f"Error in post data: {original_post}")
-            raise DataArrangementError (
-                f"Error in post data: {original_post}")
+        except Exception as error:
+            self.logger.error(f"Error in post data: {error}")
+            raise DataArrangementError(
+                f"Error in post data: {error}")
 
     def get_reply_post_data(self, reply_post: Tag) -> dict:
         """Extracts all necessary data from an individual reply post.
@@ -362,6 +369,14 @@ class ChanToContent:
             username: str = self.get_post_username(reply_post)
             replied_to_ids: list[str] = self.get_post_replied_to_ids(
                 reply_post)
+            
+            # Clean up any replied to posts from content tag
+            for reply in replied_to_ids:
+                if reply in post_content:
+                    post_content = post_content.replace(f">>>{reply}\n", "")
+                if (f">>{reply}") in post_content:
+                    post_content = post_content.replace(f">>{reply}\n", "")
+
             reply_post_data = {
                 "date_posted":
                     date_posted,
@@ -379,10 +394,10 @@ class ChanToContent:
                     replied_to_ids}
             
             return reply_post_data
-        except:
-            self.logger.error(f"Error in post data: {reply_post}")
-            raise DataArrangementError (
-                f"Error in post data: {reply_post}")
+        except Exception as error:
+            self.logger.error(f"Error in post data: {error}")
+            raise DataArrangementError(
+                f"Error in post data: {error}")
 
     def get_post_date(self, post_tag: Tag) -> str:
         """Extracts the date and time from a given post.
@@ -418,7 +433,7 @@ class ChanToContent:
                 return date_formatted
         except Exception as error:
             self.logger.error(f"Post date not found: {error}")
-            raise TagNotFoundError (f"Post date not found: {error}")
+            raise TagNotFoundError(f"Post date not found: {error}")
         
     def get_post_id(self, post_tag: Tag) -> str:
         """Extracts the ID from a given post.
@@ -463,7 +478,7 @@ class ChanToContent:
                 return post_id
         except Exception as error:
             self.logger.error(f"Post ID not found: {error}")
-            raise TagNotFoundError (f"Post ID not found: {error}")
+            raise TagNotFoundError(f"Post ID not found: {error}")
         
     def get_post_content(self, post_tag: Tag) -> str:
         """Extracts the content from a given post.
@@ -498,7 +513,7 @@ class ChanToContent:
                 return post_text
         except Exception as error:
             self.logger.error(f"Post content not found: {error}")
-            raise TagNotFoundError (f"Post content not found: {error}")
+            raise TagNotFoundError(f"Post content not found: {error}")
         
     def get_post_image_links(self, post_tag: Tag) -> list[str]:
         """Extracts the image links from a given post.
@@ -580,7 +595,7 @@ class ChanToContent:
                 return image_link
         except Exception as error:
             self.logger.error(f"Thread image link not found: {error}")
-            raise TagNotFoundError (f"Thread image link not found: {error}")
+            raise TagNotFoundError(f"Thread image link not found: {error}")
         
     def get_post_username(self, post_tag: Tag) -> str:
         """Extracts a username from a given post.
@@ -605,7 +620,7 @@ class ChanToContent:
                 return formatted_post_username
         except Exception as error:
             self.logger.error(f"Post username not found: {error}")
-            raise TagNotFoundError (f"Post username not found: {error}")
+            raise TagNotFoundError(f"Post username not found: {error}")
 
     def get_post_replied_to_ids(self, post_tag: Tag) -> list[str]:
         """Extracts a list of posts being replied to from a given post.
@@ -710,7 +725,8 @@ class ChanToContent:
                     self.all_post_data}
             
             return all_snapshot_data
-        except:
-            self.logger.error("Error during final collection of thread data")
+        except Exception as error:
+            self.logger.error(
+                f"Error during final collection of thread data: {error}")
             raise DataArrangementError(
-                "Error during final collection of thread data")
+                f"Error during final collection of thread data: {error}")
