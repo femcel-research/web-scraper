@@ -14,5 +14,5 @@ webscraper/
 .cache/
 .codetogether/
 .ctsystem
-./data/crystalcafe/TEST
 ./src/.pytest_cache
+.vscode/

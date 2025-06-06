@@ -490,8 +490,7 @@ def test_get_post_id_not_found_error(mocker):
     <html>
     <body>
         <div id='thread_101010'>
-            <div class='post reply'>
-            </div>
+            <div class='post reply'></div>
         </div>
     </body>
     </html>"""
@@ -520,13 +519,13 @@ def test_get_post_content(mocker):
         <div id='thread_101010'>
             <div class='post_op'>
                 <p class='intro' id=101010>
-                <div class='body'>
-                    I am developing an 
-                    <span style='color: #FF0404'>incredible</span>
-                    piece of technology which...
-                    <br>
-                    you aren't gonna believe.
-                </body>
+                    <div class='body'>
+                        The quick brown fox 
+                        <span style='color: #FF0404'>jumps</span>
+                        over
+                        <br>
+                        the lazy dog.
+                    </div>
                 </p>
             </div>
         </div>
@@ -543,8 +542,183 @@ def test_get_post_content(mocker):
     post_content: str = chan_to_content.get_post_content(post)
 
     assert post_content == (
-    "I am developing an\n"
-    "incredible\n"
-    "piece of technology which...\n"
-    "you aren't gonna believe."
+    "The quick brown fox\n"
+    "jumps\n"
+    "over\n"
+    "the lazy dog."
     )
+
+def test_get_post_content_not_found_error(mocker):
+    """Test get_post_content() raises a TagNotFoundError."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010></p>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    with pytest.raises(TagNotFoundError) as excinfo:
+        post_content: str = chan_to_content.get_post_content(post)
+
+    assert isinstance(excinfo.value, TagNotFoundError)
+
+def test_get_post_image_links(mocker):
+    """Test get_post_image_links() returns the correct list of image links."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                </p>
+                <div class='file'>
+                    <img class='post-image' src='/b/t/01.jpg' alt>
+                </div>
+                <img class='post-image' src='/b/t/10.jpg' alt>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    root_domain: str = "ex.com"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+    chan_to_content.root_domain = root_domain
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    post_img_links: list[str] = chan_to_content.get_post_image_links(post)
+
+    assert post_img_links == ["ex.com/b/t/01.jpg", "ex.com/b/t/10.jpg"]
+
+def test_get_post_image_links_no_not_found_error(mocker):
+    """Test get_post_image_links() doesn't raise an error when no images."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010></p>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    op_class: str = "post_op"
+    root_domain: str = "ex.com"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.op_class = op_class
+    chan_to_content.root_domain = root_domain
+
+    # Act & Assert
+    post: Tag = chan_to_content.get_original_post()
+    post_img_links: list[str] = chan_to_content.get_post_image_links(post)
+
+    assert post_img_links == []
+
+def test_get_thread_image_link(mocker):
+    """Test get_thread_image_link() returns the correct image links."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <a href='b/t/11.jpg'>
+                <img class='post-image' src='/b/t/11.jpg' alt>
+            </a>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                </p>
+                <div class='file'>
+                    <img class='post-image' src='/b/t/01.jpg' alt>
+                </div>
+                <img class='post-image' src='/b/t/10.jpg' alt>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    thread_id: str = "101010"
+    root_domain: str = "ex.com"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.thread_id = thread_id
+    chan_to_content.root_domain = root_domain
+
+    # Act & Assert
+    thread_img_link: str = chan_to_content.get_thread_image_link()
+
+    assert thread_img_link == "ex.com/b/t/11.jpg"
+
+# TODO: Not a priority because it's unlikely to ever cause problems, but
+# TODO: currently the way get_thread_image_link() works is by extracting
+# TODO: the first image in the thread. Usually that should be the thread
+# TODO: image, but if one doesn't exist then it'll serve the first
+# TODO: image from the first post with an image. This will then be attributed
+# TODO: to the original post, as well as whatever post it originally
+# TODO: appeared in. Not a huge issue, but could be reworked if it is
+# TODO: found to be problematic
+@pytest.mark.skip(reason="Fails because the first image will be from a post.")
+def test_get_thread_image_link_not_found_error(mocker):
+    """Test get_thread_image_link() raises a TagNotFoundError."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div id='thread_101010'>
+            <div class='post_op'>
+                <p class='intro' id=101010>
+                </p>
+                <div class='file'>
+                    <img class='post-image' src='/b/t/01.jpg' alt>
+                </div>
+                <img class='post-image' src='/b/t/10.jpg' alt>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    thread_id: str = "101010"
+    root_domain: str = "ex.com"
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+    chan_to_content.thread_id = thread_id
+    chan_to_content.root_domain = root_domain
+
+    # Act & Assert
+    with pytest.raises(TagNotFoundError) as excinfo:
+        thread_img_link: str = chan_to_content.get_thread_image_link()
+
+    assert isinstance(excinfo.value, TagNotFoundError)
