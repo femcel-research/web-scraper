@@ -1,6 +1,6 @@
 import json
 
-from web_scraper.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+from src.web_scraper.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
 
 
 def test_snapshot_generation():
