@@ -6,32 +6,32 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 
-def soup_to_html_file(
-        scrape_time: datetime, source_soup: BeautifulSoup, site_dir: str):
-    """TODO: Writes a soup object to an HTML file.
 
+def soup_to_html_file(source_soup: BeautifulSoup, html_file_path: str):
+    """
     A soup object, made using a thread snapshot, is used to
     write out the snapshot's HTML after being prettified. The file
     is written out according to the directory in the passed
     `site_dir` parameter; the thread ID is extracted before writing and
     is used in conjunction with the scrape time to generate a path and
     file name.
-    
+
     Args:
-        scrape_time (datetime): Time of scrape.
         source_soup (BeautifulSoup): Soup object of a thread snapshot's HTML.
-        site_dir (str): Directory for HTML files.
+        html_path (str): Directory for HTML files.
     """
-    pass
+    with open(html_file_path, "w", encoding="utf-8") as html:
+        html.write(source_soup.prettify())
+
 
 def snapshot_dict_to_json(
-        data_dict: dict, date_scraped: str, thread_id: str, 
-        name: str, start_path: str):
+    data_dict: dict, date_scraped: str, thread_id: str, name: str, start_path: str
+):
     """Writes out dictionary of data for a thread snapshot to a JSON file.
 
     Files will be written to a JSON file according to the arguments passed:
     `f"{start_path}/{thread_id}/{date_scraped}/{name}_{thread_id}.json"`
-    
+
     Args:
         data_dict (dict): Data to be written out.
         date_scraped (str): Date scraped.

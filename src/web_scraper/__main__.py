@@ -105,6 +105,23 @@ for url in url_list:
         params["reply_class"],
         params["root_domain"],
     )
+
+    # Pathing:
+    thread_dir: str = os.path.join(
+        f"./data/{args.params_name}", content_parser.data["thread_id"]
+    )
+    thread_snapshot_path: str = os.path.join(thread_dir, scan_time_str)
+    os.makedirs(thread_snapshot_path, exist_ok=True)
+
+    content_file_path: str = os.path.join(
+        thread_snapshot_path, f"content_{content_parser.data["thread_id"]}.json"
+    )
+    html_file_path: str = os.path.join(thread_snapshot_path, f"thread_{content_parser.data["thread_id"]}.html")
+
+    # Save HTML:
+    soup_to_html_file(soup, html_file_path)
+
+    # Content JSON creation:
     snapshot_dict_to_json(
         content_parser.data,
         scan_time_str,
@@ -115,18 +132,9 @@ for url in url_list:
     # TODO: Using the f-string for the data directory instead of
     # params["site_dir"] for now for testing
 
-    # Pathing:
-    thread_dir: str = os.path.join(
-        f"./data/{args.params_name}", content_parser.data["thread_id"]
-    )
-    thread_snapshot_path: str = os.path.join(thread_dir, scan_time_str)
-    content_filepath: str = os.path.join(
-        thread_snapshot_path, f"content_{content_parser.data["thread_id"]}.json"
-    )
-
     # Snapshot meta creation:
     snapshot_meta_generator: SnapshotMetaGenerator = SnapshotMetaGenerator(
-        content_filepath
+        content_file_path
     )
     snapshot_meta_generator.meta_dump()
 
