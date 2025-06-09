@@ -3,7 +3,7 @@ import os
 import pytest
 
 
-from web_scraper.parse.MasterContentGenerator import MasterContentGenerator
+from src.web_scraper.parse.MasterContentGenerator import MasterContentGenerator
 
 
 def test_meta_content_generation():
