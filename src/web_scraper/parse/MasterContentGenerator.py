@@ -78,16 +78,6 @@ class MasterContentGenerator:
                 "replies": self.all_replies,
             }
         )
-
-        # Previous scan time is updated to the date of last scan
-        previous_scan_time = self.master_contents["date_of_latest_scan"]
-        self.master_contents.update({"date_of_previous_scan": previous_scan_time})
-        logger.info(f"Date of previous scan has been updated to: {previous_scan_time}")
-
-        # Date of latest scan is updated to current time
-        current_time = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
-        self.master_contents.update({"date_of_latest_scan": current_time})
-        logger.info(f"Date of latest scan has been updated to: {current_time}")
         
         return self.master_contents
 
@@ -120,9 +110,9 @@ class MasterContentGenerator:
         # Pathing: Finds thread directory by finding parent folder of snapshot directory
 
         # Retrieves thread_id from OP post_id: done under the assumption OP post id = thread id.
+        contents = self.generate_master_content()
         original_post_id: str = self.original_post["post_id"]
-
-        file_name = f"master_version{original_post_id}.json"
+        file_name = f"master_version_{original_post_id}.json"
 
         # Finds thread directory by finding the parent of the snapshot folder
         snapshot_content_path = self.list_of_content_paths[0]
@@ -131,7 +121,6 @@ class MasterContentGenerator:
 
         # File path of master content
         self.master_content_filepath = os.path.join(thread_folder_path, file_name)
-        contents = self.generate_master_content()
         
         with open(self.master_content_filepath, "w", encoding="utf-8") as f:
             json.dump(contents, f, indent=2, ensure_ascii=False)

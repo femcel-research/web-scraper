@@ -151,13 +151,11 @@ class SnapshotMetaGenerator:
         return all_post_dates
 
     def meta_dump(self) -> None:
-        """Dumps website metadata into a JSON file.
-
-        Args:
-            metadata (dict): Dictionary containing metadata values.
+        """Dumps thread metadata into a JSON file.
         """
+        meta: dict = self.generate_meta()
         with open(self.meta_file_path, "w", encoding="utf-8") as f:
-            json.dump(self.generate_meta, f, indent=2, ensure_ascii=False)
+            json.dump(meta, f, indent=2, ensure_ascii=False)
     
     def get_path(self) -> str:
         return self.meta_file_path
@@ -176,8 +174,7 @@ class SnapshotMetaGenerator:
         # Data relating to dates/time:
         date_published: str = self.content_json["date_published"]
         date_updated: str = self.content_json["date_updated"]
-        current_date = datetime.now()
-        date_scraped: str = current_date.strftime("%Y-%m-%dT%H:%M:%S")
+        date_scraped: str = self.content_json["date_scraped"]
         all_post_dates: set = self.gather_all_post_dates()
 
         # Data relating to post ids
@@ -187,7 +184,7 @@ class SnapshotMetaGenerator:
         # Data relating to word count
         num_all_words: int = self.calculate_num_words()
 
-        self.metadata = {
+        metadata = {
             "board_name": board_name,
             "thread_title": thread_title,
             "thread_id": thread_id,
@@ -195,12 +192,12 @@ class SnapshotMetaGenerator:
             "date_published": date_published,
             "date_updated": date_updated,
             "date_scraped": date_scraped,
-            "all_post_dates": all_post_dates,
-            "all_post_ids": all_post_ids,
+            "all_post_dates": list(all_post_dates),
+            "all_post_ids": list(all_post_ids),
             "num_all_post_ids": num_all_post_ids,
             "num_all_words": num_all_words,
         }
 
-        return self.metadata
+        return metadata
 
     

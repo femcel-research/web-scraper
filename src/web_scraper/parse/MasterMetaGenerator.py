@@ -236,4 +236,12 @@ class MasterMetaGenerator:
             logger.debug(
                 f"Updated master num_lost_post_ids to {num_lost_post_ids}"
             )
+
+        #Convert sets to lists:
+        self.master_metadata ["all_post_dates"] =  list(self.master_metadata ["all_post_dates"])
+        self.master_metadata ["all_update_dates"] =  list(self.master_metadata ["all_update_dates"])
+        self.master_metadata ["all_scrape_dates"] =  list(self.master_metadata ["all_scrape_dates"])
+        self.master_metadata ["unique_post_ids"] =  list(self.master_metadata ["unique_post_ids"])
+        self.master_metadata ["lost_post_ids"] =  list(self.master_metadata ["lost_post_ids"])
+
         return self.master_metadata

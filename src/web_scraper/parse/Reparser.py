@@ -4,7 +4,7 @@ import glob
 import json
 import logging
 import os
-from write_out import *
+from web_scraper.write_out import *
 
 from bs4 import BeautifulSoup
 from HTMLToContent.ChanToContent import ChanToContent

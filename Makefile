@@ -2,14 +2,14 @@
 MAIN = ./src/web_scraper/__main__.py
 REPARSER = ./src/web_scraper/parse/Reparser.py
 PORTION_RETRIEVER = ./src/web_scraper/portion/PortionRetriever.py
-SITE_NAME ?=  # reflected in data subfolder name (i.e crystalcafe is named crystal.cafe in data)
+SITE_NAME ?=# reflected in data subfolder name (i.e crystalcafe is named crystal.cafe in data)
 
 # Portioning vars:
 THREAD_PERCENTAGE ?= 10 # can be overwritten in command-line. i.e (make portion THREAD_PERCENTAGE = 15)
 RANDOMIZE ?= 1 # sets randomization as true
 
 # Scrapes new data, reparses old data, and outputs thread portions
-all: setup scrape reparse portion
+all: setup test_all scrape reparse portion
 
 # Installs dependencies
 setup:
@@ -17,20 +17,22 @@ setup:
 	pip install -r requirements.txt
 	@echo "Dependencies installed."
 
-# Scrapes and parses new data
-scrape: test_all
+# Scrapes and parses new data for a specified S
+scrape: test_fetch test_scrape test_parse
 	@echo "Scraping and parsing new data for $(SITE_NAME)..."
 	python $(MAIN) $(SITE_NAME)
 	@echo "Scraping and parsing complete!"
 
 # Reparses existing data from their saved HTMLs
-reparse: test_all
-	ifeq ($(SITE_NAME),)
-		@echo "No site name entered. Reparsing all data."
-	else
-		@echo "Reparsing all data for $(SITE_NAME)"
-		
+reparse: test_parse
+# ifeq ($(SITE_NAME),)
+# 	@echo "No site name entered. Reparsing all data."
+# 	python $(REPARSER)
+# else
+	@echo "Reparsing data"
 	python $(REPARSER) $(SITE_NAME)
+		
+	
 	@echo "Reparsing complete!"
 
 # Retrieves portions from all sites
@@ -62,8 +64,7 @@ test_scrape:
 clean:
 	@echo "Cleaning up..."
 	rm -rf __pycache__
-	rm -rf ./data/thread_portion/crystal.cafe
-	rm -rf ./data/thread_portion/wizchan
+	rm -rf ./data/thread_portion/*
 	@echo "Cleanup complete."      
 
 .PHONY: run clean
