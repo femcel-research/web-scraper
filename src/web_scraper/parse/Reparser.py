@@ -1,7 +1,12 @@
 import argparse
+import datetime
 import glob
+import json
 import logging
 import os
+from write_out import *
+
+from bs4 import BeautifulSoup
 from HTMLToContent.ChanToContent import ChanToContent
 from .SnapshotMetaGenerator import SnapshotMetaGenerator
 from .MasterContentGenerator import MasterContentGenerator
@@ -48,9 +53,55 @@ class Reparser:
             f"Master meta has been regenerated for thread path: {thread_folder_path}"
         )  # Log message
 
+    def generate_content(self, html: str, site_name: str) -> str:
+        """Generates a content JSON from saved HTML and returns the file path.
+        Args:
+            scan_time_str (str): String containing scan time
+            html (str): String containing HTML
+            site_name (str): String containing site_name. Spelling must corresponds to the site's data subfolder name.
+
+        Returns:
+            content_file_path (str): String containing the filepath for the generated content file.
+        """
+        # Content creation:
+        scan_time_str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
+        params_file_list = glob.glob(f"./data/params/{site_name}*.json")
+        params_path = params_file_list[0]
+        with open(params_path, "r") as params_file:
+            params = json.load(params_file)
+
+        html_soup = BeautifulSoup(html, features="html.parser")
+        content_parser = ChanToContent(
+            scan_time_str,
+            html_soup,
+            params["hp_url"],
+            params["op_class"],
+            params["reply_class"],
+            params["root_domain"],
+        )
+        snapshot_dict_to_json(
+            content_parser.data,
+            scan_time_str,
+            content_parser.data["thread_id"],
+            "content",
+            f"./data/{site_name}",
+        )
+
+        thread_data_path: str = os.path.join(
+            f"./data/{site_name}", content_parser.data["thread_id"], scan_time_str
+        )
+        os.makedirs(thread_data_path, exist_ok=True)
+        content_filepath: str = os.path.join(
+            thread_data_path, "content_", content_parser.data["thread_id"], ".json"
+        )
+        return content_filepath
+
     def reparse_site(self, site_name):
         """Processes existing files present within a site's data subfolder."""
+
+        # Pathing & param retrieval
         directory = f"./data/{site_name}"
+
         html_pattern = "*.html"  # Look for an html file
         logger.info("Processing existing threads")  # Log message
 
@@ -64,20 +115,15 @@ class Reparser:
 
                 if len(matching_html_files) > 0:
                     # Reparse all snapshots to fit new format
-                    for html in matching_html_files:
-                        # Content creation:
-                        # TODO: Currently we have the HTML, implement pipeline: turning it into content, then meta, then updating masters
-                        content_generator = (
-                            ChanToContent()
-                        )  # have to have logic tree for diff sites?
-                        content_path: str = (
-                            ""  # TODO: implement a getter for the newly created content.json path (easier than globbing)
-                        )
+                    for html_file in matching_html_files:
+                        with open(html_file, "r") as html_file:
+                            html = json.load(html_file)
+
+                        #Generate content and then pass to SnapshotMetaGenerator
+                        content_path = self.generate_content(html, site_name)
                         logger.debug(
                             f"Snapshot content has been generated for HTML path: {html}"
-                        )  # Log message
-
-                        # Snapshot meta creation:
+                        )  # Log message # Snapshot meta creation:]
                         meta_generator = SnapshotMetaGenerator(content_path)
                         meta_generator.meta_dump()
                         logger.debug(
@@ -97,7 +143,9 @@ class Reparser:
 
 
 if __name__ == "__main__":  # used to run script as executable
-    parser = argparse.ArgumentParser(description="Reparses data. If no site_name is entered, all data is reparsed.")
+    parser = argparse.ArgumentParser(
+        description="Reparses data. If no site_name is entered, all data is reparsed."
+    )
     parser.add_argument(
         "site_name", type=str, help="Name of the site data folder (e.g., crystal.cafe)"
     )
