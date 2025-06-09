@@ -11,7 +11,8 @@ from pathlib import Path
 
 from fetch import fetch_html_content
 from scrape import HomepageScraper
-from parse import ChanToContent
+from parse.HTMLToContent import ChanToContent
+from write_out import *
 
 scan_time_str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")  # ISO format
 
@@ -89,9 +90,13 @@ scraper: HomepageScraper = HomepageScraper(
     homepage, params["domain"], params["container"])
 url_list: list[str] = scraper.homepage_to_list()
 for url in url_list:
-    soup = BeautifulSoup(fetch_html_content(url))
+    soup = BeautifulSoup(fetch_html_content(url), features="html.parser")
     content_parser: ChanToContent = ChanToContent(
         scan_time_str, soup, url, params["op_class"],
         params["reply_class"], params["root_domain"])
-    print(content_parser.data)
+    snapshot_dict_to_json(
+        content_parser.data, scan_time_str, content_parser.data["thread_id"],
+        "content", f"./data/test/{args.params_name}")
+    # TODO: Using the f-string for the data directory instead of 
+    # params["site_dir"] for now for testing
     

@@ -290,7 +290,7 @@ class ChanToContent:
         TODO: Add tripcode collection functionality
         TODO: If a tripcode isn't available, it is assigned an empty string.
 
-        Arguments:
+        Args:
             original_post (Tag): Where the post data should originate from.
 
         Returns:
@@ -358,7 +358,7 @@ class ChanToContent:
         TODO: Add tripcode collection functionality
         TODO: If a tripcode isn't available, it is assigned an empty string.
 
-        Arguments:
+        Args:
             reply_post (Tag): Where the post data should originate from.
 
         Returns:
@@ -411,7 +411,7 @@ class ChanToContent:
         The date and time is formatted according to the formatting standards
         used elsewhere throughout the project: `%Y-%m-%dT%H:%M:%S`
 
-        Arguments:
+        Args:
             post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
 
         Returns:
@@ -444,7 +444,7 @@ class ChanToContent:
     def get_post_id(self, post_tag: Tag) -> str:
         """Extracts the ID from a given post.
         
-        Arguments:
+        Args:
             post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
 
         Returns:
@@ -497,7 +497,7 @@ class ChanToContent:
         file type which contains all of the data from a particular snapshot
         of a thread.
         
-        Arguments:
+        Args:
             post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
 
         Returns:
@@ -538,7 +538,7 @@ class ChanToContent:
         have no image attached to it.
         An empty list is returned if no image links are found.
         
-        Arguments:
+        Args:
             post_tag (Tag): The bs4 Tag corresponding to a post (OP/reply).
 
         Returns:
@@ -671,7 +671,7 @@ class ChanToContent:
         dictionary, along with each post's post date, post ID, post
         content, image links, username, and replied-to posts.
 
-        Arguments:
+        Args:
             op (Tag): The original_post Tag.
             replies (list[Tag]): The list of reply_post Tags.
 
