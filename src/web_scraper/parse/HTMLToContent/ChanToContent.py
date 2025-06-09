@@ -99,8 +99,9 @@ class ChanToContent:
             # TODO: Write tests for the recreation
             if not self.snapshot_url:
                 self.snapshot_url = (
-                    f"https://{self.root_domain}/{self.data["board_name"]}\
-                        /res/{self.data["thread_number"]}")
+                    f"https://{self.root_domain}{self.data["board_name"]}\
+                        res/{self.data["thread_number"]}")
+                # No `/` for the board name because they're already there
         except Exception as error:
             self.logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
