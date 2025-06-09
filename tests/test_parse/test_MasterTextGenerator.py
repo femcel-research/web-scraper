@@ -1,9 +1,9 @@
 # Imports
 import pytest
 
-from PyRTF import Elements
+# from PyRTF import Elements
 
-from src.web_scraper.parse import MasterTextGenerator
+from web_scraper.parse import MasterTextGenerator
 
 @pytest.fixture
 def mock_master_content(mocker):

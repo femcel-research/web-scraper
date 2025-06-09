@@ -2,7 +2,7 @@ import glob
 import os
 
 
-from src.web_scraper.parse.MasterMetaGenerator import MasterMetaGenerator
+from web_scraper.parse.MasterMetaGenerator import MasterMetaGenerator
 
 
 def test_meta_content_generation():
