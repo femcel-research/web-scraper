@@ -25,12 +25,12 @@ def test_meta_content_generation():
 
     # Data relating to dates/time:
     date_published: str = master_content["date_published"]
-    date_updated: str = master_content["date_updated"]
-    date_scraped: str = master_content["date_scraped"]
+    date_updated: str = master_content["most_recent_update_date"]
+    date_scraped: str = master_content["most_recent_scrape_date"]
 
     # Data relating to post ids
-    all_post_ids: set = set(master_content["all_post_ids"])
-    num_all_post_ids: int = master_content["num_all_post_ids"]
+    all_post_ids: set = set(master_content["unique_post_ids"])
+    num_all_post_ids: int = master_content["num_unique_post_ids"]
 
     # Meta from the dummy data folder
     snapshot_meta = {
