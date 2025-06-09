@@ -5,8 +5,8 @@ import pytest
 from bs4 import BeautifulSoup, Tag
 # from datetime import datetime
 
-from src.web_scraper.parse.HTMLToContent import ChanToContent
-from src.web_scraper.parse.HTMLToContent.exceptions import *
+from web_scraper.parse.HTMLToContent import ChanToContent
+from web_scraper.parse.HTMLToContent.exceptions import *
 
 def test_get_thread_id_no_replace_prefix(mocker):
     """Test get_thread_id() captures a thread ID from a soup's HTML."""
@@ -1186,9 +1186,7 @@ def test_collect_all_data(mocker):
     date_published: str = "2025-06-06T16:00:01"
     date_updated: str = "2025-06-06T16:00:02"
     date_scraped: str = "2025-06-06T16:00:03"
-    posts: dict = {
-        "original_post":
-            {
+    original_post: dict = {
             "date_posted":
                 "2025-06-05T14:30:01",
             "post_id": 
@@ -1200,7 +1198,8 @@ def test_collect_all_data(mocker):
             "username":
                 "Dorothy Ashby",
             "replied_to_ids":
-                ["/b/01"]}}
+                ["/b/01"]}
+    all_replies: dict = {}
     chan_to_content.logger = logging.getLogger(__name__)
     chan_to_content.board_name = board_name
     chan_to_content.thread_title = thread_title
@@ -1209,7 +1208,8 @@ def test_collect_all_data(mocker):
     chan_to_content.date_published = date_published
     chan_to_content.date_updated = date_updated
     chan_to_content.date_scraped = date_scraped
-    chan_to_content.all_post_data = posts
+    chan_to_content.original_post = original_post
+    chan_to_content.all_replies = all_replies
     
     # Act & Assert
     assert chan_to_content.collect_all_data() == {
@@ -1227,5 +1227,7 @@ def test_collect_all_data(mocker):
             date_updated,
         "date_scraped":
             date_scraped,
-        "posts":
-            posts}
+        "original_post":
+            original_post,
+        "replies": all_replies
+        }
