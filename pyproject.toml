@@ -1,3 +1,29 @@
+[project]
+name = "web_scraper"
+version = "0.0.1"
+authors = [
+  {name="Moyartu Manley"}
+  {name="Wren Kuratana"}
+]
+description = "A web scraper and (simple) parser for  (currently) chan-style websites, built around a passed parameters file."
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICEN[CS]E.*"]
+dependencies = [
+  "pytest",
+  "requests",
+  "bs4 (>=0.0.2,<0.0.3)",
+  "pytest-mock (>=3.14.0,<4.0.0)",
+  "htmldate"
+]
+
+[project.urls]
+Source = "https://github.com/femcel-research/web-scraper/"
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = [
