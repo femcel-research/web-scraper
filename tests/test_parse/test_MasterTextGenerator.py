@@ -1,7 +1,6 @@
 # Imports
+import os
 import pytest
-
-# from PyRTF import Elements
 
 from web_scraper.parse import MasterTextGenerator
 
@@ -38,6 +37,21 @@ def mock_master_content(mocker):
         }
     }
     return master_content
+
+# def test_write_text(mocker, mock_master_content):
+#     """Tests write_text() works properly with a populated JSON."""
+#     # Arrange
+#     master_text_generator: MasterTextGenerator = (
+#         MasterTextGenerator.__new__(MasterTextGenerator))
+#     mocker.patch.object(MasterTextGenerator, "__init__", return_value=None)
+
+#     master_text_generator.content = mock_master_content
+#     master_text_generator.master_text_path = os.path.join("..", "dummy_data")
+#     # Write to a mocked master content file
+#     # mocked_open_text = mocker.mock_open()
+#     # mocker.patch("MasterTextGenerator.open")
+#     master_text_generator.write_text()
+    
 
 # def test_empty_write_out(mocker, mock_master_content):
 #     """Tests an RTF file is created."""
