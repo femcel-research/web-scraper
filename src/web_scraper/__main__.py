@@ -15,6 +15,7 @@ from parse.HTMLToContent import ChanToContent
 from parse.MasterContentGenerator import MasterContentGenerator
 from parse.MasterMetaGenerator import MasterMetaGenerator
 from parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+from parse.SiteMetaGenerator import SiteMetaGenerator
 
 from write_out import *
 
@@ -116,7 +117,9 @@ for url in url_list:
     content_file_path: str = os.path.join(
         thread_snapshot_path, f"content_{content_parser.data["thread_id"]}.json"
     )
-    html_file_path: str = os.path.join(thread_snapshot_path, f"thread_{content_parser.data["thread_id"]}.html")
+    html_file_path: str = os.path.join(
+        thread_snapshot_path, f"thread_{content_parser.data["thread_id"]}.html"
+    )
 
     # Save HTML:
     soup_to_html_file(soup, html_file_path)
@@ -157,3 +160,7 @@ for url in url_list:
         list_of_snapshot_metas
     )
     master_meta_generator.master_meta_dump()
+    
+    # Update site meta:
+    site_meta_generator: SiteMetaGenerator = SiteMetaGenerator(args.params_name)
+    site_meta_generator.dump_site_meta()
