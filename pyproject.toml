@@ -2,7 +2,7 @@
 name = "web_scraper"
 version = "0.0.1"
 authors = [
-  {name="Moyartu Manley"}
+  {name="Moyartu Manley"},
   {name="Wren Kuratana"}
 ]
 description = "A web scraper and (simple) parser for  (currently) chan-style websites, built around a passed parameters file."
