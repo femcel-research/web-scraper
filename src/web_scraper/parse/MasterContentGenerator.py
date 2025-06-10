@@ -53,6 +53,9 @@ class MasterContentGenerator:
 
             # Retrieves OP and replies from snapshot and adds their ids to a set
             original_post: dict = snapshot_content["original_post"]
+            if original_post is None:
+                logger.warning(f"Skipping snapshot {snapshot_content_path}: 'original_post' key not found.")
+                continue
             logger.debug(f"Original post retrieved.")
 
             replies: dict = snapshot_content["replies"]
