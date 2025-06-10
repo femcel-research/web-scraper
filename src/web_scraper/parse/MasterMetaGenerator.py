@@ -84,8 +84,8 @@ class MasterMetaGenerator:
         """Given a snapshot meta, it returns a set containing its lost IDs
         Args:
             snapshot_meta (dict): Dictionary containing data from snapshot meta"""
-        lost_ids: set = ()
-        snapshot_ids = list((snapshot_meta["all_post_ids"]))
+        lost_ids: set = set()
+        snapshot_ids = set((snapshot_meta["all_post_ids"]))
         unique_post_ids = self.master_metadata["unique_post_ids"]
         for post_id in unique_post_ids:
             if post_id not in snapshot_ids:
@@ -131,7 +131,7 @@ class MasterMetaGenerator:
                 f"Updated master unique_post_ids to {snapshot_meta["all_post_ids"]} from: {snapshot_meta_path}"
             )
             # Finds lost IDs & updates master
-            lost_post_ids: set = self.find_lost_ids(snapshot_meta)
+            lost_post_ids: set = set(self.find_lost_ids(snapshot_meta))
             self.master_metadata["lost_post_ids"].update(lost_post_ids)
             num_lost_post_ids += len(lost_post_ids)
             logger.debug(

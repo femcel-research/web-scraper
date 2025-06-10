@@ -602,6 +602,16 @@ class ChanToContent:
                 # This remains consistent across all chan-style sites observed
                 self.thread_soup.find("div", id=f"thread_{self.thread_id}")
             )
+            if thread_tag is None:
+                self.logger.warning(f"Thread tag with ID 'thread_{self.thread_id}' not found. No thread image link available.")
+                return ""
+            
+            # Find the first image within the thread_tag
+            img_tag = thread_tag.find("img")
+            if img_tag is None:
+                self.logger.warning("No img tag found. No thread image link available.")
+                return ""
+            
             # First image always appears to be the thread image
             image_source: str = thread_tag.find("img").get("src")
             if image_source is None:
