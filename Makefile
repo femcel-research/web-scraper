@@ -27,18 +27,19 @@ scrape: test_fetch test_scrape test_parse
 # Reparses existing data from their saved HTMLs
 reparse: test_parse
 ifeq ($(SITE_NAME),)
-	@echo "No site name entered. Reparsing all data."
+	@echo "No site name entered. Reparsing all data..."
 	PYTHONPATH=./src python -m web_scraper.parse.Reparser
 else
-	@echo "Reparsing data"
+	@echo "Reparsing data for $(SITE_NAME)..."
 	PYTHONPATH=./src python -m web_scraper.parse.Reparser $(SITE_NAME)
 	@echo "Reparsing complete!"
 endif
 
 # Retrieves portions from all sites
 portion: 
-	@echo "Portioning threads"
-	python $(PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(SITE_NAME) $(RANDOMIZE) 
+	@echo "Portioning threads..."
+	python $(PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(SITE_NAME) $(RANDOMIZE)
+	@echo "Portioning complete!" 
 
 # Testing
 test_all:

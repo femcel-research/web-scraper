@@ -12,6 +12,7 @@ from .HTMLToContent.ChanToContent import ChanToContent
 from .SnapshotMetaGenerator import SnapshotMetaGenerator
 from .MasterContentGenerator import MasterContentGenerator
 from .MasterMetaGenerator import MasterMetaGenerator
+from .SiteMetaGenerator import SiteMetaGenerator
 
 # Imports if running debugger 
 # from web_scraper.write_out import *
@@ -124,15 +125,15 @@ class Reparser:
                 if len(matching_html_files) > 0:
                     # Reparse all snapshots to fit new format
                     for html_file_path in matching_html_files:
-                        html_dir_name = os.path.dirname(html_file_path)
-                        html_scan_time = os.path.basename(
+                        html_dir_name: str = os.path.dirname(html_file_path)
+                        html_scan_time: str = os.path.basename(
                             html_dir_name
                         )  # assumption that html is stored in a scan_time subfolder
                         with open(html_file_path, "r", encoding="utf-8") as f:
                             html_content = f.read()
 
                         # Generate content and then pass to SnapshotMetaGenerator
-                        content_path = self.generate_content(
+                        content_path: str = self.generate_content(
                             html_content, site_name, html_scan_time
                         )
                         logger.debug(
@@ -146,6 +147,8 @@ class Reparser:
 
                     # Regenerates masters
                     self.regenerate_masters(thread_folder_path)
+        site_meta_generator: SiteMetaGenerator = SiteMetaGenerator(site_name)
+        site_meta_generator.dump_site_meta()
 
     def reparse_all(self):
         """Reparses all data for all sites"""

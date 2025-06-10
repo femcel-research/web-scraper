@@ -44,12 +44,16 @@ class MasterContentGenerator:
         """
         Converts all snapshot content JSONs into a single master content JSON.
         """
-
-        for snapshot_content_path in self.list_of_content_paths:
+        thread_id: str
+        for i, snapshot_content_path in enumerate(self.list_of_content_paths):
             logger.debug(f"Snapshot path: {snapshot_content_path}")
             with open(snapshot_content_path, "r") as file:
                 data = json.load(file)
             snapshot_content = data
+            # General board/thread info
+            if i == 0:
+                thread_id: str = snapshot_content["thread_id"]
+                self.master_contents.update({"thread_id": thread_id})
 
             # Retrieves OP and replies from snapshot and adds their ids to a set
             original_post: dict = snapshot_content["original_post"]
@@ -76,7 +80,7 @@ class MasterContentGenerator:
         # Populates master thread content with data
         self.master_contents.update(
             {
-                "thread_id": original_post_id,
+
                 "original_post": self.original_post,
                 "replies": self.all_replies,
             }
@@ -114,8 +118,7 @@ class MasterContentGenerator:
 
         # Retrieves thread_id from OP post_id: done under the assumption OP post id = thread id.
         contents = self.generate_master_content()
-        original_post_id: str = self.original_post["post_id"]
-        file_name = f"master_version_{original_post_id}.json"
+        file_name = f"master_version_{self.master_contents["thread_id"]}.json"
 
         # Finds thread directory by finding the parent of the snapshot folder
         snapshot_content_path = self.list_of_content_paths[0]
