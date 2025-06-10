@@ -30,7 +30,7 @@ reparse: test_parse
 # 	python $(REPARSER)
 # else
 	@echo "Reparsing data"
-	python $(REPARSER) $(SITE_NAME)
+	PYTHONPATH=./src python -m web_scraper.parse.Reparser $(SITE_NAME)
 		
 	
 	@echo "Reparsing complete!"

@@ -4,10 +4,10 @@ import glob
 import json
 import logging
 import os
-from web_scraper.write_out import *
+from ..write_out import *
 
 from bs4 import BeautifulSoup
-from HTMLToContent.ChanToContent import ChanToContent
+from .HTMLToContent.ChanToContent import ChanToContent
 from .SnapshotMetaGenerator import SnapshotMetaGenerator
 from .MasterContentGenerator import MasterContentGenerator
 from .MasterMetaGenerator import MasterMetaGenerator
@@ -20,7 +20,7 @@ class Reparser:
         """Reparses data within data subfolder"""
         pass
 
-    def regenerate_masters(thread_folder_path: str) -> None:
+    def regenerate_masters(self, thread_folder_path: str) -> None:
         """Regenerates master_content and master_meta files
         Args:
             thread_folder_path (str): String containing filepath of thread folder"""
@@ -92,8 +92,7 @@ class Reparser:
         )
         os.makedirs(thread_data_path, exist_ok=True)
         content_filepath: str = os.path.join(
-            thread_data_path, "content_", content_parser.data["thread_id"], ".json"
-        )
+            thread_data_path, f"content_{content_parser.data["thread_id"]}.json")
         return content_filepath
 
     def reparse_site(self, site_name):
@@ -115,14 +114,14 @@ class Reparser:
 
                 if len(matching_html_files) > 0:
                     # Reparse all snapshots to fit new format
-                    for html_file in matching_html_files:
-                        with open(html_file, "r") as html_file:
-                            html = json.load(html_file)
+                    for html_file_path in matching_html_files:
+                        with open(html_file_path, "r", encoding="utf-8") as f:
+                            html_content = f.read()
 
                         #Generate content and then pass to SnapshotMetaGenerator
-                        content_path = self.generate_content(html, site_name)
+                        content_path = self.generate_content(html_content, site_name)
                         logger.debug(
-                            f"Snapshot content has been generated for HTML path: {html}"
+                            f"Snapshot content has been generated for HTML path: {html_file_path}"
                         )  # Log message # Snapshot meta creation:]
                         meta_generator = SnapshotMetaGenerator(content_path)
                         meta_generator.meta_dump()
