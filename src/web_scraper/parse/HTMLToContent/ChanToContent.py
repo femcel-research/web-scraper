@@ -75,7 +75,8 @@ class ChanToContent:
         )
         try:
             # Extracting the board name and thread title
-            self.board_name: str = self.get_board_name_and_thread_title()["board"]
+            self.board_name: str = (self.get_board_name_and_thread_title()
+                ["board"])
             self.thread_title: str = self.get_board_name_and_thread_title()["title"]
 
             # Extracting the thread ID
@@ -111,10 +112,9 @@ class ChanToContent:
             # Final check to see if URL recreation from HTML is necessary
             # TODO: Write tests for the recreation
             if not self.snapshot_url:
-                self.snapshot_url = (
-                    f"https://{self.root_domain}"
-                    f"{self.data["board_name"]}res/{self.data["thread_number"]}"
-                )
+                self.snapshot_url = (f"https://{self.root_domain}"
+                    f"{self.data["board_name"]}res/"
+                    f"{self.data["thread_number"]}")
                 # No `/` for the board name because they're already there
         except Exception as error:
             self.logger.error(f"Error when trying to initialize: {error}")
@@ -350,7 +350,7 @@ class ChanToContent:
                 "date_posted": date_posted,
                 "post_id": post_id,
                 "post_content": post_content,
-                "img_links": [img_link],  # A list for consistency with replies
+                "img_links": [img_link],  # List for consistency with replies
                 "username": username,
                 # "tripcode":
                 #     ,
@@ -568,8 +568,10 @@ class ChanToContent:
 
             return image_links
         except Exception as error:
-            self.logger.error(f"Unexpected error when collecting images: {error}")
-            raise Exception(f"Unexpected error when collecting images: {error}")
+            self.logger.error(
+                f"Unexpected error when collecting images: {error}")
+            raise Exception(
+                f"Unexpected error when collecting images: {error}")
 
     def get_thread_image_link(self) -> str:
         """Extracts the image link used to start a thread.
@@ -597,14 +599,15 @@ class ChanToContent:
             )
             if thread_tag is None:
                 self.logger.warning(
-                    f"Thread tag with ID 'thread_{self.thread_id}' not found. No thread image link available."
-                )
+                    f"Thread tag with ID 'thread_{self.thread_id}' not found. "
+                    "No thread image link available.")
                 return ""
 
             # Find the first image within the thread_tag
             img_tag = thread_tag.find("img")
             if img_tag is None:
-                self.logger.warning("No img tag found. No thread image link available.")
+                self.logger.warning("No img tag found. "
+                "No thread image link available.")
                 return ""
 
             # First image always appears to be the thread image
@@ -784,7 +787,8 @@ class ChanToContent:
             return all_replies_data
         except Exception as error:
             self.logger.error("Error while collecting all reply data")
-            raise DataArrangementError("Error while collecting all reply data")
+            raise DataArrangementError(
+                "Error while collecting all reply data")
 
     def collect_all_data(self) -> dict:
         """The final call during initialization; collects all data to dict.
