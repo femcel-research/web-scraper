@@ -14,7 +14,8 @@ all: setup test_all scrape reparse portion
 # Installs dependencies
 setup:
 	@echo "Installing dependencies..."
-	pip install -r requirements.txt
+#	pip install -r requirements.txt
+	pip install .
 	@echo "Dependencies installed."
 
 # Scrapes and parses new data for a specified S
