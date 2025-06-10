@@ -4,13 +4,21 @@ import glob
 import json
 import logging
 import os
-from ..write_out import *
-
 from bs4 import BeautifulSoup
+
+# Imports if running through terminal
+from ..write_out import *
 from .HTMLToContent.ChanToContent import ChanToContent
 from .SnapshotMetaGenerator import SnapshotMetaGenerator
 from .MasterContentGenerator import MasterContentGenerator
 from .MasterMetaGenerator import MasterMetaGenerator
+
+# Imports if running debugger 
+# from web_scraper.write_out import *
+# from web_scraper.parse.HTMLToContent.ChanToContent import ChanToContent
+# from web_scraper.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+# from web_scraper.parse.MasterContentGenerator import MasterContentGenerator
+# from web_scraper.parse.MasterMetaGenerator import MasterMetaGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +61,7 @@ class Reparser:
             f"Master meta has been regenerated for thread path: {thread_folder_path}"
         )  # Log message
 
-    def generate_content(self, html: str, site_name: str) -> str:
+    def generate_content(self, html: str, site_name: str, scan_time: str) -> str:
         """Generates a content JSON from saved HTML and returns the file path.
         Args:
             scan_time_str (str): String containing scan time
@@ -63,8 +71,7 @@ class Reparser:
         Returns:
             content_file_path (str): String containing the filepath for the generated content file.
         """
-        # Content creation:
-        scan_time_str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
+        # Content creation: TODO: use thread scan name for scan time str, just get dir name of html file
         params_file_list = glob.glob(f"./data/params/{site_name}*.json")
         params_path = params_file_list[0]
         with open(params_path, "r") as params_file:
@@ -72,7 +79,7 @@ class Reparser:
 
         html_soup = BeautifulSoup(html, features="html.parser")
         content_parser = ChanToContent(
-            scan_time_str,
+            scan_time,
             html_soup,
             params["hp_url"],
             params["op_class"],
@@ -81,18 +88,19 @@ class Reparser:
         )
         snapshot_dict_to_json(
             content_parser.data,
-            scan_time_str,
+            scan_time,
             content_parser.data["thread_id"],
             "content",
             f"./data/{site_name}",
         )
 
         thread_data_path: str = os.path.join(
-            f"./data/{site_name}", content_parser.data["thread_id"], scan_time_str
+            f"./data/{site_name}", content_parser.data["thread_id"], scan_time
         )
         os.makedirs(thread_data_path, exist_ok=True)
         content_filepath: str = os.path.join(
-            thread_data_path, f"content_{content_parser.data["thread_id"]}.json")
+            thread_data_path, f"content_{content_parser.data["thread_id"]}.json"
+        )
         return content_filepath
 
     def reparse_site(self, site_name):
@@ -107,19 +115,26 @@ class Reparser:
         for thread_folder in os.listdir(directory):
             thread_folder_path = os.path.join(directory, thread_folder)
 
-            # If the thread folder is a directory, find its newest .html and meta file and use that to reprocess the thread.
+            # If the thread folder is a directory, find its .html and meta file and use that to reprocess the thread.
             if os.path.isdir(thread_folder_path):
                 html_search_path = os.path.join(thread_folder_path, "**", html_pattern)
+
                 matching_html_files = glob.glob(html_search_path, recursive=True)
 
                 if len(matching_html_files) > 0:
                     # Reparse all snapshots to fit new format
                     for html_file_path in matching_html_files:
+                        html_dir_name = os.path.dirname(html_file_path)
+                        html_scan_time = os.path.basename(
+                            html_dir_name
+                        )  # assumption that html is stored in a scan_time subfolder
                         with open(html_file_path, "r", encoding="utf-8") as f:
                             html_content = f.read()
 
-                        #Generate content and then pass to SnapshotMetaGenerator
-                        content_path = self.generate_content(html_content, site_name)
+                        # Generate content and then pass to SnapshotMetaGenerator
+                        content_path = self.generate_content(
+                            html_content, site_name, html_scan_time
+                        )
                         logger.debug(
                             f"Snapshot content has been generated for HTML path: {html_file_path}"
                         )  # Log message # Snapshot meta creation:]
@@ -146,7 +161,10 @@ if __name__ == "__main__":  # used to run script as executable
         description="Reparses data. If no site_name is entered, all data is reparsed."
     )
     parser.add_argument(
-        "site_name", type=str, nargs="?", help="Name of the site data folder (e.g., crystal.cafe)"
+        "site_name",
+        type=str,
+        nargs="?",
+        help="Name of the site data folder (e.g., crystal.cafe)",
     )
     args = parser.parse_args()
     reparser = Reparser()

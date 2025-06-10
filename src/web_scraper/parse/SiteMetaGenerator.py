@@ -27,8 +27,7 @@ class SiteMetaGenerator:
             # "keywords": "",
         }
 
-        
-
+    
     def get_site_stats(self) -> dict:
         """
         Iterates through a list of master meta paths found in the site data subdirectory, and returns a dictionary of site-wide statistics to be dumped into a JSON.
