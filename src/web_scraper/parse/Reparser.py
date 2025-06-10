@@ -146,7 +146,7 @@ if __name__ == "__main__":  # used to run script as executable
         description="Reparses data. If no site_name is entered, all data is reparsed."
     )
     parser.add_argument(
-        "site_name", type=str, help="Name of the site data folder (e.g., crystal.cafe)"
+        "site_name", type=str, nargs="?", help="Name of the site data folder (e.g., crystal.cafe)"
     )
     args = parser.parse_args()
     reparser = Reparser()
