@@ -92,7 +92,7 @@ def scrape(params_name: str, scan_time_str: str) -> None:
 
         # Pathing:
         thread_dir: str = os.path.join(
-            f"./data/{params_name}", content_parser.data["thread_id"]
+            f"./data/{params["site_name"]}", content_parser.data["thread_id"]
         )
         thread_snapshot_path: str = os.path.join(thread_dir, scan_time_str)
         os.makedirs(thread_snapshot_path, exist_ok=True)
@@ -113,7 +113,7 @@ def scrape(params_name: str, scan_time_str: str) -> None:
             scan_time_str,
             content_parser.data["thread_id"],
             "content",
-            f"./data/{params_name}",
+            f"./data/{params["site_name"]}",
         )
         # TODO: Using the f-string for the data directory instead of
         # params["site_dir"] for now for testing

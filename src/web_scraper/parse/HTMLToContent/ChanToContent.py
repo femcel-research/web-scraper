@@ -115,7 +115,7 @@ class ChanToContent:
                 self.snapshot_url = (
                     f"https://{self.root_domain}"
                     f"{self.data["board_name"]}res/"
-                    f"{self.data["thread_number"]}")
+                    f"{self.data["thread_id"]}") #changed key search to thread id; was getting errors since self.data didn't have the key 'thread_number'
                 # No `/` for the board name because they're already there
         except Exception as error:
             self.logger.error(f"Error when trying to initialize: {error}")

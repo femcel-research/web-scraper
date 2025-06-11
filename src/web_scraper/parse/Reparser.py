@@ -61,7 +61,7 @@ class Reparser:
             f"Master meta has been regenerated for thread path: {thread_folder_path}"
         )  # Log message
 
-    def generate_content(self, html: str, site_name: str, scan_time: str) -> str:
+    def generate_content(self, html: str, site_name: str, scan_time: str, params: dict) -> str:
         """Generates a content JSON from saved HTML and returns the file path.
         Args:
             scan_time_str (str): String containing scan time
@@ -71,12 +71,7 @@ class Reparser:
         Returns:
             content_file_path (str): String containing the filepath for the generated content file.
         """
-        # Content creation: TODO: use thread scan name for scan time str, just get dir name of html file
-        params_file_list = glob.glob(f"./data/params/{site_name}*.json")
-        params_path = params_file_list[0]
-        with open(params_path, "r") as params_file:
-            params = json.load(params_file)
-
+        # Content creation: 
         html_soup = BeautifulSoup(html, features="html.parser")
         content_parser = ChanToContent(
             scan_time,
@@ -103,17 +98,24 @@ class Reparser:
         )
         return content_filepath
 
-    def reparse_site(self, site_name):
+    def reparse_site(self, site_search):
         """Processes existing files present within a site's data subfolder."""
 
-        # Pathing & param retrieval
-        directory = f"./data/{site_name}"
+        #Param retrieval
+        params_file_list = glob.glob(f"./data/params/{site_search}*.json")
+        params_path = params_file_list[0]
+        with open(params_path, "r") as params_file:
+            params = json.load(params_file)
+
+        # Pathing
+        site_name: str = params["site_name"]
+        site_directory = f"./data/{site_name}"
 
         html_pattern = "*.html"  # Look for an html file
         logger.info("Processing existing threads")  # Log message
 
-        for thread_folder in os.listdir(directory):
-            thread_folder_path = os.path.join(directory, thread_folder)
+        for thread_folder in os.listdir(site_directory):
+            thread_folder_path = os.path.join(site_directory, thread_folder)
 
             # If the thread folder is a directory, find its .html and meta file and use that to reprocess the thread.
             if os.path.isdir(thread_folder_path):
@@ -133,7 +135,7 @@ class Reparser:
 
                         # Generate content and then pass to SnapshotMetaGenerator
                         content_path: str = self.generate_content(
-                            html_content, site_name, html_scan_time
+                            html_content, site_name, html_scan_time, params
                         )
                         logger.debug(
                             f"Snapshot content has been generated for HTML path: {html_file_path}"
