@@ -81,7 +81,7 @@ class Reparser:
         content_parser = ChanToContent(
             scan_time,
             html_soup,
-            params["hp_url"],
+            "",
             params["op_class"],
             params["reply_class"],
             params["root_domain"],
