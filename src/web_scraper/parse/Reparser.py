@@ -123,6 +123,7 @@ class Reparser:
                 matching_html_files = glob.glob(html_search_path, recursive=True)
 
                 if len(matching_html_files) > 0:
+                    site_meta_generator: SiteMetaGenerator = SiteMetaGenerator(site_name)
                     # Reparse all snapshots to fit new format
                     for html_file_path in matching_html_files:
                         html_dir_name: str = os.path.dirname(html_file_path)
@@ -147,8 +148,10 @@ class Reparser:
 
                     # Regenerates masters
                     self.regenerate_masters(thread_folder_path)
-        site_meta_generator: SiteMetaGenerator = SiteMetaGenerator(site_name)
-        site_meta_generator.dump_site_meta()
+                    # Update site meta
+                    site_meta_generator.dump_site_meta()
+        
+        
 
     def reparse_all(self):
         """Reparses all data for all sites"""
