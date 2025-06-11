@@ -12,7 +12,6 @@ from .HTMLToContent.ChanToContent import ChanToContent
 from .SnapshotMetaGenerator import SnapshotMetaGenerator
 from .MasterContentGenerator import MasterContentGenerator
 from .MasterMetaGenerator import MasterMetaGenerator
-from .SiteMetaGenerator import SiteMetaGenerator
 
 # Imports if running debugger 
 # from web_scraper.write_out import *
@@ -123,7 +122,6 @@ class Reparser:
                 matching_html_files = glob.glob(html_search_path, recursive=True)
 
                 if len(matching_html_files) > 0:
-                    site_meta_generator: SiteMetaGenerator = SiteMetaGenerator(site_name)
                     # Reparse all snapshots to fit new format
                     for html_file_path in matching_html_files:
                         html_dir_name: str = os.path.dirname(html_file_path)
@@ -148,18 +146,16 @@ class Reparser:
 
                     # Regenerates masters
                     self.regenerate_masters(thread_folder_path)
-                    # Update site meta
-                    site_meta_generator.dump_site_meta()
-        
         
 
     def reparse_all(self):
         """Reparses all data for all sites"""
-        data_directory = f"./data"
-        # Iterates through all directories in data and reparses their data
-        # The following assumes all directories in the data subfolder are site_folders.
-        for site_folder in os.listdir(data_directory):
-            self.reparse_site(site_folder)
+        params_directory = os.path.join("./data", "params")
+        params_files: list[str] = os.listdir(params_directory)
+        # Iterates through all availiable sites and recalculates their stats
+        for param_file in params_files:
+            site_name = param_file.replace("_params.json", "")
+            self.reparse_site(site_name)
 
 
 if __name__ == "__main__":  # used to run script as executable

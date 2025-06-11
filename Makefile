@@ -1,6 +1,7 @@
 # General vars
 MAIN = ./src/web_scraper/__main__.py
 REPARSER = ./src/web_scraper/parse/Reparser.py
+SITE_META = src/web_scraper/parse/SiteMetaGenerator.py
 PORTION_RETRIEVER = ./src/web_scraper/portion/PortionRetriever.py
 SITE_NAME ?=# reflected in data subfolder name (i.e crystalcafe is named crystal.cafe in data)
 
@@ -9,7 +10,7 @@ THREAD_PERCENTAGE ?= 10 # can be overwritten in command-line. i.e (make portion 
 RANDOMIZE ?= 1 # sets randomization as true
 
 # Scrapes new data, reparses old data, and outputs thread portions
-all: setup test_all scrape reparse portion
+all: setup test_all reparse scrape calculate_sitewide
 
 # Installs dependencies
 setup:
@@ -18,12 +19,18 @@ setup:
 	pip install .
 	@echo "Dependencies installed."
 
-# Scrapes and parses new data for a specified S
+# Scrapes and parses new data for a specified site
 scrape: test_fetch test_scrape test_parse
+ifeq ($(SITE_NAME),)
+	@echo "Scraping and parsing new data for all availiable sites"
+	python $(MAIN)
+	@echo "Scraping and parsing complete!"
+else
 	@echo "Scraping and parsing new data for $(SITE_NAME)..."
 	python $(MAIN) $(SITE_NAME)
 	@echo "Scraping and parsing complete!"
-
+endif
+	
 # Reparses existing data from their saved HTMLs
 reparse: test_parse
 ifeq ($(SITE_NAME),)
@@ -40,6 +47,18 @@ portion:
 	@echo "Portioning threads..."
 	python $(PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(SITE_NAME) $(RANDOMIZE)
 	@echo "Portioning complete!" 
+
+# Calculates sitewide stats
+calculate_sitewide:
+ifeq ($(SITE_NAME),)
+	@echo "No site name entered. Calculating stats for all sites..."
+	python $(SITE_META) 
+	@echo "Calculations complete!"
+else
+	@echo "Calculating stats data for $(SITE_NAME)..."
+	python $(SITE_META) $(SITE_NAME)
+	@echo "Calculations complete!"
+endif
 
 # Testing
 test_all:

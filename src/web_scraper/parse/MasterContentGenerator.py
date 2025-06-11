@@ -56,11 +56,14 @@ class MasterContentGenerator:
                 self.master_contents.update({"thread_id": thread_id})
 
             # Retrieves OP and replies from snapshot and adds their ids to a set
-            original_post: dict = snapshot_content["original_post"]
-            if original_post is None:
-                logger.warning(f"Skipping snapshot {snapshot_content_path}: 'original_post' key not found.")
+            try:
+                original_post: dict = snapshot_content["original_post"]
+                logger.debug(f"Original post retrieved.")
+            except KeyError:
+                logger.warning(
+                    f"Skipping snapshot {snapshot_content_path}: 'original_post' key not found."
+                )
                 continue
-            logger.debug(f"Original post retrieved.")
 
             replies: dict = snapshot_content["replies"]
             logger.debug(f"Replies retrieved.")
@@ -80,12 +83,11 @@ class MasterContentGenerator:
         # Populates master thread content with data
         self.master_contents.update(
             {
-
                 "original_post": self.original_post,
                 "replies": self.all_replies,
             }
         )
-        
+
         return self.master_contents
 
     def gather_all_post_ids(self, original_post: dict, replies: dict):
@@ -127,7 +129,7 @@ class MasterContentGenerator:
 
         # File path of master content
         self.master_content_filepath = os.path.join(thread_folder_path, file_name)
-        
+
         with open(self.master_content_filepath, "w", encoding="utf-8") as f:
             json.dump(contents, f, indent=2, ensure_ascii=False)
 
