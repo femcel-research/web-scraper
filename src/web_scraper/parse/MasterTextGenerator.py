@@ -100,32 +100,42 @@ class MasterTextGenerator:
                     # (Indented) date
                     master_text.write(
                         f"\n  {reply["date_posted"]}")
-                    # (Indented) replied-to subheader
-                    master_text.write(
-                        "\n  Replied-to posts:")
-                    # Quotes of posts being replied to
+                    
                     replied_to: list[str] = reply["replied_to_ids"]
-                    id: str
-                    for id in replied_to:
-                        post: dict
-                        try:
-                            post = replies[f"reply_{id}"]
-                        except:
-                            if id == op["post_id"]:  # Need to also check OP
-                                post = op
-                            else:
-                                self.logger.error(
-                                    f"ID in {reply["post_id"]} replied-to "
-                                    "not found in thread content")
-                                raise Exception(
-                                    f"ID in {reply["post_id"]} replied-to "
-                                    "not found in thread content")
-                        # E.g. `101010 : The quick brown fox jumps over...`
-                        quote: str = (
-                            f"\n{post["post_id"]} : {post["post_content"]}")
-                        # All indented
-                        master_text.write(f"\n{textwrap.indent(quote, ' ' * 4)}")
-                        master_text.write("\n")
+
+                    if not replied_to:
+                        # (Indented) replied-to subheader (empty)
+                        master_text.write(
+                            "\n  Replied-to posts: [N/A]")
+                    else: 
+                        # (Indented) replied-to subheader
+                        master_text.write(
+                            "\n  Replied-to posts:")
+                        # Quotes of posts being replied to
+                        id: str
+                        for id in replied_to:
+                            post: dict
+                            try:
+                                post = replies[f"reply_{id}"]
+                            except:
+                                if id == op["post_id"]:  # Need to also check OP
+                                    post = op
+                                else:
+                                    post = {
+                                        "post_id" : id, 
+                                        "post_content" : "[EXTERNAL POST]"}
+                                    # self.logger.error(
+                                    #     f"ID in {reply["post_id"]} replied-to "
+                                    #     "not found in thread content")
+                                    # raise Exception(
+                                    #     f"ID in {reply["post_id"]} replied-to "
+                                    #     "not found in thread content")
+                            # E.g. `101010 : The quick brown fox jumps over...`
+                            quote: str = (
+                                f"\n{post["post_id"]} : {post["post_content"]}")
+                            # All indented
+                            master_text.write(f"\n{textwrap.indent(quote, ' ' * 4)}")
+                            master_text.write("\n")
                     self.logger.debug("All replied-to posts have been quoted")
                     #Content
                     master_text.write(f"\n{reply["post_content"]}")

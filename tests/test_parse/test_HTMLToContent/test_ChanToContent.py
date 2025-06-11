@@ -799,10 +799,10 @@ def test_get_replied_to_ids_op(mocker):
         <div id='thread_101010'>
             <div class='post_op'>
                 <p class='intro' id=101010>
-                    <a href="/b/101010">101010</a>
+                    <a onclick="" href="/b/101010">101010</a>
                 </p>
                 <div class='body'>
-                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    <a onclick="" href='/b/t/01.html'>>>>/b/01</a>
                 </div>
             </div>
         </div>
@@ -835,13 +835,13 @@ def test_get_replied_to_ids_reply(mocker):
             <div class='post_reply'>
                 <p class='intro' id='000001'></p>
                 <div class='body'>
-                    <a href='/b/t/000000'>>>000000</a>
+                    <a onclick="" href='/b/t/000000'>>>000000</a>
                 </div>
             </div>
             <div class='post_reply'>
                 <p class='intro' id='000002'></p>
                 <div class='body'>
-                    <a href='/b/t/000001'>>>000001</a>
+                    <a onclick="" href='/b/t/000001'>>>000001</a>
                     Here's a quick test
                     <a href="https://google.com">https://google.com</a>
                 </div>
@@ -917,7 +917,7 @@ def test_get_original_post_data(mocker):
                     </span>
                 </p>
                 <div class='body'>
-                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    <a onclick="" href='/b/t/01.html'>>>>/b/01</a>
                     The quick brown fox jumps over the lazy dog.
                 </div>
             </div>
@@ -979,7 +979,7 @@ def test_get_reply_post_data(mocker):
                     </span>
                 </p>
                 <div class='body'>
-                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    <a onclick="" href='/b/t/01.html'>>>>/b/01</a>
                     The quick brown fox jumps over the lazy dog.
                 </div>
             </div>
@@ -1038,7 +1038,7 @@ def test_get_all_post_data(mocker):
                     </span>
                 </p>
                 <div class='body'>
-                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    <a onclick="" href='/b/t/01.html'>>>>/b/01</a>
                     The quick brown fox jumps over the lazy dog.
                 </div>
             </div>
@@ -1058,7 +1058,7 @@ def test_get_all_post_data(mocker):
                     </span>
                 </p>
                 <div class='body'>
-                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    <a onclick="" href='/b/t/01.html'>>>>/b/01</a>
                     The quick brown fox jumps over the lazy dog.
                 </div>
             </div>
@@ -1135,7 +1135,7 @@ def test_get_all_post_data_op_only(mocker):
                     </span>
                 </p>
                 <div class='body'>
-                    <a href='/b/t/01.html'>>>>/b/01</a>
+                    <a onclick="" href='/b/t/01.html'>>>>/b/01</a>
                     The quick brown fox jumps over the lazy dog.
                 </div>
             </div>
