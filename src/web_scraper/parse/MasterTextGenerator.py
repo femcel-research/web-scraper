@@ -4,6 +4,8 @@ import logging
 import os
 import textwrap  # Used for indentation
 
+from datetime import datetime
+
 class MasterTextGenerator:
     """Given a master content JSON, a human-readable file is made.
     
@@ -80,7 +82,7 @@ class MasterTextGenerator:
                     f"\nOP ID: {op["post_id"]}")
                 # (Indented) date
                 master_text.write(
-                    f"\n  {op["date_posted"]}")
+                    f"\n  {self._get_date(op["date_posted"])}")
                 # (Indented) replied-to list
                 master_text.write(
                     f"\n  Replied-to thread IDs: {op["replied_to_ids"]}")
@@ -99,7 +101,7 @@ class MasterTextGenerator:
                         f"\nReply ID: {reply["post_id"]}")
                     # (Indented) date
                     master_text.write(
-                        f"\n  {reply["date_posted"]}")
+                        f"\n  {self._get_date(reply["date_posted"])}")
                     
                     replied_to: list[str] = reply["replied_to_ids"]
 
@@ -118,23 +120,19 @@ class MasterTextGenerator:
                             try:
                                 post = replies[f"reply_{id}"]
                             except:
-                                if id == op["post_id"]:  # Need to also check OP
+                                if id == op["post_id"]:  # Also check OP
                                     post = op
                                 else:
                                     post = {
                                         "post_id" : id, 
                                         "post_content" : "[EXTERNAL POST]"}
-                                    # self.logger.error(
-                                    #     f"ID in {reply["post_id"]} replied-to "
-                                    #     "not found in thread content")
-                                    # raise Exception(
-                                    #     f"ID in {reply["post_id"]} replied-to "
-                                    #     "not found in thread content")
                             # E.g. `101010 : The quick brown fox jumps over...`
                             quote: str = (
-                                f"\n{post["post_id"]} : {post["post_content"]}")
+                                f"\n{post["post_id"]} : "
+                                f"{post["post_content"]}")
                             # All indented
-                            master_text.write(f"\n{textwrap.indent(quote, ' ' * 4)}")
+                            master_text.write(
+                                f"\n{textwrap.indent(quote, ' ' * 4)}")
                             master_text.write("\n")
                     self.logger.debug("All replied-to posts have been quoted")
                     #Content
@@ -147,3 +145,14 @@ class MasterTextGenerator:
         except Exception as error:
             self.logger.error(f"Error writing text: {error}")
             raise Exception(f"Error writing text: {error}")
+        
+    def _get_date(self, date: str) -> str:
+        """Returns a more human-readable date.
+        
+        Assumes the date passed is in YYYY-MM-DDTHH:MM:SS format.
+
+        Args:
+            date (str): Date string to be reformatted.
+        """
+        time: datetime = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S")
+        return datetime.strftime(time, "%Y-%b-%d @%I:%M:%S %p")

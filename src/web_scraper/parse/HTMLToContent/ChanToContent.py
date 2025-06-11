@@ -47,6 +47,9 @@ class ChanToContent:
         The ChanToContent object collects all data-to-be-used from the soup
         object on initialization, ready to be written out to a JSON.
 
+        If the snapshot URL passed is an empty string, then a URL is recreated
+        from the HTML data -> `root_domain/board_name/res/thread_number`.
+
         Args:
             scrape_time (str): Formatted time of scrape.
             thread_soup (BeautifulSoup): HTML from a thread in a soup object.
@@ -75,21 +78,13 @@ class ChanToContent:
         )
         try:
             # Extracting the board name and thread title
-            self.board_name: str = (self.get_board_name_and_thread_title()
-                ["board"])
-            self.thread_title: str = self.get_board_name_and_thread_title()["title"]
+            self.board_name: str = (
+                self.get_board_name_and_thread_title()["board"])
+            self.thread_title: str = (
+                self.get_board_name_and_thread_title()["title"])
 
             # Extracting the thread ID
             self.thread_id: str = self.get_thread_id()
-
-            # Extracting the date published (when the page was created)
-            # and date updated (when the page was most recently changed)
-            self.date_published: str = self.get_date_published_and_updated()[
-                "date_published"
-            ]
-            self.date_updated: str = self.get_date_published_and_updated()[
-                "date_updated"
-            ]
 
             # Extracting the original post Tag
             original_post_tag: Tag = self.get_original_post()
@@ -103,20 +98,51 @@ class ChanToContent:
             )
 
             # Dicts containing OP and replies respectively
-            self.original_post: dict = self.get_original_post_data(original_post_tag)
-            self.all_replies: dict = self.get_replies(reply_post_tag_list)
+            self.original_post: dict = (
+                self.get_original_post_data(original_post_tag))
+            self.all_replies: dict = (
+                self.get_replies(reply_post_tag_list))
 
-            # Final assignment of everything to tags in a dictionary
-            self.data: dict = self.collect_all_data()
+            # Extracting the date published (when the page was created)
+            # and date updated (when the page was most recently changed)
+            # -> This is after obtaining the dictionaries above so the
+            # exception case can be handled
+            try:
+                self.date_published: str = self.get_date_published_and_updated()[
+                    "date_published"
+                ]
+                self.date_updated: str = self.get_date_published_and_updated()[
+                    "date_updated"
+                ]
+            except DateNotFoundError as error:
+                self.logger.error(f"Error when trying to initialize: {error}")
+                self.logger.error(
+                    "Date published will be set to OP post date; "
+                    "date updated will be set to last reply's post date")
+                # Get OP post date
+                self.date_published: str = self.original_post["date_posted"]
+                # Get the latest reply
+                newest_reply: dict = max(
+                    self.all_replies.items(), 
+                    key=lambda ind_reply: datetime.strptime(
+                        ind_reply[1]["date_posted"], "%Y-%m-%dT%H:%M:%S"))
+                self.date_updated: str = newest_reply["date_posted"]
+            
+            except Exception as error:
+                raise error
 
             # Final check to see if URL recreation from HTML is necessary
             # TODO: Write tests for the recreation
             if not self.snapshot_url:
                 self.snapshot_url = (
                     f"https://{self.root_domain}"
-                    f"{self.data["board_name"]}res/"
-                    f"{self.data["thread_id"]}") #changed key search to thread id; was getting errors since self.data didn't have the key 'thread_number'
+                    f"{self.board_name}res/"
+                    f"{self.thread_id}.html")
                 # No `/` for the board name because they're already there
+
+            # Final assignment of everything to tags in a dictionary
+            self.data: dict = self.collect_all_data()
+
         except Exception as error:
             self.logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
@@ -341,11 +367,11 @@ class ChanToContent:
             replied_to_ids: list[str] = self.get_post_replied_to_ids(original_post)
 
             # Clean up any replied to posts from content tag
-            for reply in replied_to_ids:
-                if reply in post_content:
-                    post_content = post_content.replace(f">>>{reply}\n", "")
-                if (f">>{reply}") in post_content:
-                    post_content = post_content.replace(f">>{reply}\n", "")
+            # for reply in replied_to_ids:
+            #     if reply in post_content:
+            #         post_content = post_content.replace(f">>>{reply}\n", "")
+            #     if (f">>{reply}") in post_content:
+            #         post_content = post_content.replace(f">>{reply}\n", "")
 
             original_post_data = {
                 "date_posted": date_posted,
@@ -393,11 +419,11 @@ class ChanToContent:
             replied_to_ids: list[str] = self.get_post_replied_to_ids(reply_post)
 
             # Clean up any replied to posts from content tag
-            for reply in replied_to_ids:
-                if reply in post_content:
-                    post_content = post_content.replace(f">>>{reply}\n", "")
-                if (f">>{reply}") in post_content:
-                    post_content = post_content.replace(f">>{reply}\n", "")
+            # for reply in replied_to_ids:
+            #     if reply in post_content:
+            #         post_content = post_content.replace(f">>>{reply}\n", "")
+            #     if (f">>{reply}") in post_content:
+            #         post_content = post_content.replace(f">>{reply}\n", "")
 
             reply_post_data = {
                 "date_posted": date_posted,
@@ -638,8 +664,9 @@ class ChanToContent:
         try:
             post_username: str = post_tag.find(class_="name").get_text()
             if not post_username:
-                self.logger.error("Post username found, but empty")
-                raise TagNotFoundError("Post username found, but empty")
+                post_username = "[INTENTIONALLY EMPTY]"
+                # self.logger.error("Post username found, but empty")
+                # raise TagNotFoundError("Post username found, but empty")
             else:
                 formatted_post_username: str = post_username.strip().replace("\n", "")
                 self.logger.debug("Post username successfully found")

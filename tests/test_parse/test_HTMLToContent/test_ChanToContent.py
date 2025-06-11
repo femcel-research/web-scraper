@@ -944,7 +944,7 @@ def test_get_original_post_data(mocker):
         "post_id": 
             "101010",
         "post_content":
-            "The quick brown fox jumps over the lazy dog.",
+            ">>>/b/01\nThe quick brown fox jumps over the lazy dog.",
         "img_links": 
             ["ex.com/b/t/11.jpg"],
         "username":
@@ -1006,7 +1006,7 @@ def test_get_reply_post_data(mocker):
         "post_id": 
             "101010",
         "post_content":
-            "The quick brown fox jumps over the lazy dog.",
+            ">>>/b/01\nThe quick brown fox jumps over the lazy dog.",
         "img_links": 
             ["ex.com/b/t/11.jpg"],
         "username":
@@ -1089,7 +1089,7 @@ def test_get_all_post_data(mocker):
             "post_id": 
                 "101010",
             "post_content":
-                "The quick brown fox jumps over the lazy dog.",
+                ">>>/b/01\nThe quick brown fox jumps over the lazy dog.",
             "img_links": 
                 ["ex.com/b/t/11.jpg"],
             "username":
@@ -1103,7 +1103,7 @@ def test_get_all_post_data(mocker):
             "post_id": 
                 "010101",
             "post_content":
-                "The quick brown fox jumps over the lazy dog.",
+                ">>>/b/01\nThe quick brown fox jumps over the lazy dog.",
             "img_links": 
                 ["ex.com/b/t/11.jpg"],
             "username":
@@ -1166,7 +1166,7 @@ def test_get_all_post_data_op_only(mocker):
             "post_id": 
                 "101010",
             "post_content":
-                "The quick brown fox jumps over the lazy dog.",
+                ">>>/b/01\nThe quick brown fox jumps over the lazy dog.",
             "img_links": 
                 ["ex.com/b/t/11.jpg"],
             "username":
