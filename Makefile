@@ -10,7 +10,7 @@ THREAD_PERCENTAGE ?= 10 # can be overwritten in command-line. i.e (make portion 
 RANDOMIZE ?= 1 # sets randomization as true
 
 # Scrapes new data, reparses old data
-all: setup test_all reparse scrape 
+all: setup test_all reparse scrape calculate_sitewide
 
 # Installs dependencies
 setup:
@@ -20,7 +20,7 @@ setup:
 	@echo "Dependencies installed."
 
 # Scrapes and parses new data for a specified site
-scrape: test_fetch test_scrape test_parse calculate_sitewide
+scrape: test_fetch test_scrape test_parse 
 ifeq ($(SITE_NAME),)
 	@echo "Scraping and parsing new data for all availiable sites"
 	python $(MAIN)
@@ -32,7 +32,7 @@ else
 endif
 	
 # Reparses existing data from their saved HTMLs
-reparse: test_parse calculate_sitewide
+reparse: test_parse 
 ifeq ($(SITE_NAME),)
 	@echo "No site name entered. Reparsing all data..."
 	PYTHONPATH=./src python -m web_scraper.parse.Reparser
