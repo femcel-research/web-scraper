@@ -9,8 +9,8 @@ SITE_NAME ?=# reflected in data subfolder name (i.e crystalcafe is named crystal
 THREAD_PERCENTAGE ?= 10 # can be overwritten in command-line. i.e (make portion THREAD_PERCENTAGE = 15)
 RANDOMIZE ?= 1 # sets randomization as true
 
-# Scrapes new data, reparses old data, and outputs thread portions
-all: setup test_all reparse scrape calculate_sitewide
+# Scrapes new data, reparses old data
+all: setup test_all reparse scrape 
 
 # Installs dependencies
 setup:
@@ -20,7 +20,7 @@ setup:
 	@echo "Dependencies installed."
 
 # Scrapes and parses new data for a specified site
-scrape: test_fetch test_scrape test_parse
+scrape: test_fetch test_scrape test_parse calculate_sitewide
 ifeq ($(SITE_NAME),)
 	@echo "Scraping and parsing new data for all availiable sites"
 	python $(MAIN)
@@ -32,7 +32,7 @@ else
 endif
 	
 # Reparses existing data from their saved HTMLs
-reparse: test_parse
+reparse: test_parse calculate_sitewide
 ifeq ($(SITE_NAME),)
 	@echo "No site name entered. Reparsing all data..."
 	PYTHONPATH=./src python -m web_scraper.parse.Reparser
@@ -42,7 +42,7 @@ else
 	@echo "Reparsing complete!"
 endif
 
-# Retrieves portions from all sites
+# Retrieves portions, currently requires a site name
 portion: 
 	@echo "Portioning threads..."
 	python $(PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(SITE_NAME) $(RANDOMIZE)
