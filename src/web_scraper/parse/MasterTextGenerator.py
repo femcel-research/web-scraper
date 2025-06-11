@@ -15,6 +15,9 @@ class MasterTextGenerator:
     def __init__(self, master_content_path: str, site_dir: str):
         """Uses the data from a master content file for a text file.
 
+        Dependent on a master content file for a thread having already
+        been generated. 
+
         Given the path to a thread's master content (JSON) file, the
         data from that file is used to generate a Master Text File
         according to the specification in this project's documentation.
