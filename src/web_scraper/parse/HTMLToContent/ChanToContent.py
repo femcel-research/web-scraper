@@ -112,7 +112,8 @@ class ChanToContent:
             # Final check to see if URL recreation from HTML is necessary
             # TODO: Write tests for the recreation
             if not self.snapshot_url:
-                self.snapshot_url = (f"https://{self.root_domain}"
+                self.snapshot_url = (
+                    f"https://{self.root_domain}"
                     f"{self.data["board_name"]}res/"
                     f"{self.data["thread_number"]}")
                 # No `/` for the board name because they're already there
@@ -666,10 +667,7 @@ class ChanToContent:
             post_body: Tag = post_tag.find(class_="body")
             links_to_other_posts: str
             links_to_other_posts = post_body.find_all(
-                # Prevents external links from being added
-                "a",
-                attrs={"href": re.compile("^/")},
-            )
+                self._has_href_and_onclick_a)
             post_links: list[str] = []
             if links_to_other_posts:
                 self.logger.debug("Replied-to post IDs sucessfully found")
@@ -684,7 +682,14 @@ class ChanToContent:
             self.logger.error(
                 f"Unexpected error when extracting replied-to IDs: {error}"
             )
-            raise Exception(f"Unexpected error when extracting replied-to IDs: {error}")
+            raise Exception(
+                f"Unexpected error when extracting replied-to IDs: {error}")
+        
+    def _has_href_and_onclick_a(self, tag: Tag) -> bool:
+        """True if has a link that starts with `/`, and onclick behavior"""
+        if not tag.has_attr("href"): 
+            return False
+        return tag.get("href").startswith("/") and tag.has_attr("onclick")
 
     def get_all_post_data(self, op: Tag, replies: list[Tag]) -> dict:
         """Collects a formatted dictionary of all data from every post.

@@ -11,11 +11,12 @@ from pathlib import Path
 
 from fetch import fetch_html_content
 from scrape import HomepageScraper
-from parse.HTMLToContent import ChanToContent
+from parse import ChanToContent
 from parse.MasterContentGenerator import MasterContentGenerator
 from parse.MasterMetaGenerator import MasterMetaGenerator
 from parse.SnapshotMetaGenerator import SnapshotMetaGenerator
 from parse.SiteMetaGenerator import SiteMetaGenerator
+from parse import MasterTextGenerator
 
 from write_out import *
 
@@ -150,6 +151,15 @@ for url in url_list:
         list_of_snapshot_contents
     )
     master_content_generator.content_dump()
+
+    # Master text creation:
+    master_text_generator: MasterTextGenerator = MasterTextGenerator(
+        os.path.join(
+            thread_dir, 
+            f"master_version_{content_parser.data["thread_id"]}.json"), 
+            params["site_dir"])
+
+    master_text_generator.write_text()
 
     # Master meta creation:
     candidate_meta_files = os.path.join(thread_dir, "**", "meta_*.json")
