@@ -14,6 +14,7 @@ from pathlib import Path
 from fetch import fetch_html_content
 from scrape import ArchiveScraper
 from scrape import HomepageScraper
+from parse import MasterTextGenerator
 from parse.HTMLToContent import ChanToContent
 from parse.HTMLToContent.ArchiveToContent import ArchiveToContent
 from parse.MasterContentGenerator import MasterContentGenerator
@@ -159,9 +160,18 @@ def scrape(params_name: str, scan_time_str: str) -> None:
             glob.glob(candidate_content_files, recursive=True)
         )
         master_content_generator: MasterContentGenerator = MasterContentGenerator(
-            list_of_snapshot_contents
+            list_of_snapshot_contents, 
         )
         master_content_generator.content_dump()
+
+        # Master text creation:
+        master_text_generator: MasterTextGenerator = MasterTextGenerator(
+            os.path.join(
+                thread_dir, 
+                f"master_version_{content_parser.data["thread_id"]}.json"),
+            params["site_dir"]
+        )
+        master_text_generator.write_text()
 
         # Master meta creation:
         candidate_meta_files = os.path.join(thread_dir, "**", "meta_*.json")

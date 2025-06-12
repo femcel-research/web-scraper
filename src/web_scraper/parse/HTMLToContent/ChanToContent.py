@@ -126,6 +126,7 @@ class ChanToContent:
                     self.all_replies.items(), 
                     key=lambda ind_reply: datetime.strptime(
                         ind_reply[1]["date_posted"], "%Y-%m-%dT%H:%M:%S"))
+                # TODO: This still needs to be tested
                 self.date_updated: str = newest_reply["date_posted"]
             
             except Exception as error:
