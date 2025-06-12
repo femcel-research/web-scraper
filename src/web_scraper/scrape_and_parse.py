@@ -79,8 +79,8 @@ def scrape(params_name: str, scan_time_str: str) -> None:
         sys.exit(1)
 
     # Bool determining ehther or not website is an archive
-    archive: bool
-    if "archive" in params["site_name"]:
+    archive: bool = False
+    if "archive" in params["site_name"]: #TODO: in future maybe add an archive bool key to site param files and read from that
         archive = True
 
     homepage: bytes = fetch_html_content(params["hp_url"])
