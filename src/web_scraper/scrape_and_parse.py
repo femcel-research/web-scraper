@@ -5,14 +5,17 @@ import json
 import logging
 import os
 import sys
+import time
 
 from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 
 from fetch import fetch_html_content
+from scrape import ArchiveScraper
 from scrape import HomepageScraper
 from parse.HTMLToContent import ChanToContent
+from parse.HTMLToContent.ArchiveToContent import ArchiveToContent
 from parse.MasterContentGenerator import MasterContentGenerator
 from parse.MasterMetaGenerator import MasterMetaGenerator
 from parse.SnapshotMetaGenerator import SnapshotMetaGenerator
@@ -39,9 +42,9 @@ def scrape(params_name: str, scan_time_str: str) -> None:
         params_name (str): Name of website that corresponds to its respective params file
         scan_time_str (str): String containing the scan time
     """
+
     # Parameters
     params_file_list = glob.glob(f"./data/params/{params_name}*.json")
-
     params_file = params_file_list[0] if params_file_list else None
 
     if params_file is None:
@@ -74,21 +77,47 @@ def scrape(params_name: str, scan_time_str: str) -> None:
         logger.critical("Aborting")
         sys.exit(1)
 
+    # Bool determining ehther or not website is an archive
+    archive: bool
+    if "archive" in params["site_name"]:
+        archive = True
+
     homepage: bytes = fetch_html_content(params["hp_url"])
-    scraper: HomepageScraper = HomepageScraper(
-        homepage, params["domain"], params["container"]
-    )
-    url_list: list[str] = scraper.homepage_to_list()
+
+    if archive:
+        archive_scraper: ArchiveScraper = ArchiveScraper(
+            homepage, params["domain"], params["container"]
+        )
+        url_list: list[str] = archive_scraper.crawl_site_for_links(
+            params["hp_url"], 1, 1
+        )
+    else:
+        scraper: HomepageScraper = HomepageScraper(
+            homepage, params["domain"], params["container"]
+        )
+        url_list: list[str] = scraper.homepage_to_list()
+
     for url in url_list:
         soup = BeautifulSoup(fetch_html_content(url), features="html.parser")
-        content_parser: ChanToContent = ChanToContent(
-            scan_time_str,
-            soup,
-            url,
-            params["op_class"],
-            params["reply_class"],
-            params["root_domain"],
-        )
+        if archive:
+            content_parser: ArchiveToContent = ArchiveToContent(
+                scan_time_str,
+                soup,
+                url,
+                params["op_class"],
+                params["reply_class"],
+                params["id_class"],
+                params["root_domain"],
+            )
+        else:
+            content_parser: ChanToContent = ChanToContent(
+                scan_time_str,
+                soup,
+                url,
+                params["op_class"],
+                params["reply_class"],
+                params["root_domain"],
+            )
 
         # Pathing:
         thread_dir: str = os.path.join(
@@ -143,3 +172,7 @@ def scrape(params_name: str, scan_time_str: str) -> None:
             list_of_snapshot_metas
         )
         master_meta_generator.master_meta_dump()
+
+        if archive:
+            # to not overload server
+            time.sleep(10)  # wait 10s before looping again
