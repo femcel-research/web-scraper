@@ -115,54 +115,60 @@ class Reparser:
 
     def reparse_site(self, site_search):
         """Processes existing files present within a site's data subfolder."""
+        try:
+            #Param retrieval
+            params_file_list = glob.glob(f"./data/params/{site_search}*.json")
+            params_path = params_file_list[0]
+            with open(params_path, "r") as params_file:
+                params = json.load(params_file)
 
-        #Param retrieval
-        params_file_list = glob.glob(f"./data/params/{site_search}*.json")
-        params_path = params_file_list[0]
-        with open(params_path, "r") as params_file:
-            params = json.load(params_file)
+            # Pathing
+            site_name: str = params["site_name"]
+            site_directory = f"./data/{site_name}"
 
-        # Pathing
-        site_name: str = params["site_name"]
-        site_directory = f"./data/{site_name}"
+            html_pattern = "*.html"  # Look for an html file
+            logger.info("Processing existing threads")  # Log message
 
-        html_pattern = "*.html"  # Look for an html file
-        logger.info("Processing existing threads")  # Log message
+            for thread_folder in os.listdir(site_directory):
+                thread_folder_path = os.path.join(site_directory, thread_folder)
 
-        for thread_folder in os.listdir(site_directory):
-            thread_folder_path = os.path.join(site_directory, thread_folder)
+                # If the thread folder is a directory, find its .html and meta file and use that to reprocess the thread.
+                if os.path.isdir(thread_folder_path):
+                    html_search_path = os.path.join(thread_folder_path, "**", html_pattern)
 
-            # If the thread folder is a directory, find its .html and meta file and use that to reprocess the thread.
-            if os.path.isdir(thread_folder_path):
-                html_search_path = os.path.join(thread_folder_path, "**", html_pattern)
+                    matching_html_files = glob.glob(html_search_path, recursive=True)
 
-                matching_html_files = glob.glob(html_search_path, recursive=True)
+                    if len(matching_html_files) > 0:
+                        # Reparse all snapshots to fit new format
+                        for html_file_path in matching_html_files:
+                            html_dir_name: str = os.path.dirname(html_file_path)
+                            html_scan_time: str = os.path.basename(
+                                html_dir_name
+                            )  # assumption that html is stored in a scan_time subfolder
+                            with open(html_file_path, "r", encoding="utf-8") as f:
+                                html_content = f.read()
 
-                if len(matching_html_files) > 0:
-                    # Reparse all snapshots to fit new format
-                    for html_file_path in matching_html_files:
-                        html_dir_name: str = os.path.dirname(html_file_path)
-                        html_scan_time: str = os.path.basename(
-                            html_dir_name
-                        )  # assumption that html is stored in a scan_time subfolder
-                        with open(html_file_path, "r", encoding="utf-8") as f:
-                            html_content = f.read()
+                            # Generate content and then pass to SnapshotMetaGenerator
+                            content_path: str = self.generate_content(
+                                html_content, site_name, html_scan_time, params
+                            )
+                            logger.debug(
+                                f"Snapshot content has been generated for HTML path: {html_file_path}"
+                            )  # Log message # Snapshot meta creation:]
+                            meta_generator = SnapshotMetaGenerator(content_path)
+                            meta_generator.meta_dump()
+                            logger.debug(
+                                f"Snapshot meta has been generated for content path: {content_path}"
+                            )  # Log message
 
-                        # Generate content and then pass to SnapshotMetaGenerator
-                        content_path: str = self.generate_content(
-                            html_content, site_name, html_scan_time, params
-                        )
-                        logger.debug(
-                            f"Snapshot content has been generated for HTML path: {html_file_path}"
-                        )  # Log message # Snapshot meta creation:]
-                        meta_generator = SnapshotMetaGenerator(content_path)
-                        meta_generator.meta_dump()
-                        logger.debug(
-                            f"Snapshot meta has been generated for content path: {content_path}"
-                        )  # Log message
-
-                    # Regenerates masters
-                    self.regenerate_masters(thread_folder_path, params)
+                        # Regenerates masters
+                        self.regenerate_masters(thread_folder_path, params)
+        except FileNotFoundError as error:
+            logger.error(f"Error while reparsing: {error}")
+            pass
+        except Exception as error:
+            logger.error(f"Error while reparsing: {error}")
+            pass
         
 
     def reparse_all(self):
