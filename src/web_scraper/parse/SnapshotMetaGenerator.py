@@ -21,7 +21,7 @@ class SnapshotMetaGenerator:
         self.content_json = data
         try:
             self.thread_id = self.content_json["thread_id"]
-            logger.info(f"Thread ID located: {self.thread_id}")
+            logger.debug(f"Thread ID located: {self.thread_id}")
         except Exception as error:
             logger.error(f"Error finding 'thread_id' in {content_json_path}: {error}")
             raise KeyError(f"Error finding 'thread_id' in {content_json_path}: {error}")
@@ -30,7 +30,7 @@ class SnapshotMetaGenerator:
         file_name = f"meta_{self.thread_id}.json"
         thread_folder_path = os.path.dirname(content_json_path)
         self.meta_file_path = os.path.join(thread_folder_path, file_name)
-        logger.info(f"File path for meta is denoted as: {self.meta_file_path}")
+        logger.debug(f"File path for meta is denoted as: {self.meta_file_path}")
 
         # Posts
         try:
@@ -63,7 +63,7 @@ class SnapshotMetaGenerator:
             original_post_content: str = self.original_post["post_content"]
             original_post_words: list[str] = original_post_content.split()
             original_post_word_count: int = len(original_post_words)
-            logger.info(f"Word count for original post calculated: {original_post_word_count} word(s)")
+            logger.debug(f"Word count for original post calculated: {original_post_word_count} word(s)")
 
             # Adds word count of OP to total word count of thread
             num_words += original_post_word_count
@@ -79,7 +79,7 @@ class SnapshotMetaGenerator:
                 reply_content: str = reply["post_content"]
                 reply_words: list[str] = reply_content.split()
                 reply_word_count: int = len(reply_words)
-                logger.info(f"Word count for reply calculated: {reply_word_count} word(s)")
+                logger.debug(f"Word count for reply calculated: {reply_word_count} word(s)")
                 
                 # Adds word count of reply to total word count of thread
                 num_words += reply_word_count
@@ -105,7 +105,7 @@ class SnapshotMetaGenerator:
         try:
             original_post_id: str = self.original_post["post_id"]
             all_post_ids.add(original_post_id)
-            logger.info(f"Original post ID {original_post_id} added to all_post_ids set.")
+            logger.debug(f"Original post ID {original_post_id} added to all_post_ids set.")
         except Exception as error:
             logger.error(f"Error finding 'post_id' in original post: {error}")
             raise KeyError(f"Error finding 'post_id' in original post: {error}")
@@ -114,7 +114,7 @@ class SnapshotMetaGenerator:
             try:
                 reply_id: str = reply["post_id"]
                 all_post_ids.add(reply_id)
-                logger.info(f"Reply ID {reply_id} added to all_post_ids set.")
+                logger.debug(f"Reply ID {reply_id} added to all_post_ids set.")
             except Exception as error:
                 logger.error(f"Error finding 'post_id' in reply: {error}")
                 raise KeyError(f"Error finding 'post_id' in reply: {error}")
@@ -135,7 +135,7 @@ class SnapshotMetaGenerator:
         try:
             original_post_date_posted = self.original_post["date_posted"]
             all_post_dates.add(original_post_date_posted)
-            logger.info(f"OP post date {original_post_date_posted} added to all_post_dates set.")
+            logger.debug(f"OP post date {original_post_date_posted} added to all_post_dates set.")
         except Exception as error:
             logger.error(f"Error finding 'date_posted' in original post: {error}")
             raise KeyError(f"Error finding 'date_posted' in original post: {error}")
