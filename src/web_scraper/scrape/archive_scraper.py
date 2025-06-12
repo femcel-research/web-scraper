@@ -139,11 +139,10 @@ class ArchiveScraper:
                     if "/thread/" in link:  # only get links w/ "/thread/"
                         all_links.add(link)
 
-                # to not overload server
-                delay_seconds = random.uniform(60, 90) # Delay between 30 and 60 seconds
-                time.sleep(delay_seconds) 
-
                 page_number += 1
+                # to not overload server
+                delay_seconds = random.uniform(10, 30) # Delay between 30 and 60 seconds
+                time.sleep(delay_seconds) 
             else:
                 logger.warning(
                     f"Failed to retrieve content from {page_url}.  Assuming this is the last page. Stopping."
