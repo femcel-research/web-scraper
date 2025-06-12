@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 
 # Imports if running through terminal
 from ..write_out import *
+from . import MasterTextGenerator
 from .HTMLToContent.ChanToContent import ChanToContent
 from .SnapshotMetaGenerator import SnapshotMetaGenerator
 from .MasterContentGenerator import MasterContentGenerator
@@ -28,10 +29,12 @@ class Reparser:
         """Reparses data within data subfolder"""
         pass
 
-    def regenerate_masters(self, thread_folder_path: str) -> None:
+    def regenerate_masters(self, thread_folder_path: str, params: dict) -> None:
         """Regenerates master_content and master_meta files
         Args:
-            thread_folder_path (str): String containing filepath of thread folder"""
+            thread_folder_path (str): String containing filepath of thread folder
+            params (dict): Parameters, used in master_text_generation
+        """
 
         # Find all of thread's content JSONs
         candidate_content_files = os.path.join(
@@ -47,6 +50,18 @@ class Reparser:
         logger.info(
             f"Master content has been regenerated for thread path: {thread_folder_path}"
         )  # Log message
+
+        # Master text creation:
+        thread_id: str = master_content_generator.master_contents["thread_id"]
+        # Not sure how else to get this because I don't really
+        # understand this pipeline?
+        master_text_generator: MasterTextGenerator = MasterTextGenerator(
+            os.path.join(
+                thread_folder_path, 
+                f"master_version_{thread_id}.json"),
+            params["site_dir"]
+        )
+        master_text_generator.write_text()
 
         # Find all of thread's meta JSONs
         candidate_meta_files = os.path.join(thread_folder_path, "**", "meta_*.json")
@@ -147,7 +162,7 @@ class Reparser:
                         )  # Log message
 
                     # Regenerates masters
-                    self.regenerate_masters(thread_folder_path)
+                    self.regenerate_masters(thread_folder_path, params)
         
 
     def reparse_all(self):

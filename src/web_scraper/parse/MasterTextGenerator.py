@@ -83,11 +83,21 @@ class MasterTextGenerator:
                 # (Indented) date
                 master_text.write(
                     f"\n  {self._get_date(op["date_posted"])}")
-                # (Indented) replied-to list
-                master_text.write(
-                    f"\n  Replied-to thread IDs: {op["replied_to_ids"]}")
+                
+                replied_to_threads: list[str] = op["replied_to_ids"]
+
+                if not replied_to_threads:
+                    # (Indented) replied-to subheader (empty)
+                    master_text.write("\n  Replied-to thread IDs: [N/A]")
+                else:
+                    # (Indented) replied-to list
+                    master_text.write(
+                        f"\n  Replied-to thread IDs: \n\n{textwrap.indent(
+                            textwrap.fill(
+                                str(op["replied_to_ids"]), width=50),
+                                (' '*4))}")
                 # Content
-                master_text.write(f"\n{op["post_content"]}")
+                master_text.write(f"\n\n{op["post_content"]}")
                 # Separator
                 master_text.write(separator)
 
@@ -108,11 +118,11 @@ class MasterTextGenerator:
                     if not replied_to:
                         # (Indented) replied-to subheader (empty)
                         master_text.write(
-                            "\n  Replied-to posts: [N/A]")
+                            "\n  Replied-to posts: [N/A]\n")
                     else: 
                         # (Indented) replied-to subheader
                         master_text.write(
-                            "\n  Replied-to posts:")
+                            "\n  Replied-to posts:\n")
                         # Quotes of posts being replied to
                         id: str
                         for id in replied_to:
@@ -132,11 +142,13 @@ class MasterTextGenerator:
                                 f"{post["post_content"]}")
                             # All indented
                             master_text.write(
-                                f"\n{textwrap.indent(quote, ' ' * 4)}")
+                                f"\n{textwrap.indent(textwrap.fill(
+                                    quote, width=50), (' '*4))}")
                             master_text.write("\n")
                     self.logger.debug("All replied-to posts have been quoted")
                     #Content
-                    master_text.write(f"\n{reply["post_content"]}")
+                    master_text.write(
+                        f"\n{reply["post_content"]}")
                     # Separator
                     master_text.write(separator)
                 # End
@@ -155,4 +167,4 @@ class MasterTextGenerator:
             date (str): Date string to be reformatted.
         """
         time: datetime = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S")
-        return datetime.strftime(time, "%Y-%b-%d @%I:%M:%S %p")
+        return datetime.strftime(time, "%Y-%b-%d %I:%M:%S %p")
