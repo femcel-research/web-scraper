@@ -76,9 +76,13 @@ def random_portion_out(
                 if random_thread_id not in (
                     threads_portioned_prior[params["site_name"]]) and (
                         random_thread_id not in duplicated_thread_ids):
-                    if ("meta" not in random_thread_id) and (  # Not meta file
-                        random_thread_id[0] != "."):  # Not hidden file
+                    # TODO: This should be a method...
+                    if ("meta" not in random_thread_id) and (  
+                        random_thread_id[0] != ".") and (
+                            "logs" not in random_thread_id) and (
+                                "processed" not in random_thread_id): 
                         # Copy the file over
+                        print(random_thread_dir)
                         master_text_path: str = _get_a_master_text(
                             random_thread_dir)
                         current_portion_site_path: str = (

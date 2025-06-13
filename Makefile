@@ -2,7 +2,6 @@
 MAIN = ./src/web_scraper/__main__.py
 REPARSER = ./src/web_scraper/parse/Reparser.py
 SITE_META = src/web_scraper/parse/SiteMetaGenerator.py
-PORTION_RETRIEVER = ./src/web_scraper/portion/PortionRetriever.py
 SITE_NAME ?=# reflected in data subfolder name
 
 # Portioning vars:
