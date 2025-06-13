@@ -26,7 +26,26 @@ def fetch_html_content(url: str) -> bytes:
     except requests.RequestException as error:
         logger.error(f"Request error fetching {url}: {error}")
         raise NetworkError(f"Request error fetching {url}: {error}") from error
+
+def fetch_fourchan_html_content(url: str) -> bytes: #have to use headers for 4chan
+    """Fetches HTML content from a given 4chan URL.
     
+    Args:
+        url (str): The URL that will be fetched.
+    """
+    try:
+        logger.info(f"Fetching: {url}")
+        _requests_session = requests.session()
+        _requests_session.headers['User-Agent'] = 'py-4chan/%s' % '0.6.0'
+        response = _requests_session.get(url)
+        return response.content
+    except requests.HTTPError as error:
+        logger.error(f"HTTP error fetching {url}: {error}")
+        raise NetworkError(f"HTTP error fetching {url}: {error}") from error
+    except requests.RequestException as error:
+        logger.error(f"Request error fetching {url}: {error}")
+        raise NetworkError(f"Request error fetching {url}: {error}") from error
+
 
 def archive_crawler(url:str) -> list[str]:
     """TODO: Given a starting URL, will crawl and collect overview pages.

@@ -297,6 +297,7 @@ def _get_site_params(site_name: str, params_dir: str) -> list[dict]:
             with open(params_path, "r") as params_file:
                 params: dict = json.load(params_file)
                 # TODO: Remove check when archive scraping works
+                #TODO: add conditional for 4chan
                 if "archive" not in params["site_name"]:
                     params_data_list.append(params)
         return params_data_list
