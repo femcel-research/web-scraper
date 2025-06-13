@@ -13,6 +13,8 @@ PORTION_DIRECTORY ?= ./data/portions
 # Scrapes new data, reparses old data
 all: setup test_all reparse scrape calculate_sitewide
 
+scrape_calculate: test_all scrape calculate_sitewide
+
 # Installs dependencies
 setup:
 	@echo "Installing dependencies..."
