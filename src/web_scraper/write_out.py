@@ -23,7 +23,6 @@ def soup_to_html_file(source_soup: BeautifulSoup, html_file_path: str):
     with open(html_file_path, "w", encoding="utf-8") as html:
         html.write(source_soup.prettify())
 
-
 def snapshot_dict_to_json(
     data_dict: dict, date_scraped: str, thread_id: str, name: str, start_path: str
 ):

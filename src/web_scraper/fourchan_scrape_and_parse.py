@@ -1,5 +1,4 @@
 # Imports
-import argparse
 import glob
 import json
 import logging
@@ -8,19 +7,18 @@ import sys
 import time
 
 from bs4 import BeautifulSoup
-from datetime import datetime
 from pathlib import Path
 
-import basc_py4chan
 from basc_py4chan import *
 
-from fetch.fetcher import fetch_fourchan_html_content
+from fetch.fetcher import fetch_fourchan_json_content
 from scrape.board_scraper import BoardScraper
 from parse.MasterTextGenerator import MasterTextGenerator
 from parse.HTMLToContent.BoardToContent import BoardToContent
 from parse.MasterContentGenerator import MasterContentGenerator
 from parse.MasterMetaGenerator import MasterMetaGenerator
 from parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+from write_out import *
 
 from write_out import *
 
@@ -74,8 +72,6 @@ def fourchan_scrape(params_name: str, scan_time_str: str) -> None:
     for thread in list_of_threads:
         thread: Thread
         thread_id: int = thread.id
-        url: str = thread.url
-        soup = BeautifulSoup(fetch_fourchan_html_content(url), features="html.parser")
 
         # Pathing:
         thread_dir: str = os.path.join(f"./data/{params["site_name"]}", str(thread_id))
@@ -85,12 +81,10 @@ def fourchan_scrape(params_name: str, scan_time_str: str) -> None:
         content_file_path: str = os.path.join(
             thread_snapshot_path, f"content_{thread_id}.json"
         )
-        html_file_path: str = os.path.join(
-            thread_snapshot_path, f"thread_{thread_id}.html"
-        )
 
-        # Save HTML:
-        soup_to_html_file(soup, html_file_path)
+        # Saves API data as dict:
+        api_data: dict = fetch_fourchan_json_content(thread._api_url)
+        snapshot_dict_to_json(api_data, scan_time_str, thread_id, "source", f"./data/{params["site_name"]}",)
 
         content_parser: BoardToContent = BoardToContent(
             params["site_dir"], thread, scan_time_str
