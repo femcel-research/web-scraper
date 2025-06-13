@@ -86,12 +86,13 @@ def scrape(params_name: str, scan_time_str: str) -> None:
     homepage: bytes = fetch_html_content(params["hp_url"])
 
     if archive:
-        archive_scraper: ArchiveScraper = ArchiveScraper(
-            homepage, params["domain"], params["container"]
-        )
-        url_list: list[str] = archive_scraper.crawl_site_for_links(
-            params["hp_url"], 1, 1
-        )
+        # archive_scraper: ArchiveScraper = ArchiveScraper(
+        #     homepage, params["domain"], params["container"]
+        # )
+        # url_list: list[str] = archive_scraper.crawl_site_for_links(
+        #     params["hp_url"], 1, 1
+        # )
+        pass  # Archive is still being worked on
     else:
         scraper: HomepageScraper = HomepageScraper(
             homepage, params["domain"], params["container"]
