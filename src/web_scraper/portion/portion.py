@@ -85,15 +85,18 @@ def random_portion_out(
                         print(random_thread_dir)
                         master_text_path: str = _get_a_master_text(
                             random_thread_dir)
-                        current_portion_site_path: str = (
-                            current_directories[params["site_name"]])
-                        # The original text file to the directory 
-                        # for the current round of portioning
-                        shutil.copy(master_text_path, current_portion_site_path)
+                        if master_text_path is None:
+                            continue #proceed to next random generated thread
+                        else: 
+                            current_portion_site_path: str = (
+                                current_directories[params["site_name"]])
+                            # The original text file to the directory 
+                            # for the current round of portioning
+                            shutil.copy(master_text_path, current_portion_site_path)
 
-                        duplicated_thread_ids.append(random_thread_id)
+                            duplicated_thread_ids.append(random_thread_id)
 
-                        successful_duplications += 1
+                            successful_duplications += 1
 
             # And at last, write the duplicated IDs into site's portion log
             # "These thread IDs has now been duplicated for this site"
@@ -242,9 +245,11 @@ def _get_a_master_text(random_thread_dir: str) -> str:
         # Glob returns list, even though we only expect one
         file = glob.glob(master_text_pattern)[0]
         return os.path.abspath(file)
+            
     except Exception as error:
-        raise Exception(
-            f"Error while getting a master text file: {error}")
+        return None
+        # raise Exception(
+        #     f"Error while getting a master text file: {error}")
 
 def _write_thread_ids_to_log(
         specific_params: dict, por_dir: str, thread_ids: list[str]):
@@ -277,11 +282,13 @@ def _get_all_site_params(params_dir: str) -> list[dict]:
         params_file_list = glob.glob(
             os.path.join(params_dir, "*.json"))
         for params_path in params_file_list:
+                # TODO: Remove check when archive scraping works
+                # TODO: 4chan scraping will most likely be continuously ongoing, so I may exclude it from the portion all command for now.
+                if "archive" in params_path or "4chan_" in params_path:
+                        continue
                 with open(params_path, "r") as params_file:
                     params: dict = json.load(params_file)
-                    # TODO: Remove check when archive scraping works
-                    if "archive" not in params["site_name"]:
-                        params_data_list.append(params)
+                    params_data_list.append(params)
         return params_data_list
     except Exception as error:
         raise Exception(

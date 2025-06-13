@@ -1,16 +1,20 @@
 # Imports
+import json
 import logging
 import requests
 
 logger = logging.getLogger(__name__)
 
+
 class NetworkError(Exception):
     """Exception raised for network-related errors during scraping."""
+
     pass
+
 
 def fetch_html_content(url: str) -> bytes:
     """Fetches HTML content from a given URL.
-    
+
     Args:
         url (str): The URL that will be fetched.
     """
@@ -27,18 +31,24 @@ def fetch_html_content(url: str) -> bytes:
         logger.error(f"Request error fetching {url}: {error}")
         raise NetworkError(f"Request error fetching {url}: {error}") from error
 
-def fetch_fourchan_html_content(url: str) -> bytes: #have to use headers for 4chan
+
+def fetch_fourchan_json_content(
+    url: str,
+) -> (
+    dict
+):  # we cant directly access the 4chan webpage due to cloudflare protections, so our best bet is using the 4chan api, which only returns info as a JSON
     """Fetches HTML content from a given 4chan URL.
-    
+
     Args:
         url (str): The URL that will be fetched.
     """
     try:
         logger.info(f"Fetching: {url}")
         _requests_session = requests.session()
-        _requests_session.headers['User-Agent'] = 'py-4chan/%s' % '0.6.0'
+        _requests_session.headers["User-Agent"] = "py-4chan/%s" % "0.6.0"
         response = _requests_session.get(url)
-        return response.content
+        content = json.loads(response.text)
+        return content
     except requests.HTTPError as error:
         logger.error(f"HTTP error fetching {url}: {error}")
         raise NetworkError(f"HTTP error fetching {url}: {error}") from error
@@ -47,7 +57,7 @@ def fetch_fourchan_html_content(url: str) -> bytes: #have to use headers for 4ch
         raise NetworkError(f"Request error fetching {url}: {error}") from error
 
 
-def archive_crawler(url:str) -> list[str]:
+def archive_crawler(url: str) -> list[str]:
     """TODO: Given a starting URL, will crawl and collect overview pages.
 
     Starting from the provided overview page of a board on a
