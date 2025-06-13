@@ -72,6 +72,12 @@ class MasterTextGenerator:
                 # ~~ Thread ID header ~~
                 master_text.write(
                     f"Thread ID: {self.content["thread_id"]}")
+
+                # Number of posts
+                num_posts = len(self.content["replies"]) + 1
+
+                master_text.write(
+                    f"\n\nNumber of posts in this thread: {num_posts}")
                 # Separator
                 master_text.write(separator)
 
