@@ -175,10 +175,11 @@ class Reparser:
         """Reparses all data for all sites"""
         params_directory = os.path.join("./data", "params")
         params_files: list[str] = os.listdir(params_directory)
-        # Iterates through all availiable sites and recalculates their stats
+        # Iterates through all availiable sites and reparses the respective site data
         for param_file in params_files:
             site_name = param_file.replace("_params.json", "")
-            self.reparse_site(site_name)
+            if "4chan_" not in site_name: #TODO: Excluding 4chan reparsing for now until we figure out how to reparse 4chan API json
+                self.reparse_site(site_name)
 
 
 if __name__ == "__main__":  # used to run script as executable
