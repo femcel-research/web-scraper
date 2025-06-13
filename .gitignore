@@ -19,3 +19,4 @@ src/.pytest_cache/
 .vscode/
 web_scraper.egg-info/
 build/
+.DS_Store

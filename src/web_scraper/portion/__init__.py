@@ -1,1 +1,1 @@
-from .PortionRetriever import PortionRetriever
+from portion import random_portion_out
