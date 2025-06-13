@@ -112,7 +112,7 @@ if __name__ == "__main__":  # used to run script as executable
         "site_name",
         type=str,
         nargs="?",
-        help="Name of the site data folder (e.g., crystal.cafe)",
+        help="Name of the site data folder",
     )
     args = parser.parse_args()
 
