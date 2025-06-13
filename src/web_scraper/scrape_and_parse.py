@@ -34,7 +34,8 @@ def scrape_all(scan_time_str: str) -> None:
     # Iterates through all param files and scrapes and reparses its respective site
     for params_file_name in os.listdir(params_directory):
         params_name = params_file_name.replace("_params.json", "")
-        scrape(params_name, scan_time_str)
+        if "archive" not in params_name or "4chan_" not in params_name: #excludes archives and 4chan from scrape all
+            scrape(params_name, scan_time_str)
 
 
 def scrape(params_name: str, scan_time_str: str) -> None:
