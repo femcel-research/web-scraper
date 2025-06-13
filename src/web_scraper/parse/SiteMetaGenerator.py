@@ -100,7 +100,8 @@ def dump_all():
     # Iterates through all availiable sites and recalculates their stats
     for param_file in params_files:
         site_name = param_file.replace("_params.json", "")
-        dump_site_meta(site_name)
+        if "archive" not in site_name:  # TODO: Remove once archive sites work
+            dump_site_meta(site_name)
 
 
 if __name__ == "__main__":  # used to run script as executable

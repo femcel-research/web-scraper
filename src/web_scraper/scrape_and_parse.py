@@ -85,6 +85,8 @@ def scrape(params_name: str, scan_time_str: str) -> None:
 
     homepage: bytes = fetch_html_content(params["hp_url"])
 
+    url_list: list[str] = []
+
     if archive:
         # archive_scraper: ArchiveScraper = ArchiveScraper(
         #     homepage, params["domain"], params["container"]
@@ -92,25 +94,27 @@ def scrape(params_name: str, scan_time_str: str) -> None:
         # url_list: list[str] = archive_scraper.crawl_site_for_links(
         #     params["hp_url"], 1, 1
         # )
+        logging.warning("Archive site detected; WIP; skipping")
         pass  # Archive is still being worked on
     else:
         scraper: HomepageScraper = HomepageScraper(
             homepage, params["domain"], params["container"]
         )
-        url_list: list[str] = scraper.homepage_to_list()
+        url_list = scraper.homepage_to_list()
 
     for url in url_list:
         soup = BeautifulSoup(fetch_html_content(url), features="html.parser")
         if archive:
-            content_parser: ArchiveToContent = ArchiveToContent(
-                scan_time_str,
-                soup,
-                url,
-                params["op_class"],
-                params["reply_class"],
-                params["id_class"],
-                params["root_domain"],
-            )
+            # content_parser: ArchiveToContent = ArchiveToContent(
+            #     scan_time_str,
+            #     soup,
+            #     url,
+            #     params["op_class"],
+            #     params["reply_class"],
+            #     params["id_class"],
+            #     params["root_domain"],
+            # )
+            pass
         else:
             content_parser: ChanToContent = ChanToContent(
                 scan_time_str,
@@ -186,4 +190,5 @@ def scrape(params_name: str, scan_time_str: str) -> None:
 
         if archive:
             # to not overload server
-            time.sleep(10)  # wait 10s before looping again
+            # time.sleep(10)  # wait 10s before looping again
+            pass

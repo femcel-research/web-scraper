@@ -3,11 +3,12 @@ MAIN = ./src/web_scraper/__main__.py
 REPARSER = ./src/web_scraper/parse/Reparser.py
 SITE_META = src/web_scraper/parse/SiteMetaGenerator.py
 PORTION_RETRIEVER = ./src/web_scraper/portion/PortionRetriever.py
-SITE_NAME ?=# reflected in data subfolder name (i.e crystalcafe is named crystal.cafe in data)
+SITE_NAME ?=# reflected in data subfolder name
 
 # Portioning vars:
 THREAD_PERCENTAGE ?= 10 # can be overwritten in command-line. i.e (make portion THREAD_PERCENTAGE = 15)
-RANDOMIZE ?= 1 # sets randomization as true
+PORTION_DIRECTORY ?= ./data/portions
+# RANDOMIZE ?= 1 # sets randomization as true
 
 # Scrapes new data, reparses old data
 all: setup test_all reparse scrape calculate_sitewide
@@ -42,11 +43,16 @@ else
 	@echo "Reparsing complete!"
 endif
 
-# Retrieves portions, currently requires a site name
-portion: 
+# # Retrieves portions, currently requires a site name
+# portion: 
+# 	@echo "Portioning threads..."
+# 	python $(PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(SITE_NAME) $(RANDOMIZE)
+# 	@echo "Portioning complete!"
+
+portion:
 	@echo "Portioning threads..."
-	python $(PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(SITE_NAME) $(RANDOMIZE)
-	@echo "Portioning complete!" 
+	PYTHONPATH=./src python -m web_scraper.portion.portion $(THREAD_PERCENTAGE) $(PORTION_DIRECTORY) $(SITE_NAME)
+	@echo "Portioning complete!"
 
 # Calculates sitewide stats
 calculate_sitewide:

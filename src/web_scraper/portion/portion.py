@@ -234,7 +234,7 @@ def _get_a_master_text(random_thread_dir: str) -> str:
     """
     try:
         master_text_pattern: str = os.path.join(
-            random_thread_dir, "*.txt")  # Master text file
+            random_thread_dir, "master_text_*.txt")  # Master text file
         # Glob returns list, even though we only expect one
         file = glob.glob(master_text_pattern)[0]
         return os.path.abspath(file)
@@ -273,9 +273,11 @@ def _get_all_site_params(params_dir: str) -> list[dict]:
         params_file_list = glob.glob(
             os.path.join(params_dir, "*.json"))
         for params_path in params_file_list:
-            with open(params_path, "r") as params_file:
-                params: dict = json.load(params_file)
-                params_data_list.append(params)
+                with open(params_path, "r") as params_file:
+                    params: dict = json.load(params_file)
+                    # TODO: Remove check when archive scraping works
+                    if "archive" not in params["site_name"]:
+                        params_data_list.append(params)
         return params_data_list
     except Exception as error:
         raise Exception(
@@ -294,7 +296,9 @@ def _get_site_params(site_name: str, params_dir: str) -> list[dict]:
         for params_path in params_file_list:
             with open(params_path, "r") as params_file:
                 params: dict = json.load(params_file)
-                params_data_list.append(params)
+                # TODO: Remove check when archive scraping works
+                if "archive" not in params["site_name"]:
+                    params_data_list.append(params)
         return params_data_list
     except Exception as error:
         raise Exception(

@@ -99,7 +99,7 @@ class MasterContentGenerator:
         # Retrieves original post ID and adds to set of all post ids.
         original_post_id: str = original_post["post_id"]
         self.all_post_ids.add(original_post_id)
-        logging.info(
+        logging.debug(
             f"Original post {original_post_id} has been added to the master thread."
         )
 
@@ -107,7 +107,7 @@ class MasterContentGenerator:
             # Retrieves reply ID and adds to set of all post ids.
             reply_id: str = reply.get("post_id")
             self.all_post_ids.add(reply_id)
-            logging.info(f"Reply {reply_id} has been added to the master thread.")
+            logging.debug(f"Reply {reply_id} has been added to the master thread.")
 
     def content_dump(self) -> None:
         """Dumps master contents into a JSON file.
