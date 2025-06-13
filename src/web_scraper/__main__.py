@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from scrape_and_parse import *
+from fourchan_scrape_and_parse import *
 
 scan_time_str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")  # ISO format
 
@@ -45,11 +46,11 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+if "4chan_" in args.params_name: #to differentiate from 4chanarchives
+    fourchan_scrape(args.params_name, scan_time_str)
 
 if args.params_name is None:
     scrape_all(scan_time_str)
 
 else:
     scrape(args.params_name, scan_time_str)
-
-#TODO: look at scrape within crystalcafe for bugfixes

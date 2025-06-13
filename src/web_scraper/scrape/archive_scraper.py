@@ -141,7 +141,7 @@ class ArchiveScraper:
 
                 page_number += 1
                 # to not overload server
-                delay_seconds = random.uniform(10, 30) # Delay between 30 and 60 seconds
+                delay_seconds = random.uniform(1, 2) # Delay between 10 and 30 seconds
                 time.sleep(delay_seconds) 
             else:
                 logger.warning(
