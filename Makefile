@@ -3,6 +3,7 @@ MAIN = ./src/web_scraper/__main__.py
 REPARSER = ./src/web_scraper/parse/Reparser.py
 SITE_META = src/web_scraper/parse/SiteMetaGenerator.py
 SITE_NAME ?=# reflected in data subfolder name
+BACKLOG ?=#whether or not to scrape 4chan backlog, leave as none for default scrape.
 
 # Portioning vars:
 THREAD_PERCENTAGE ?= 10 # can be overwritten in command-line. i.e (make portion THREAD_PERCENTAGE = 15)
@@ -29,7 +30,7 @@ ifeq ($(SITE_NAME),)
 	@echo "Scraping and parsing complete!"
 else
 	@echo "Scraping and parsing new data for $(SITE_NAME)..."
-	python $(MAIN) $(SITE_NAME)
+	python $(MAIN) $(SITE_NAME) $(BACKLOG)
 	@echo "Scraping and parsing complete!"
 endif
 	
