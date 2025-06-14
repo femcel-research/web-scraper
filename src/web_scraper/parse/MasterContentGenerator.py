@@ -52,7 +52,12 @@ class MasterContentGenerator:
             snapshot_content = data
             # General board/thread info
             if i == 0:
-                thread_id: str = snapshot_content["thread_id"]
+                try:
+                    thread_id: str = snapshot_content["thread_id"]
+                except KeyError:
+                    thread_id: str = snapshot_content["thread_number"]
+                    logger.warning(
+                    f"Thread ID not found for path: {snapshot_content_path}")
                 self.master_contents.update({"thread_id": thread_id})
 
             # Retrieves OP and replies from snapshot and adds their ids to a set
