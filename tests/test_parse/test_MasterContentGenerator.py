@@ -139,7 +139,8 @@ def faux_content_dir(fs):
 
 def test_read_faux_data(faux_content_dir):
     """Test reading data from the faux directory created by the fixture."""
-    # This is more of a test-internal test, to ensure the fixture is working properly
+    # This is more of a test-internal test, to ensure the fixture is 
+    # working properly
 
     # Arrange
     snapshot_1 = os.path.join(faux_content_dir, "snapshot_1.json")
