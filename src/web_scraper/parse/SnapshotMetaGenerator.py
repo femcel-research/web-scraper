@@ -49,11 +49,13 @@ class SnapshotMetaGenerator:
 
     # Helper functions:
     def calculate_num_words(self) -> int:
-        """
-         Calculates total number of words in a thread.
-
+        """Calculates total number of words in a thread. 
+        
+        Calculated by totaling the word counts of the original post 
+        and each reply.
+        
         Returns:
-             num_words (int): Word count of all the words within a thread. Calculated by totaling the word counts of the original post and each reply.
+            num_words (int): Word count of all the words within a thread.
         """
 
         num_words: int = 0
@@ -153,7 +155,7 @@ class SnapshotMetaGenerator:
     def meta_dump(self) -> None:
         """Dumps thread metadata into a JSON file.
         """
-        meta: dict = self.generate_meta()
+        meta: dict = self._generate_meta()
         with open(self.meta_file_path, "w", encoding="utf-8") as f:
             json.dump(meta, f, indent=2, ensure_ascii=False)
     
@@ -161,7 +163,7 @@ class SnapshotMetaGenerator:
         return self.meta_file_path
 
     # Main method:
-    def generate_meta(self) -> dict:
+    def _generate_meta(self) -> dict:
         """
         Transfers data from thread contents to a metafile.
         """
