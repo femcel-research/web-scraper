@@ -13,6 +13,8 @@ def faux_content_dir(fs):
     snapshot_two = os.path.join(faux_thread_dir, "snapshot_02.json")
     snapshot_three = os.path.join(faux_thread_dir, "snapshot_03.json")
     snapshot_four = os.path.join(faux_thread_dir, "snapshot_04.json")
+    # Evil depricated snapshot for testing interactions with outdated files
+    snapshot_depr = os.path.join(faux_content_dir, "snapshot_depr.json")
 
     # Create fake snapshot content data
     # (Likely don't need all of this for testing, but I would rather be
@@ -166,12 +168,33 @@ def faux_content_dir(fs):
         "replies": two_replies_one_lost}
     snapshot_four_bytes = json.dumps(snapshot_four_content).encode('utf-8')
 
+    snapshot_depr_content: dict = {
+        "thread_number": "00",
+        "original_post": {
+            "post_id": "00",
+            "username": "Dorothy Ashby",
+            "reply_to_another_thread?": False,
+            "date_posted": "2025-06-16T10:00:01",
+            "image_links": [],
+            "post_content": "The quick brown fox jumps over the lazy dog.",
+            "replied_thread_ids": []},
+        "replies": {
+            "reply_01": {
+                "post_id": "01",
+                "ids_of_replied_posts": [],
+                "username": "Alice Coltrane",
+                "date_posted": "2025-06-16T10:00:02",
+                "image_links": [],
+                "post_content": "Sphinx of black quartz judge my vow."}}}
+    snapshot_depr_bytes = json.dumps(snapshot_depr_content).encode('utf-8')
+
     # Create the fake directory and files
     fs.create_dir(faux_thread_dir)
     fs.create_file(snapshot_one, contents=snapshot_one_bytes)
     fs.create_file(snapshot_two, contents=snapshot_two_bytes)
     fs.create_file(snapshot_three, contents=snapshot_three_bytes)
     fs.create_file(snapshot_four, contents=snapshot_four_bytes)
+    fs.create_file(snapshot_depr, contents=snapshot_depr_bytes)
 
     # Return the path to the created directory/files
     yield faux_thread_dir
