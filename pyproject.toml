@@ -19,7 +19,8 @@ dependencies = [
   "bs4 (>=0.0.2,<0.0.3)",
   "pytest-mock (>=3.14.0,<4.0.0)",
   "htmldate",
-  "basc_py4chan"
+  "basc_py4chan",
+  "pyfakefs"
 ]
 
 [project.urls]

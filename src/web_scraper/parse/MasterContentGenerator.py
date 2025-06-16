@@ -1,25 +1,24 @@
-# from datetime import datetime
+# Imports
 import json
 import logging
 import os
 
-
 logger = logging.getLogger(__name__)
 
-
 class MasterContentGenerator:
-    def __init__(self, list_of_content_paths: list[str]):
-        """
-        Given a list of paths to snapshot content JSONs (gathered through Glob), a master content JSON is generated and saved locally.
+    def __init__(self, content_paths: list[str]):
+        """Generates a master content JSON according to snapshots.
+
+        Given a list of paths to snapshot content JSONs (gathered through 
+        Glob), a master content JSON is generated and saved locally.
 
         Args:
-        list_of_content_paths (list[str]): List containing filepaths to snapshot content JSONs
-
+            content_paths (list[str]): Paths to snapshot content JSONs.
         """
 
         # Ensures at least one content path exists
-        if len(list_of_content_paths) > 0:
-            self.list_of_content_paths: list[str] = list_of_content_paths
+        if len(content_paths) > 0:
+            self.list_of_content_paths: list[str] = content_paths
             logger.info("List of snapshot content paths retrieved.")
         else:
             logger.error("No snapshot content paths found.")
@@ -40,9 +39,12 @@ class MasterContentGenerator:
             "replies": self.all_replies,
         }
 
-    def generate_master_content(self) -> dict:
-        """
-        Converts all snapshot content JSONs into a single master content JSON.
+    def _generate_master_content(self) -> dict:
+        """Converts snapshot content JSONs into single master content dict.
+        
+        Depends on a list of content paths having been set, as well as an
+        OP dictionary, all_replies dictionary, all_post_ids set, and 
+        master_contents dictionary having been initialized.
         """
         thread_id: str
         for i, snapshot_content_path in enumerate(self.list_of_content_paths):
@@ -73,7 +75,7 @@ class MasterContentGenerator:
             replies: dict = snapshot_content["replies"]
             logger.debug(f"Replies retrieved.")
 
-            self.gather_all_post_ids(original_post, replies)
+            self._gather_all_post_ids(original_post, replies)
             logger.debug(f"All post ids gathered from snapshot.")
 
             # Update master posts with any new snapshot posts
@@ -95,12 +97,13 @@ class MasterContentGenerator:
 
         return self.master_contents
 
-    def gather_all_post_ids(self, original_post: dict, replies: dict):
-        """Adds original post id and all reply ids into a set containing all post ids
+    def _gather_all_post_ids(self, original_post: dict, replies: dict):
+        """Adds OP ID and all reply IDs into a set containing all post IDs.
+
         Args:
             original_post (dict): Dictionary containing the original post.
-            replies (dict): Dictionary containing all replies."""
-
+            replies (dict): Dictionary containing all replies.
+        """
         # Retrieves original post ID and adds to set of all post ids.
         original_post_id: str = original_post["post_id"]
         self.all_post_ids.add(original_post_id)
@@ -115,16 +118,9 @@ class MasterContentGenerator:
             logging.debug(f"Reply {reply_id} has been added to the master thread.")
 
     def content_dump(self) -> None:
-        """Dumps master contents into a JSON file.
-
-        Args:
-            content (dict): Dictionary containing content data.
-            master_content_filepath (str): String containing filepath for the master meta JSON.
-        """
-        # Pathing: Finds thread directory by finding parent folder of snapshot directory
-
+        """Dumps master contents into a JSON file."""
         # Retrieves thread_id from OP post_id: done under the assumption OP post id = thread id.
-        contents = self.generate_master_content()
+        contents = self._generate_master_content()
         file_name = f"master_version_{self.master_contents["thread_id"]}.json"
 
         # Finds thread directory by finding the parent of the snapshot folder
