@@ -19,18 +19,18 @@ def faux_content_dir(fs):
     thread_id: str = "00"
     url: str = "example.com"
     date_published: str = "2025-06-16T10:00:01"
+    # Snapshot One
     snapshot_one_date_updated: str = "2025-06-16T10:00:01"
     snapshot_one_date_scraped: str = "2025-06-16T10:00:02"
-    snapshot_two_date_updated: str = "2025-06-16T10:00:02"
-    snapshot_two_date_scraped: str = "2025-06-16T10:00:03"
-    snapshot_three_date_updated: str = "2025-06-16T10:00:03"
-    snapshot_three_date_scraped: str = "2025-06-16T10:00:04"
     snapshot_one_post_dates: list[str] = [
         "2025-06-16T10:00:01"]
     snapshot_one_post_ids: list[str] = [
         "00"]
     snapshot_one_num_post_ids: int = 1
     snapshot_one_num_words: int = 9
+    # Snapshot Two
+    snapshot_two_date_updated: str = "2025-06-16T10:00:02"
+    snapshot_two_date_scraped: str = "2025-06-16T10:00:03"
     snapshot_two_post_dates: list[str] = [
         "2025-06-16T10:00:01", 
         "2025-06-16T10:00:02"]
@@ -39,6 +39,9 @@ def faux_content_dir(fs):
         "01"]
     snapshot_two_num_post_ids: int = 2
     snapshot_two_num_words: int = 16
+    # Snapshot Three
+    snapshot_three_date_updated: str = "2025-06-16T10:00:03"
+    snapshot_three_date_scraped: str = "2025-06-16T10:00:04" 
     snapshot_three_post_dates: list[str] = [
         "2025-06-16T10:00:01", 
         "2025-06-16T10:00:02",
