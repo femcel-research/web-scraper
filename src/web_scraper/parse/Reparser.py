@@ -21,7 +21,22 @@ from .MasterMetaGenerator import MasterMetaGenerator
 # from web_scraper.parse.MasterContentGenerator import MasterContentGenerator
 # from web_scraper.parse.MasterMetaGenerator import MasterMetaGenerator
 
+scan_time_str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")  # ISO format
+
+log_dir = Path("./data/logs")
+log_dir.mkdir(parents=True, exist_ok=True)
+
+# Root logger config
+logging.basicConfig(
+    filename=(f"./data/logs/{scan_time_str}.log"),
+    filemode="w",
+    format=("%(asctime)s %(levelname)s : %(message)s"),
+    datefmt="%Y-%m-%dT%H:%M:%S",
+    style="%",
+    level=logging.INFO,  # We can make a lot of the spam-y logs DEBUG
+)
 logger = logging.getLogger(__name__)
+logger.info("Root logger configured")
 
 
 class Reparser:
