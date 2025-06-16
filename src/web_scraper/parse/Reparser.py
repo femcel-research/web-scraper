@@ -18,9 +18,12 @@ from .MasterMetaGenerator import MasterMetaGenerator
 # Imports if running debugger
 # from web_scraper.write_out import *
 # from web_scraper.parse.HTMLToContent.ChanToContent import ChanToContent
+# from web_scraper.parse.JSONToContent.SourceToContent import SourceToContent
 # from web_scraper.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
 # from web_scraper.parse.MasterContentGenerator import MasterContentGenerator
 # from web_scraper.parse.MasterMetaGenerator import MasterMetaGenerator
+# from web_scraper.parse.MasterTextGenerator import MasterTextGenerator
+
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +118,7 @@ class Reparser:
         return content_filepath
     
     def generate_fourchan_content(
-        self, source_json: dict, board_name: str, scan_time: str, params: dict
+        self, source_json: dict, site_name: str, scan_time: str, params: dict
     ) -> str:
         """Generates a content JSON from saved HTML and returns the file path.
         Args:
@@ -127,7 +130,10 @@ class Reparser:
             content_file_path (str): String containing the filepath for the generated content file.
         """
         # Content creation:
+        board_name = params["board_name"]
         content_parser = SourceToContent(board_name, source_json, scan_time)
+
+        #File creation
         site_dir = params["site_dir"]
         snapshot_dict_to_json(
             content_parser.data,
@@ -138,7 +144,7 @@ class Reparser:
         )
 
         thread_data_path: str = os.path.join(
-            f"./data/{board_name}", content_parser.data["thread_id"], scan_time
+            f"./data/{site_name}", content_parser.data["thread_id"], scan_time
         )
         os.makedirs(thread_data_path, exist_ok=True)
         content_filepath: str = os.path.join(
@@ -212,9 +218,9 @@ class Reparser:
         # Iterates through all availiable sites and reparses the respective site data
         for param_file in params_files:
             site_name = param_file.replace("_params.json", "")
-            if (
-                "4chan_" not in site_name
-            ):  # TODO: Excluding 4chan reparsing for now until we figure out how to reparse 4chan API json
+            if ("4chan_" in  site_name):
+                self.reparse_fourchan(site_name)
+            else:
                 self.reparse_site(site_name)
 
     def reparse_fourchan(self, board_search):
@@ -228,6 +234,7 @@ class Reparser:
 
             # Pathing
             site_name: str = params["site_name"]
+            board_name: str = params["board_name"]
             site_directory = f"./data/{site_name}"
 
             source_pattern = "source*.json"  # Look for an html file
@@ -254,8 +261,8 @@ class Reparser:
                                 source_dir_name
                             )  # assumption that html is stored in a scan_time subfolder
 
-                            with open(source_file_path, "r", encoding="utf-8") as f:
-                                source_content: dict = json.load(source_file_path)
+                            with open(source_file_path, "r", encoding="utf-8") as file:
+                                source_content: dict = json.load(file)
 
                             # Generate content and then pass to SnapshotMetaGenerator
                             content_path: str = self.generate_fourchan_content(
@@ -295,6 +302,9 @@ if __name__ == "__main__":  # used to run script as executable
 
     if args.site_name is None:
         reparser.reparse_all()
+
+    elif "4chan_" in args.site_name:
+        reparser.reparse_fourchan(args.site_name)
 
     else:
         reparser.reparse_site(args.site_name)

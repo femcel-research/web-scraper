@@ -57,5 +57,5 @@ def unix_to_datetime(unix_time: int) -> datetime:
         """Formats a UNIX timestamp into a datetime object
         Args:
             unix_time (int): UNIX timestamp"""
-        datetime_obj = datetime.datetime.fromtimestamp(unix_time)
+        datetime_obj = datetime.fromtimestamp(unix_time)
         return datetime_obj

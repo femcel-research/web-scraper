@@ -1,6 +1,7 @@
 import logging
-from write_out import *
+from web_scraper.write_out import *
 from bs4 import BeautifulSoup
+from lxml import html
 
 logger = logging.getLogger(__name__)
 
@@ -9,13 +10,17 @@ class SourceToContent:
     def __init__(self, board_name, source_json: dict, scan_time_str):
         logger.info(f"Accessing API data.")
         # Parse API JSON and make values (posts) accessible via indexing.
-        source_json: dict = source_json["posts"]
-        self.posts = list(self.source_json.values())
-        self.op_data = self.posts[0]
+        self.posts: list = source_json["posts"]
+        self.op_data: dict = self.posts[0]
 
         # Data values
         self.board_name: str = board_name
-        self.thread_title: str = self.op_data["sub"]  # thread subtitle
+        self.thread_title: str = ""
+        try:
+            self.thread_title = self.op_data["sub"]  # thread subtitle
+        except:
+            semantic_url: str = self.op_data["semantic_url"]  # thread subtitle
+            self.thread_title = semantic_url.replace("-", " ")
         self.thread_id: str = str(self.op_data["no"])  # thread number
         self.thread_url: str = (
             f"https://boards.4chan.org/{board_name}/thread/{self.thread_id}"
@@ -37,7 +42,7 @@ class SourceToContent:
             "date_updated": latest_date,
             "date_scraped": self.scrape_time,
             "original_post": self.generate_post_data(self.op_data),
-            "replies": self.generate_replies_data(),
+            "replies": self.generate_replies_data(self.posts),
         }
 
         logger.info(
@@ -48,14 +53,21 @@ class SourceToContent:
         unix_timestamp: int = post["time"]
         date_posted: str = format_date(unix_to_datetime(unix_timestamp))
         post_id: str = str(post["no"])
-        post_content_html: str = post["com"]
+        try:
+            post_content_html: str = post["com"]
+            post_content_html = post_content_html.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&").replace('<span class="quote">', "\n")
+            post_content = self.remove_comment_tags(post_content_html)
+        except KeyError:
+            post_content = ""
+            logger.debug(f"Post ID {post_id} does not contain an comment. Post most likely only contains an image.")
         username: str = post["name"]
 
         # Replied to IDs
-        if post["resto"] is not 0:
-            replied_to_ids: list = list(post["resto"])
-        else:
+        if post["resto"] == 0:
             replied_to_ids: list = []
+        else:
+            replied_to_ids: list = [post["resto"]]
+            
 
         # Img link recreation and finding tripcodes
         img_links: list[str] = []
@@ -78,7 +90,7 @@ class SourceToContent:
         data = {
             "date_posted": date_posted,
             "post_id": post_id,
-            "post_content": self.remove_comment_tags(post_content_html),
+            "post_content": post_content,
             "img_links": img_links,  # List for consistency with replies
             "username": username,
             "tripcode": tripcode,
@@ -123,7 +135,8 @@ class SourceToContent:
         """Removes HTML tags from post comment
         Args:
             comment (str): String containing comment (body) of post."""
-        soup = BeautifulSoup(comment, "html.parser")
-        for data in soup(["style", "script"]):
-            data.decompose()
-        return " ".join(soup.stripped_strings)
+        # soup = BeautifulSoup(comment, "html.parser")
+        # for data in soup(["style", "script"]):
+        #     data.decompose()
+        # return " ".join(soup.stripped_strings)
+        return html.fromstring(comment).text_content()
