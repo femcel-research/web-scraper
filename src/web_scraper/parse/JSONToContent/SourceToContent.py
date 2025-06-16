@@ -1,13 +1,13 @@
 import logging
 from web_scraper.write_out import *
 from bs4 import BeautifulSoup
-from lxml import html
 
 logger = logging.getLogger(__name__)
 
 
 class SourceToContent:
     def __init__(self, board_name, source_json: dict, scan_time_str):
+        """Reparses thread data from a 4chan API JSON."""
         logger.info(f"Accessing API data.")
         # Parse API JSON and make values (posts) accessible via indexing.
         self.posts: list = source_json["posts"]
@@ -50,16 +50,20 @@ class SourceToContent:
         )
 
     def generate_post_data(self, post: dict):
+        """Generates and formats data for a given post.
+        Args:
+            post (dict): Dictionary containing post API data."""
         unix_timestamp: int = post["time"]
         date_posted: str = format_date(unix_to_datetime(unix_timestamp))
         post_id: str = str(post["no"])
         try:
             post_content_html: str = post["com"]
-            post_content_html = post_content_html.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&").replace('<span class="quote">', "\n")
-            post_content = self.remove_comment_tags(post_content_html)
+            post_content = self.clean_comment_text(post_content_html)
         except KeyError:
             post_content = ""
-            logger.debug(f"Post ID {post_id} does not contain an comment. Post most likely only contains an image.")
+            logger.debug(
+                f"Post ID {post_id} does not contain an comment. Post most likely only contains an image."
+            )
         username: str = post["name"]
 
         # Replied to IDs
@@ -67,7 +71,6 @@ class SourceToContent:
             replied_to_ids: list = []
         else:
             replied_to_ids: list = [post["resto"]]
-            
 
         # Img link recreation and finding tripcodes
         img_links: list[str] = []
@@ -131,12 +134,21 @@ class SourceToContent:
         date: str = format_date(latest_date)
         return date
 
-    def remove_comment_tags(self, comment: str) -> str:
+    def clean_comment_text(self, comment: str) -> str:
         """Removes HTML tags from post comment
         Args:
             comment (str): String containing comment (body) of post."""
-        # soup = BeautifulSoup(comment, "html.parser")
-        # for data in soup(["style", "script"]):
-        #     data.decompose()
-        # return " ".join(soup.stripped_strings)
-        return html.fromstring(comment).text_content()
+        text_with_placeholders = comment.replace(
+            "\\u003Cbr\\u003E", "NEWLINE_PLACEHOLDER"
+        )
+        text_with_placeholders = text_with_placeholders.replace(
+            "<br>", "NEWLINE_PLACEHOLDER"
+        )
+
+        soup = BeautifulSoup(text_with_placeholders, "html.parser")
+        clean_text = soup.get_text()
+        result: str = clean_text.replace("NEWLINE_PLACEHOLDER", "\n")
+        # result = " ".join(result.split)
+        result = result.replace(" \n", "\n").replace("\n ", "\n")
+        # return html.fromstring(comment).text_content()
+        return result
