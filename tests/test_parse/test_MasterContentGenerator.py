@@ -164,10 +164,7 @@ def test__generate_master_content(mocker, faux_content_dir):
     snapshot_1 = os.path.join(faux_content_dir, "snapshot_1.json")
     snapshot_2 = os.path.join(faux_content_dir, "snapshot_2.json")
     snapshot_3 = os.path.join(faux_content_dir, "snapshot_3.json")
-    paths = []
-    paths.append(snapshot_1)
-    paths.append(snapshot_2)
-    paths.append(snapshot_3)
+    paths = [snapshot_1, snapshot_2, snapshot_3]
 
     # Assign the empty variables that would normally by handled by init
     master_content_generator.original_post = {}

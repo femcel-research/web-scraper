@@ -1,542 +1,194 @@
-import glob
+# Imports
+import json
 import os
-
+import pytest
 
 from web_scraper.parse.MasterMetaGenerator import MasterMetaGenerator
 
+@pytest.fixture
+def faux_content_dir(fs):
+    """Custom fixture to create a fake data directory with snapshot files."""
+    faux_thread_dir = "/faux_thread"
+    snapshot_one = os.path.join(faux_thread_dir, "snapshot_1.json")
+    snapshot_two = os.path.join(faux_thread_dir, "snapshot_2.json")
+    snapshot_three = os.path.join(faux_thread_dir, "snapshot_3.json")
 
-def test_meta_content_generation():
-    # Finds list of snapshot paths from dummy data
-    dummy_data_dir = "./tests/dummy_data"
-    candidate_meta_files = os.path.join(dummy_data_dir, "**", "meta_*.json")
-    list_of_snapshot_paths: list[str] = list(
-        glob.glob(candidate_meta_files, recursive=True)
-    )
+    # Create fake snapshot meta data
+    board_name: str = "Test"
+    thread_title: str = "Scraper"
+    thread_id: str = "00"
+    url: str = "example.com"
+    date_published: str = "2025-06-16T10:00:01"
+    snapshot_one_date_updated: str = "2025-06-16T10:00:01"
+    snapshot_one_date_scraped: str = "2025-06-16T10:00:02"
+    snapshot_two_date_updated: str = "2025-06-16T10:00:02"
+    snapshot_two_date_scraped: str = "2025-06-16T10:00:03"
+    snapshot_three_date_updated: str = "2025-06-16T10:00:03"
+    snapshot_three_date_scraped: str = "2025-06-16T10:00:04"
+    snapshot_one_post_dates: list[str] = [
+        "2025-06-16T10:00:01"]
+    snapshot_one_post_ids: list[str] = [
+        "00"]
+    snapshot_one_num_post_ids: int = 1
+    snapshot_one_num_words: int = 9
+    snapshot_two_post_dates: list[str] = [
+        "2025-06-16T10:00:01", 
+        "2025-06-16T10:00:02"]
+    snapshot_two_post_ids: list[str] = [
+        "00",
+        "01"]
+    snapshot_two_num_post_ids: int = 2
+    snapshot_two_num_words: int = 16
+    snapshot_three_post_dates: list[str] = [
+        "2025-06-16T10:00:01", 
+        "2025-06-16T10:00:02",
+        "2025-06-16T10:00:03"]
+    snapshot_three_post_ids: list[str] = [
+        "00",
+        "01",
+        "02"]
+    snapshot_three_num_post_ids: int = 3
+    snapshot_three_num_words: int = 22
+    
+    snapshot_one_meta: dict = {
+        "board_name":
+            board_name,
+        "thread_title":
+            thread_title,
+        "thread_id":
+            thread_id,
+        "url":
+            url,
+        "date_published":
+            date_published,
+        "date_updated":
+            snapshot_one_date_updated,
+        "date_scraped":
+            snapshot_one_date_scraped,
+        "all_post_dates":
+            snapshot_one_post_dates,
+        "all_post_ids": 
+            snapshot_one_post_ids,
+        "num_all_post_ids":
+            snapshot_one_num_post_ids,
+        "num_all_words":
+            snapshot_one_num_words}
+    # Needs to be bytes for fs.create_file()
+    snapshot_one_bytes = json.dumps(snapshot_one_meta).encode('utf-8')
 
-    # Generates master content
-    master_meta_generator = MasterMetaGenerator(list_of_snapshot_paths)
-    master_content = master_meta_generator.generate_master_meta()
+    snapshot_two_meta: dict = {
+        "board_name":
+            board_name,
+        "thread_title":
+            thread_title,
+        "thread_id":
+            thread_id,
+        "url":
+            url,
+        "date_published":
+            date_published,
+        "date_updated":
+            snapshot_two_date_updated,
+        "date_scraped":
+            snapshot_two_date_scraped,
+        "all_post_dates":
+            snapshot_two_post_dates,
+        "all_post_ids": 
+            snapshot_two_post_ids,
+        "num_all_post_ids":
+            snapshot_two_num_post_ids,
+        "num_all_words":
+            snapshot_two_num_words}
+    snapshot_two_bytes = json.dumps(snapshot_two_meta).encode('utf-8')
+    
+    snapshot_three_meta: dict = {
+        "board_name":
+            board_name,
+        "thread_title":
+            thread_title,
+        "thread_id":
+            thread_id,
+        "url":
+            url,
+        "date_published":
+            date_published,
+        "date_updated":
+            snapshot_three_date_updated,
+        "date_scraped":
+            snapshot_three_date_scraped,
+        "all_post_dates":
+            snapshot_three_post_dates,
+        "all_post_ids": 
+            snapshot_three_post_ids,
+        "num_all_post_ids":
+            snapshot_three_num_post_ids,
+        "num_all_words":
+            snapshot_three_num_words}
+    snapshot_three_bytes = json.dumps(snapshot_three_meta).encode('utf-8')
 
-    # General board/thread info
-    board_name: str = master_content["board_name"]
-    thread_title: str = master_content["thread_title"]
-    thread_id: str = master_content["thread_id"]
-    url: str = master_content["url"]
+    # Create the fake directory and files
+    fs.create_dir(faux_thread_dir)
+    fs.create_file(snapshot_one, contents=snapshot_one_bytes)
+    fs.create_file(snapshot_two, contents=snapshot_two_bytes)
+    fs.create_file(snapshot_three, contents=snapshot_three_bytes)
 
-    # Data relating to dates/time:
-    date_published: str = master_content["date_published"]
-    date_updated: str = master_content["most_recent_update_date"]
-    date_scraped: str = master_content["most_recent_scrape_date"]
+    # Return the path to the created directory/files
+    yield faux_thread_dir
 
-    # Data relating to post ids
-    all_post_ids: set = set(master_content["unique_post_ids"])
-    num_all_post_ids: int = master_content["num_unique_post_ids"]
+def test_read_faux_data(faux_content_dir):
+    """Test reading data from the faux directory created by the fixture."""
+    # This is more of a test-internal test, to ensure the fixture is 
+    # working properly
 
-    # Meta from the dummy data folder
-    snapshot_meta = {
-        "URL": "https://crystal.cafe/hb/res/431.html#21821",
-        "board": "/hb/",
-        "thread_title": "Skincare General",
-        "thread_number": "431",
-        "date_published": "2017-05-27T11:31:22",
-        "date_updated": "2025-06-01T18:07:52",
-        "date_scraped": "2025-06-02T20:40:49",
-        "dist_post_ids": [
-            "431",
-            "432",
-            "433",
-            "434",
-            "435",
-            "436",
-            "437",
-            "438",
-            "439",
-            "440",
-            "441",
-            "442",
-            "443",
-            "444",
-            "445",
-            "446",
-            "447",
-            "448",
-            "449",
-            "450",
-            "451",
-            "452",
-            "453",
-            "454",
-            "455",
-            "456",
-            "457",
-            "458",
-            "459",
-            "460",
-            "461",
-            "462",
-            "463",
-            "464",
-            "465",
-            "466",
-            "467",
-            "468",
-            "469",
-            "470",
-            "471",
-            "472",
-            "473",
-            "474",
-            "475",
-            "476",
-            "477",
-            "478",
-            "479",
-            "480",
-            "481",
-            "482",
-            "483",
-            "484",
-            "485",
-            "486",
-            "487",
-            "488",
-            "489",
-            "490",
-            "491",
-            "492",
-            "493",
-            "494",
-            "495",
-            "496",
-            "497",
-            "498",
-            "499",
-            "500",
-            "501",
-            "502",
-            "503",
-            "504",
-            "505",
-            "506",
-            "507",
-            "508",
-            "509",
-            "510",
-            "2007",
-            "2038",
-            "2040",
-            "2048",
-            "2049",
-            "2052",
-            "2111",
-            "2116",
-            "2117",
-            "2119",
-            "2137",
-            "2189",
-            "2191",
-            "2223",
-            "2226",
-            "2229",
-            "2230",
-            "2231",
-            "2247",
-            "2251",
-            "2254",
-            "2255",
-            "2256",
-            "2388",
-            "2389",
-            "2412",
-            "2431",
-            "2448",
-            "2495",
-            "2496",
-            "2499",
-            "2511",
-            "2518",
-            "2519",
-            "2525",
-            "2530",
-            "2533",
-            "2535",
-            "2536",
-            "2546",
-            "2550",
-            "2551",
-            "2566",
-            "2570",
-            "2571",
-            "2572",
-            "2576",
-            "2577",
-            "2581",
-            "2583",
-            "2584",
-            "2588",
-            "2593",
-            "2599",
-            "2633",
-            "2636",
-            "2638",
-            "2689",
-            "2690",
-            "2691",
-            "2692",
-            "2694",
-            "2702",
-            "2703",
-            "2706",
-            "2707",
-            "2709",
-            "2710",
-            "2711",
-            "2714",
-            "2716",
-            "2722",
-            "2726",
-            "2737",
-            "2761",
-            "2778",
-            "2779",
-            "2905",
-            "2906",
-            "2907",
-            "2911",
-            "2913",
-            "2914",
-            "2922",
-            "2925",
-            "2929",
-            "2930",
-            "2931",
-            "2932",
-            "2933",
-            "2934",
-            "2940",
-            "2948",
-            "2951",
-            "2952",
-            "2953",
-            "2955",
-            "2956",
-            "2974",
-            "2975",
-            "2976",
-            "2989",
-            "2995",
-            "2998",
-            "3052",
-            "3056",
-            "3057",
-            "3065",
-            "3067",
-            "3074",
-            "3076",
-            "3077",
-            "3078",
-            "3079",
-            "3080",
-            "3082",
-            "3083",
-            "3143",
-            "3158",
-            "3159",
-            "3165",
-            "3171",
-            "3177",
-            "3180",
-            "3203",
-            "3204",
-            "3205",
-            "3216",
-            "3217",
-            "3219",
-            "3223",
-            "3232",
-            "3243",
-            "3244",
-            "3245",
-            "3270",
-            "3276",
-            "3277",
-            "3278",
-            "3291",
-            "3293",
-            "3294",
-            "3306",
-            "3307",
-            "3313",
-            "3314",
-            "3317",
-            "3334",
-            "3340",
-            "3353",
-            "3501",
-            "3506",
-            "4430",
-            "4431",
-            "4442",
-            "4561",
-            "4562",
-            "4704",
-            "4705",
-            "4706",
-            "4707",
-            "4834",
-            "4862",
-            "4885",
-            "4920",
-            "4921",
-            "6204",
-            "6249",
-            "6291",
-            "6292",
-            "6307",
-            "6510",
-            "6534",
-            "6536",
-            "6578",
-            "6579",
-            "6580",
-            "6595",
-            "6635",
-            "6639",
-            "6640",
-            "6647",
-            "6707",
-            "6711",
-            "6712",
-            "6719",
-            "6928",
-            "6938",
-            "6940",
-            "6941",
-            "6943",
-            "6946",
-            "6965",
-            "7051",
-            "7059",
-            "7096",
-            "7098",
-            "7101",
-            "7125",
-            "7128",
-            "7148",
-            "7155",
-            "7183",
-            "7184",
-            "7185",
-            "7186",
-            "7187",
-            "7429",
-            "7430",
-            "7431",
-            "7433",
-            "7647",
-            "7761",
-            "7762",
-            "7763",
-            "7764",
-            "7768",
-            "7769",
-            "7772",
-            "7829",
-            "7848",
-            "7860",
-            "7874",
-            "8029",
-            "8032",
-            "8155",
-            "8157",
-            "8179",
-            "8180",
-            "8181",
-            "9948",
-            "9951",
-            "9955",
-            "9956",
-            "9959",
-            "10016",
-            "10017",
-            "10421",
-            "10422",
-            "10426",
-            "10427",
-            "10428",
-            "10429",
-            "10472",
-            "10473",
-            "10474",
-            "10476",
-            "10654",
-            "10684",
-            "10695",
-            "10707",
-            "10976",
-            "10992",
-            "11129",
-            "11130",
-            "11189",
-            "11191",
-            "11223",
-            "11224",
-            "11225",
-            "11299",
-            "11311",
-            "11312",
-            "11316",
-            "11317",
-            "11357",
-            "11361",
-            "11362",
-            "11363",
-            "11364",
-            "11365",
-            "11380",
-            "12721",
-            "12722",
-            "12723",
-            "12752",
-            "12753",
-            "13074",
-            "13338",
-            "13339",
-            "13340",
-            "13342",
-            "13343",
-            "13344",
-            "13348",
-            "13440",
-            "13441",
-            "13445",
-            "13447",
-            "13448",
-            "13463",
-            "13464",
-            "13483",
-            "13499",
-            "13717",
-            "13718",
-            "13720",
-            "13722",
-            "13723",
-            "13724",
-            "13725",
-            "13726",
-            "13783",
-            "13784",
-            "13874",
-            "13958",
-            "13968",
-            "14042",
-            "14043",
-            "14138",
-            "14139",
-            "14140",
-            "14141",
-            "14190",
-            "14192",
-            "14194",
-            "14199",
-            "14209",
-            "14214",
-            "14215",
-            "14219",
-            "14220",
-            "14221",
-            "14222",
-            "14228",
-            "14229",
-            "14304",
-            "14305",
-            "14309",
-            "14342",
-            "14347",
-            "14372",
-            "14380",
-            "14381",
-            "14384",
-            "14385",
-            "14388",
-            "14397",
-            "14398",
-            "14399",
-            "14403",
-            "14404",
-            "14416",
-            "14419",
-            "16211",
-            "16250",
-            "16398",
-            "16401",
-            "16407",
-            "16434",
-            "16435",
-            "16436",
-            "16443",
-            "16446",
-            "16506",
-            "16513",
-            "16521",
-            "16527",
-            "16535",
-            "16536",
-            "16540",
-            "16582",
-            "16660",
-            "16718",
-            "16833",
-            "17533",
-            "17535",
-            "17549",
-            "17550",
-            "17551",
-            "18826",
-            "18945",
-            "19105",
-            "19106",
-            "19108",
-            "19109",
-            "19236",
-            "19242",
-            "19252",
-            "19253",
-            "19260",
-            "19282",
-            "19357",
-            "19380",
-            "19381",
-            "19384",
-            "19732",
-            "19751",
-            "19752",
-            "19754",
-            "19777",
-            "19904",
-            "19921",
-            "19922",
-            "20297",
-            "21816",
-            "21817",
-            "21818",
-            "21821",
-        ],
-        "lost_post_ids": [],
-        "num_dist_posts": 479,
-        "num_total_posts": 479,
-        "num_lost_posts": 0,
-    }
+    # Arrange
+    snapshot_1 = os.path.join(faux_content_dir, "snapshot_1.json")
 
-    # Assertions:
-    assert isinstance(master_content, dict)
-    assert board_name == snapshot_meta["board"]
-    assert thread_title == snapshot_meta["thread_title"]
-    assert thread_id == snapshot_meta["thread_number"]
-    assert url == snapshot_meta["URL"]
-    assert date_published == snapshot_meta["date_published"]
-    assert date_updated == snapshot_meta["date_updated"]
-    assert date_scraped == snapshot_meta["date_scraped"]
-    assert num_all_post_ids == snapshot_meta["num_dist_posts"]
-    for id in all_post_ids:
-        assert id in snapshot_meta["dist_post_ids"]
+    # Act & Assert
+    assert os.path.exists(snapshot_1)
+
+    with open(snapshot_1, "r", encoding="utf-8") as file:
+        content = json.load(file)
+
+    assert content["thread_id"] == "00"
+
+def test__generate_master_meta(mocker, faux_content_dir):
+    """Test _generate_master_meta() returns a correct master dict."""
+    master_meta_generator = MasterMetaGenerator.__new__(
+        MasterMetaGenerator)
+    mocker.patch.object(MasterMetaGenerator, "__init__", return_value=None)
+
+    # Create a list of meta file paths using faux directory
+    snapshot_1 = os.path.join(faux_content_dir, "snapshot_1.json")
+    snapshot_2 = os.path.join(faux_content_dir, "snapshot_2.json")
+    snapshot_3 = os.path.join(faux_content_dir, "snapshot_3.json")
+    paths = [snapshot_1, snapshot_2, snapshot_3]
+
+    # Assign the empty variables that would normally by handled by init
+    master_meta_generator.thread_id = ""
+    master_meta_generator.master_metadata = {
+        "board_name": "",
+            "thread_title": "",
+            "thread_id": "",
+            "url": "",
+            "date_published": "",
+            "most_recent_update_date": "0001-01-01T00:00:00",
+            "most_recent_scrape_date": "0001-01-01T00:00:00",
+            "all_post_dates": set(),
+            "all_update_dates": set(),
+            "all_scrape_dates": set(),
+            "snapshot_history": {},
+            "num_aggregate_post_ids": 0,
+            "unique_post_ids": set(),
+            "num_unique_post_ids": 0,
+            "lost_post_ids": set(),
+            "num_aggregate_words": 0,
+            "num_words_most_recent": 22}
+
+    # Assign list of faux paths
+    master_meta_generator.list_of_meta_paths = paths
+
+    # Act & Assert
+    master_meta = master_meta_generator._generate_master_meta()
+
+    assert master_meta["url"] == "example.com"
+    # TODO: Add more assertions

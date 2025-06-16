@@ -55,7 +55,7 @@ class MasterMetaGenerator:
             master_meta_filepath (str): String containing filepath for the master meta JSON.
         """
         # Pathing: Finds thread directory by finding parent folder of snapshot directory
-        master_meta = self.generate_master_meta()
+        master_meta = self._generate_master_meta()
         thread_id = self.master_metadata["thread_id"]
         file_name = f"thread_meta_{thread_id}.json"
         thread_folder_path = os.path.dirname(self.snapshot_folder_path)
@@ -92,7 +92,7 @@ class MasterMetaGenerator:
                 lost_ids.add(post_id)
         return lost_ids
 
-    def generate_master_meta(self) -> dict:
+    def _generate_master_meta(self) -> dict:
         """
         Transfers data from snapshot meta contents to a master metafile.
         """
