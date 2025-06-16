@@ -108,12 +108,12 @@ class ChanToContent:
             # -> This is after obtaining the dictionaries above so the
             # exception case can be handled
             try:
-                self.date_published: str = self.get_date_published_and_updated()[
-                    "date_published"
-                ]
-                self.date_updated: str = self.get_date_published_and_updated()[
-                    "date_updated"
-                ]
+                self.date_published: str = (
+                    self.get_date_published_and_updated()[
+                        "date_published"])
+                self.date_updated: str = (
+                    self.get_date_published_and_updated()[
+                        "date_updated"])
             except DateNotFoundError as error:
                 self.logger.error(f"Error when trying to initialize: {error}")
                 self.logger.error(
@@ -172,11 +172,13 @@ class ChanToContent:
             page_title: str = self.thread_soup.title.string
         except:
             self.logger.error("Page title unable to be located")
-            raise BoardNameAndTitleNotFoundError(f"Page title unable to be located")
+            raise BoardNameAndTitleNotFoundError(
+                f"Page title unable to be located")
         # If it's empty, then it's unsupported, otherwise parse it
         if page_title is None:
             self.logger.error("Page title unable to be located")
-            raise BoardNameAndTitleNotFoundError(f"Page title unable to be located")
+            raise BoardNameAndTitleNotFoundError(
+                f"Page title unable to be located")
         else:
             if "-" in page_title:
                 # Splits board name and thread title...
@@ -234,7 +236,12 @@ class ChanToContent:
                 raise TagNotFoundError("Thread ID unable to be located")
         else:
             self.logger.debug(f"ID successfully found: {thread_id}")
-            # TODO: The thread_id for wizchan content kept having op_ pop up in them, (i.e op_12345) added that to a replace, but in the future we could look into regex or looping through a dict to account for different ways thread_ids are presented.
+            # TODO: The thread_id for wizchan content kept having op_ pop up 
+            # in them, (i.e op_12345) added that to a replace, but in the 
+            # future we could look into regex or looping through a dict 
+            # to account for different ways thread_ids are presented.
+
+            # TODO: Account for OP prefix param here 
             thread_id.replace("op_", "")
             return thread_id
 
@@ -275,7 +282,9 @@ class ChanToContent:
             f"found: {date_published}, {date_updated}"
         )
 
-        return {"date_published": date_published, "date_updated": date_updated}
+        return {
+            "date_published": date_published, 
+            "date_updated": date_updated}
 
     def get_original_post(self) -> Tag:
         """Extracts the original post from the HTML.
@@ -316,7 +325,8 @@ class ChanToContent:
         """
         self.logger.debug("Searching for reply posts")
         try:
-            reply_posts: list[Tag] = self.thread_soup.find_all(class_=self.reply_class)
+            reply_posts: list[Tag] = self.thread_soup.find_all(
+                class_=self.reply_class)
             if reply_posts is None:
                 self.logger.debug("No reply post(s) found")
             else:
@@ -365,7 +375,8 @@ class ChanToContent:
             # beyond the scope of the original post tag)
             img_link: str = self.get_thread_image_link()
             username: str = self.get_post_username(original_post)
-            replied_to_ids: list[str] = self.get_post_replied_to_ids(original_post)
+            replied_to_ids: list[str] = self.get_post_replied_to_ids(
+                original_post)
 
             # Clean up any replied to posts from content tag
             # for reply in replied_to_ids:
@@ -412,12 +423,18 @@ class ChanToContent:
             DataArrangementError: When there is a problem with a post's data.
         """
         try:
-            date_posted: str = self.get_post_date(reply_post)
-            post_id: str = self.get_post_id(reply_post)
-            post_content: str = self.get_post_content(reply_post)
-            img_links: list[str] = self.get_post_image_links(reply_post)
-            username: str = self.get_post_username(reply_post)
-            replied_to_ids: list[str] = self.get_post_replied_to_ids(reply_post)
+            date_posted: str = self.get_post_date(
+                reply_post)
+            post_id: str = self.get_post_id(
+                reply_post)
+            post_content: str = self.get_post_content(
+                reply_post)
+            img_links: list[str] = self.get_post_image_links(
+                reply_post)
+            username: str = self.get_post_username(
+                reply_post)
+            replied_to_ids: list[str] = self.get_post_replied_to_ids(
+                reply_post)
 
             # Clean up any replied to posts from content tag
             # for reply in replied_to_ids:
@@ -466,10 +483,12 @@ class ChanToContent:
             else:
                 date_string = date_posted["datetime"]
                 # Converts post date to a datetime object
-                date_datetime = datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ")
+                date_datetime = datetime.strptime(
+                    date_string, "%Y-%m-%dT%H:%M:%SZ")
                 # Formats object to be more uniform
                 date_formatted = date_datetime.strftime("%Y-%m-%dT%H:%M:%S")
-                self.logger.debug(f"Post date successfully found: {date_formatted}")
+                self.logger.debug(
+                    f"Post date successfully found: {date_formatted}")
 
                 return date_formatted
         except Exception as error:
@@ -627,8 +646,8 @@ class ChanToContent:
             )
             if thread_tag is None:
                 self.logger.warning(
-                    f"Thread tag with ID 'thread_{self.thread_id}' not found. "
-                    "No thread image link available.")
+                    f"Thread tag with ID 'thread_{self.thread_id}' not found."
+                    " No thread image link available.")
                 return ""
 
             # Find the first image within the thread_tag
@@ -669,7 +688,8 @@ class ChanToContent:
                 # self.logger.error("Post username found, but empty")
                 # raise TagNotFoundError("Post username found, but empty")
             else:
-                formatted_post_username: str = post_username.strip().replace("\n", "")
+                formatted_post_username: str = (
+                    post_username.strip().replace("\n", ""))
                 self.logger.debug("Post username successfully found")
 
                 return formatted_post_username
@@ -834,7 +854,8 @@ class ChanToContent:
         Raises:
             DataArrangementError: When something goes wrong?
         """
-        self.logger.debug("Collecting all data from thread snapshot into a dictionary")
+        self.logger.debug(
+            "Collecting all data from thread snapshot into a dictionary")
         try:
             all_snapshot_data: dict = {
                 "board_name": self.board_name,
@@ -850,7 +871,8 @@ class ChanToContent:
 
             return all_snapshot_data
         except Exception as error:
-            self.logger.error(f"Error during final collection of thread data: {error}")
+            self.logger.error(
+                f"Error during final collection of thread data: {error}")
             raise DataArrangementError(
                 f"Error during final collection of thread data: {error}"
             )
