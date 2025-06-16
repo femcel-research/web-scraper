@@ -4,6 +4,8 @@ import glob
 import json
 import logging
 import os
+import sys
+
 from bs4 import BeautifulSoup
 
 # Imports if running through terminal
@@ -35,6 +37,7 @@ logging.basicConfig(
     style="%",
     level=logging.INFO,  # We can make a lot of the spam-y logs DEBUG
 )
+logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 logger = logging.getLogger(__name__)
 logger.info("Root logger configured")
 
