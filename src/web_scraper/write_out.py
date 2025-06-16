@@ -45,3 +45,17 @@ def snapshot_dict_to_json(
     if os.path.exists(thread_data_path):
         with open(individual_file_path, "w") as json_file:
             json.dump(data_dict, json_file, indent=4)
+
+def format_date(date: datetime) -> str:
+        """Formats datetime object to %Y-%m-%dT%H:%M:%S
+        Args:
+            date (datetime): Date to be formatted"""
+        formatted_date: str = datetime.strftime(date, "%Y-%m-%dT%H:%M:%S")
+        return formatted_date
+
+def unix_to_datetime(unix_time: int) -> datetime:
+        """Formats a UNIX timestamp into a datetime object
+        Args:
+            unix_time (int): UNIX timestamp"""
+        datetime_obj = datetime.fromtimestamp(unix_time)
+        return datetime_obj

@@ -100,8 +100,8 @@ def dump_all():
     # Iterates through all availiable sites and recalculates their stats
     for param_file in params_files:
         site_name = param_file.replace("_params.json", "")
-        if "archive" in site_name or "4chan_" in site_name:  # TODO: Remove once archive sites work
-            continue
+        if "archive" in site_name:  # TODO: Remove once archive sites work
+            continue 
         else:
             dump_site_meta(site_name)
 

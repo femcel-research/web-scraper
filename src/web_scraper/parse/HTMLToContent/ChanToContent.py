@@ -10,6 +10,8 @@ from datetime import datetime
 
 from .exceptions import *
 
+logger = logging.getLogger(__name__)
+
 
 class ChanToContent:
     """Takes HTML from a chan-style thread and formats it (for a JSON).
@@ -62,7 +64,6 @@ class ChanToContent:
         Raises:
             ContentInitError: If an error occurs during initialization.
         """
-        self.logger = logging.getLogger(__name__)
 
         self.date_scraped = date_scraped
         self.thread_soup = thread_soup
@@ -72,7 +73,7 @@ class ChanToContent:
         self.root_domain = root_domain  # Parameter
 
         # Initialization: Extracting all data from the thread_soup
-        self.logger.info(
+        logger.info(
             "Beginning the process of extracting content data "
             "from this thread snapshot's soup object"
         )
@@ -115,8 +116,8 @@ class ChanToContent:
                     self.get_date_published_and_updated()[
                         "date_updated"])
             except DateNotFoundError as error:
-                self.logger.error(f"Error when trying to initialize: {error}")
-                self.logger.error(
+                logger.error(f"Error when trying to initialize: {error}")
+                logger.error(
                     "Date published will be set to OP post date; "
                     "date updated will be set to last reply's post date")
                 # Get OP post date
@@ -145,12 +146,12 @@ class ChanToContent:
             self.data: dict = self.collect_all_data()
 
         except Exception as error:
-            self.logger.error(f"Error when trying to initialize: {error}")
+            logger.error(f"Error when trying to initialize: {error}")
             raise ContentInitError(
                 f"Error when trying to initialize: {error}"
             ) from error
         # End of initialization
-        self.logger.info(
+        logger.info(
             "Successfully extracted and collected all content data from the "
             f"snapshot of thread {self.thread_id}"
         )
@@ -166,17 +167,17 @@ class ChanToContent:
         Raises:
             BoardNameAndTitleNotFoundError: If a board name/title isn't found.
         """
-        self.logger.debug("Searching for a board name/title")
+        logger.debug("Searching for a board name/title")
         # Search for a <title> tag in the HTML and extract
         try:
             page_title: str = self.thread_soup.title.string
         except:
-            self.logger.error("Page title unable to be located")
+            logger.error("Page title unable to be located")
             raise BoardNameAndTitleNotFoundError(
                 f"Page title unable to be located")
         # If it's empty, then it's unsupported, otherwise parse it
         if page_title is None:
-            self.logger.error("Page title unable to be located")
+            logger.error("Page title unable to be located")
             raise BoardNameAndTitleNotFoundError(
                 f"Page title unable to be located")
         else:
@@ -188,14 +189,14 @@ class ChanToContent:
                     board_and_title[x] = board_and_title[x].strip()
                 board = board_and_title[0]
                 title = board_and_title[1]
-                self.logger.debug(
+                logger.debug(
                     "Board and title successfully found:" f"{board}, {title}"
                 )
 
                 return {"board": board, "title": title}
             else:
                 # Unsupported format
-                self.logger.error("Board name/title unable to be parsed")
+                logger.error("Board name/title unable to be parsed")
                 raise BoardNameAndTitleUnsupportedError(
                     "Board name/title unable to be parsed"
                 )
@@ -209,7 +210,7 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If a thread ID cannot be found.
         """
-        self.logger.debug("Searching for a thread ID")
+        logger.debug("Searching for a thread ID")
         # Every chan-style site we've seen has an intro class, under
         # the op_class (parameter) in the HTML. If there is no "id" in
         # the intro class, then `None` is returned, and a different
@@ -217,7 +218,7 @@ class ChanToContent:
         try:
             thread_id = self.thread_soup.find(class_="intro").get("id")
         except:
-            self.logger.error("Thread ID unable to be located")
+            logger.error("Thread ID unable to be located")
             raise TagNotFoundError("Thread ID unable to be located")
         if thread_id is None:
             try:
@@ -228,14 +229,14 @@ class ChanToContent:
                     .replace("post_no_", "")
                     .replace("op_", "")
                 )
-                self.logger.debug(f"ID successfully found: {thread_id}")
+                logger.debug(f"ID successfully found: {thread_id}")
 
                 return thread_id
             except:
-                self.logger.error("Thread ID unable to be located")
+                logger.error("Thread ID unable to be located")
                 raise TagNotFoundError("Thread ID unable to be located")
         else:
-            self.logger.debug(f"ID successfully found: {thread_id}")
+            logger.debug(f"ID successfully found: {thread_id}")
             # TODO: The thread_id for wizchan content kept having op_ pop up 
             # in them, (i.e op_12345) added that to a replace, but in the 
             # future we could look into regex or looping through a dict 
@@ -256,7 +257,7 @@ class ChanToContent:
         Raises:
             BoardNameAndTitleNotFoundError: If a board name/title isn't found.
         """
-        self.logger.debug("Searching for publish and update dates")
+        logger.debug("Searching for publish and update dates")
         html = str(self.thread_soup)  # Retrieves HTML from soup object
         # Uses htmldate lib to find original and update dates
         date_published = find_date(
@@ -266,7 +267,7 @@ class ChanToContent:
             outputformat="%Y-%m-%dT%H:%M:%S",
         )
         if date_published is None:
-            self.logger.error("Date published not found.")
+            logger.error("Date published not found.")
             raise DateNotFoundError("Date published not found.")
         date_updated = find_date(
             html,
@@ -275,9 +276,9 @@ class ChanToContent:
             outputformat="%Y-%m-%dT%H:%M:%S",
         )
         if date_updated is None:
-            self.logger.error("Date updated not found.")
+            logger.error("Date updated not found.")
             raise DateNotFoundError("Date updated not found.")
-        self.logger.debug(
+        logger.debug(
             "Date published and date updated successfully "
             f"found: {date_published}, {date_updated}"
         )
@@ -297,18 +298,18 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If an OP can't be found with a parameter.
         """
-        self.logger.debug("Searching for original post")
+        logger.debug("Searching for original post")
         try:
             original_post: Tag = self.thread_soup.find(class_=self.op_class)
             if original_post is None:
-                self.logger.error("Original post found, but empty")
+                logger.error("Original post found, but empty")
                 raise TagNotFoundError("Original post found, but empty")
             else:
-                self.logger.debug("Original post successfully found")
+                logger.debug("Original post successfully found")
 
                 return original_post
         except Exception as error:
-            self.logger.error(f"Original post not found: {error}")
+            logger.error(f"Original post not found: {error}")
             raise TagNotFoundError(f"Original post not found: {error}")
 
     def get_reply_posts(self) -> list[Tag]:
@@ -323,20 +324,20 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If replies can't be found with a parameter.
         """
-        self.logger.debug("Searching for reply posts")
+        logger.debug("Searching for reply posts")
         try:
             reply_posts: list[Tag] = self.thread_soup.find_all(
                 class_=self.reply_class)
             if reply_posts is None:
-                self.logger.debug("No reply post(s) found")
+                logger.debug("No reply post(s) found")
             else:
-                self.logger.debug(
+                logger.debug(
                     f"Reply post(s) successfully found: {len(reply_posts)}"
                 )
 
                 return reply_posts
         except Exception as error:
-            self.logger.error(f"Reply post(s) not found: {error}")
+            logger.error(f"Reply post(s) not found: {error}")
             raise TagNotFoundError(f"Reply post(s) not found: {error}")
 
     def get_original_post_data(self, original_post: Tag) -> dict:
@@ -398,7 +399,7 @@ class ChanToContent:
 
             return original_post_data
         except Exception as error:
-            self.logger.error(f"Error in post data: {error}")
+            logger.error(f"Error in post data: {error}")
             raise DataArrangementError(f"Error in post data: {error}")
 
     def get_reply_post_data(self, reply_post: Tag) -> dict:
@@ -456,7 +457,7 @@ class ChanToContent:
 
             return reply_post_data
         except Exception as error:
-            self.logger.error(f"Error in post data: {error}")
+            logger.error(f"Error in post data: {error}")
             raise DataArrangementError(f"Error in post data: {error}")
 
     def get_post_date(self, post_tag: Tag) -> str:
@@ -474,11 +475,11 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If replies can't be found with a parameter.
         """
-        self.logger.debug("Searching for post date")
+        logger.debug("Searching for post date")
         try:
             date_posted: Tag = post_tag.find("time")
             if date_posted is None:
-                self.logger.error("Post date found, but empty")
+                logger.error("Post date found, but empty")
                 raise TagNotFoundError("Post date found, but empty")
             else:
                 date_string = date_posted["datetime"]
@@ -487,12 +488,12 @@ class ChanToContent:
                     date_string, "%Y-%m-%dT%H:%M:%SZ")
                 # Formats object to be more uniform
                 date_formatted = date_datetime.strftime("%Y-%m-%dT%H:%M:%S")
-                self.logger.debug(
+                logger.debug(
                     f"Post date successfully found: {date_formatted}")
 
                 return date_formatted
         except Exception as error:
-            self.logger.error(f"Post date not found: {error}")
+            logger.error(f"Post date not found: {error}")
             raise TagNotFoundError(f"Post date not found: {error}")
 
     def get_post_id(self, post_tag: Tag) -> str:
@@ -507,7 +508,7 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If an ID can't be found.
         """
-        self.logger.debug("Searching for post ID")
+        logger.debug("Searching for post ID")
         try:
             # Get the attribute of the 'id' tag
             try:
@@ -516,7 +517,7 @@ class ChanToContent:
                     # Alternative structure seen for reply posts, specifically
                     post_id: str = post_tag.get("id").replace("reply_", "")
                     if post_id is None:
-                        self.logger.error("Post ID found, but empty")
+                        logger.error("Post ID found, but empty")
                         raise TagNotFoundError("Post ID found, but empty")
                     else:
 
@@ -526,17 +527,17 @@ class ChanToContent:
                 # Alternative structure seen for reply posts, specifically
                 post_id: str = post_tag.get("id").replace("reply_", "")
                 if post_id is None:
-                    self.logger.error("Post ID found, but empty")
+                    logger.error("Post ID found, but empty")
                     raise TagNotFoundError("Post ID found, but empty")
                 else:
 
                     return post_id
             else:
-                self.logger.debug(f"Post ID successfully found: {post_id}")
+                logger.debug(f"Post ID successfully found: {post_id}")
 
                 return post_id
         except Exception as error:
-            self.logger.error(f"Post ID not found: {error}")
+            logger.error(f"Post ID not found: {error}")
             raise TagNotFoundError(f"Post ID not found: {error}")
 
     def get_post_content(self, post_tag: Tag) -> str:
@@ -559,19 +560,19 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If a post body can't be found.
         """
-        self.logger.debug("Searching for post content")
+        logger.debug("Searching for post content")
         try:
             post_body: Tag = post_tag.find(class_="body")
             if post_body is None:
-                self.logger.error("Post content (body) found, but empty")
+                logger.error("Post content (body) found, but empty")
                 raise TagNotFoundError("Post content (body) found, but empty")
             else:
                 post_text: str = post_body.get_text("\n", True)
-                self.logger.debug("Post content successfully found")
+                logger.debug("Post content successfully found")
 
                 return post_text
         except Exception as error:
-            self.logger.error(f"Post content not found: {error}")
+            logger.error(f"Post content not found: {error}")
             raise TagNotFoundError(f"Post content not found: {error}")
 
     def get_post_image_links(self, post_tag: Tag) -> list[str]:
@@ -600,7 +601,7 @@ class ChanToContent:
         Raises:
             Exception: A generic exception for unanticipated errors.
         """
-        self.logger.debug("Searching for image links within post")
+        logger.debug("Searching for image links within post")
         image_links: list[str] = []
         try:
             image_tag: Tag
@@ -608,14 +609,14 @@ class ChanToContent:
                 image_source: str = image_tag.get("src")
                 if image_source:
                     image_links.append(f"{self.root_domain}{image_source}")
-                    self.logger.debug(
+                    logger.debug(
                         "Image link within post successfully found: "
                         f"{self.root_domain}{image_source}"
                     )
 
             return image_links
         except Exception as error:
-            self.logger.error(
+            logger.error(
                 f"Unexpected error when collecting images: {error}")
             raise Exception(
                 f"Unexpected error when collecting images: {error}")
@@ -638,14 +639,14 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If a thread image can't be found.
         """
-        self.logger.debug("Searching for a thread image link")
+        logger.debug("Searching for a thread image link")
         try:
             thread_tag: Tag = (
                 # This remains consistent across all chan-style sites observed
                 self.thread_soup.find("div", id=f"thread_{self.thread_id}")
             )
             if thread_tag is None:
-                self.logger.warning(
+                logger.warning(
                     f"Thread tag with ID 'thread_{self.thread_id}' not found."
                     " No thread image link available.")
                 return ""
@@ -653,22 +654,22 @@ class ChanToContent:
             # Find the first image within the thread_tag
             img_tag = thread_tag.find("img")
             if img_tag is None:
-                self.logger.warning("No img tag found. "
+                logger.warning("No img tag found. "
                 "No thread image link available.")
                 return ""
 
             # First image always appears to be the thread image
             image_source: str = thread_tag.find("img").get("src")
             if image_source is None:
-                self.logger.error("Thread image link found, but empty")
+                logger.error("Thread image link found, but empty")
                 raise TagNotFoundError("Thread image link found, but empty")
             else:
                 image_link: str = f"{self.root_domain}{image_source}"
-                self.logger.debug("Thread image link successfully found")
+                logger.debug("Thread image link successfully found")
 
                 return image_link
         except Exception as error:
-            self.logger.error(f"Thread image link not found: {error}")
+            logger.error(f"Thread image link not found: {error}")
             raise TagNotFoundError(f"Thread image link not found: {error}")
 
     def get_post_username(self, post_tag: Tag) -> str:
@@ -680,21 +681,21 @@ class ChanToContent:
         Raises:
             TagNotFoundError: If a username cannot be found.
         """
-        self.logger.debug("Searching for a post username")
+        logger.debug("Searching for a post username")
         try:
             post_username: str = post_tag.find(class_="name").get_text()
             if not post_username:
                 post_username = "[INTENTIONALLY EMPTY]"
-                # self.logger.error("Post username found, but empty")
+                # logger.error("Post username found, but empty")
                 # raise TagNotFoundError("Post username found, but empty")
             else:
                 formatted_post_username: str = (
                     post_username.strip().replace("\n", ""))
-                self.logger.debug("Post username successfully found")
+                logger.debug("Post username successfully found")
 
                 return formatted_post_username
         except Exception as error:
-            self.logger.error(f"Post username not found: {error}")
+            logger.error(f"Post username not found: {error}")
             raise TagNotFoundError(f"Post username not found: {error}")
 
     def get_post_replied_to_ids(self, post_tag: Tag) -> list[str]:
@@ -710,7 +711,7 @@ class ChanToContent:
         Raises:
             Exception: A generic exception for unanticipated errors.
         """
-        self.logger.debug("Searching for replied-to post IDs")
+        logger.debug("Searching for replied-to post IDs")
         try:
             post_body: Tag = post_tag.find(class_="body")
             links_to_other_posts: str
@@ -718,16 +719,16 @@ class ChanToContent:
                 self._has_href_and_onclick_a)
             post_links: list[str] = []
             if links_to_other_posts:
-                self.logger.debug("Replied-to post IDs sucessfully found")
+                logger.debug("Replied-to post IDs sucessfully found")
                 link: Tag
                 for link in links_to_other_posts:
                     post_links.append(link.text.strip().replace(">", ""))
             else:
-                self.logger.debug("No replied-to post IDs found")
+                logger.debug("No replied-to post IDs found")
 
             return post_links
         except Exception as error:
-            self.logger.error(
+            logger.error(
                 f"Unexpected error when extracting replied-to IDs: {error}"
             )
             raise Exception(
@@ -756,7 +757,7 @@ class ChanToContent:
         Raises:
             DataArrangementError: When putting it all together goes wrong.
         """
-        self.logger.debug("Collecting data from every post in the thread")
+        logger.debug("Collecting data from every post in the thread")
         try:
             all_post_data: dict = {}
 
@@ -767,11 +768,11 @@ class ChanToContent:
                 all_post_data[f"reply_{self.get_post_id(reply)}"] = (
                     self.get_reply_post_data(reply)
                 )
-            self.logger.debug("Data from every post successfully collected")
+            logger.debug("Data from every post successfully collected")
 
             return all_post_data
         except Exception as error:
-            self.logger.error("Error while collecting all post data")
+            logger.error("Error while collecting all post data")
             raise DataArrangementError("Error while collecting all post data")
 
     def get_all_post_data(self, op: Tag, replies: list[Tag]) -> dict:
@@ -791,7 +792,7 @@ class ChanToContent:
         Raises:
             DataArrangementError: When putting it all together goes wrong.
         """
-        self.logger.debug("Collecting data from every post in the thread")
+        logger.debug("Collecting data from every post in the thread")
         try:
             all_post_data: dict = {}
 
@@ -802,11 +803,11 @@ class ChanToContent:
                 all_post_data[f"reply_{self.get_post_id(reply)}"] = (
                     self.get_reply_post_data(reply)
                 )
-            self.logger.debug("Data from every post successfully collected")
+            logger.debug("Data from every post successfully collected")
 
             return all_post_data
         except Exception as error:
-            self.logger.error("Error while collecting all post data")
+            logger.error("Error while collecting all post data")
             raise DataArrangementError("Error while collecting all post data")
 
     # Slightly altered from method above.
@@ -826,7 +827,7 @@ class ChanToContent:
         Raises:
             DataArrangementError: When putting it all together goes wrong.
         """
-        self.logger.debug("Collecting data from every post in the thread")
+        logger.debug("Collecting data from every post in the thread")
         try:
             all_replies_data: dict = {}
 
@@ -835,11 +836,11 @@ class ChanToContent:
                 all_replies_data[f"reply_{self.get_post_id(reply)}"] = (
                     self.get_reply_post_data(reply)
                 )
-            self.logger.debug("Data from every reply successfully collected")
+            logger.debug("Data from every reply successfully collected")
 
             return all_replies_data
         except Exception as error:
-            self.logger.error("Error while collecting all reply data")
+            logger.error("Error while collecting all reply data")
             raise DataArrangementError(
                 "Error while collecting all reply data")
 
@@ -854,7 +855,7 @@ class ChanToContent:
         Raises:
             DataArrangementError: When something goes wrong?
         """
-        self.logger.debug(
+        logger.debug(
             "Collecting all data from thread snapshot into a dictionary")
         try:
             all_snapshot_data: dict = {
@@ -871,7 +872,7 @@ class ChanToContent:
 
             return all_snapshot_data
         except Exception as error:
-            self.logger.error(
+            logger.error(
                 f"Error during final collection of thread data: {error}")
             raise DataArrangementError(
                 f"Error during final collection of thread data: {error}"

@@ -44,13 +44,19 @@ parser.add_argument(
     "params_name", nargs="?", help="Name of the JSON parameters file to be searched and retrieved."
 )
 
+parser.add_argument(
+    "backlog", nargs="?", type=bool, help="Boolean used to determine whether or not 4chan backlog is scraped."
+)
+
 args = parser.parse_args()
 
 if args.params_name is None:
     scrape_all(scan_time_str)
 
 elif "4chan_" in args.params_name: #to differentiate from 4chanarchives
-    fourchan_scrape(args.params_name, scan_time_str)
-
+    if args.backlog is not None:
+        fourchan_backlog_scrape(args.params_name, scan_time_str)
+    else:
+        fourchan_scrape(args.params_name, scan_time_str)
 else:
     scrape(args.params_name, scan_time_str)

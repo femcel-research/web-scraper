@@ -7,13 +7,17 @@ logger = logging.getLogger(__name__)
 
 class MasterContentGenerator:
     def __init__(self, content_paths: list[str]):
-        """Generates a master content JSON according to snapshots.
+        """Generates a master content JSON according to content snapshots.
 
         Given a list of paths to snapshot content JSONs (gathered through 
-        Glob), a master content JSON is generated and saved locally.
+        Glob), a master content JSON is generated and saved locally (after
+        calling `content_dump()`).
 
         Args:
             content_paths (list[str]): Paths to snapshot content JSONs.
+
+        Raises:
+            Exception: A generic exception for unanticipated errors.
         """
         try:
             # Ensures at least one content path exists
@@ -32,8 +36,6 @@ class MasterContentGenerator:
 
             # Populates master thread content with data
             self.master_contents = {
-                # "date_of_previous_scan": "",
-                # "date_of_latest_scan": "",
                 "thread_id": "",
                 "original_post": self.original_post,
                 "replies": self.all_replies,
@@ -76,7 +78,7 @@ class MasterContentGenerator:
                 except KeyError:
                     logger.warning(
                         f"Skipping snapshot {snapshot_content_path}:" 
-                        "'original_post' key not found.")
+                        " 'original_post' key not found.")
                     continue
 
                 replies: dict = snapshot_content["replies"]
@@ -94,7 +96,7 @@ class MasterContentGenerator:
                 self.all_replies.update(replies)
                 logger.debug(f"Master replies updated with snapshot replies.")
 
-            original_post_id: str = self.original_post["post_id"]
+            # original_post_id: str = self.original_post["post_id"]
 
             # Populates master thread content with data
             self.master_contents.update(
@@ -111,6 +113,8 @@ class MasterContentGenerator:
 
     def _gather_all_post_ids(self, original_post: dict, replies: dict):
         """Adds OP ID and all reply IDs into a set containing all post IDs.
+
+        `self.all_post_ids` is updated using the passed dictionaries.
 
         Args:
             original_post (dict): Dictionary containing the original post.
@@ -160,4 +164,5 @@ class MasterContentGenerator:
             raise Exception(f"Error when dumping master content: {error}")
 
     def get_path(self) -> str:
+        """Currently unused."""
         return self.master_content_filepath

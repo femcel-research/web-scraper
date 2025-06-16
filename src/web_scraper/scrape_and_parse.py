@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 
+from fourchan_scrape_and_parse import *
 from fetch import fetch_html_content
 from scrape import ArchiveScraper
 from scrape import HomepageScraper
@@ -34,8 +35,10 @@ def scrape_all(scan_time_str: str) -> None:
     # Iterates through all param files and scrapes and reparses its respective site
     for params_file_name in os.listdir(params_directory):
         params_name = params_file_name.replace("_params.json", "")
-        if "archive" in params_name or "4chan_" in params_name: #excludes archives and 4chan from scrape all
+        if "archive" in params_name: #excludes archives and 4chan from scrape all
             continue
+        elif "4chan_" in params_name:
+            fourchan_scrape(params_name, scan_time_str)
         else:
             scrape(params_name, scan_time_str)
 

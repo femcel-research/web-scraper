@@ -13,6 +13,7 @@ from .exceptions import SoupError, ContainerNotFoundError, NoListItemsFoundError
 
 logger = logging.getLogger(__name__)
 
+
 class BoardScraper:
     """A tool to retrieve a list of threads that can be iterated over.
 
@@ -23,7 +24,7 @@ class BoardScraper:
         """Scrapes from a specific 4chan board"""
         self.board: Board = basc_py4chan.Board(board_name, True)
 
-    def threads_to_list(self) -> list[Thread]:
+    def all_threads_to_list(self) -> list[Thread]:
         """Extracts threads from the specified board.
 
         Returns:
@@ -31,8 +32,27 @@ class BoardScraper:
         """
         logger.info("Beginning the process to extract threads from board")
         try:
-            list_of_threads: list[Thread] = self.board.get_all_threads(expand= True)
-            
+            list_of_threads: list[Thread] = self.board.get_all_threads(expand=True)
+
+        except Exception as error:
+            logger.error(f"Error retrieving threads: {error}")
+            raise SoupError(f"Error retrieving threads: {error}")
+        logger.info("Extraction complete!")
+        return list_of_threads
+
+    def page_threads_to_list(self, page_number: int) -> list[Thread]:
+        """Extracts threads from the specific page on a board.
+
+        Args:
+            page_number (int): 4Chan page number
+
+        Returns:
+            list[Thread]: A list of thread objects from the board.
+        """
+        logger.info("Beginning the process to extract threads from board")
+        try:
+            list_of_threads: list[Thread] = self.board.get_threads(page=page_number)
+
         except Exception as error:
             logger.error(f"Error retrieving threads: {error}")
             raise SoupError(f"Error retrieving threads: {error}")
