@@ -14,7 +14,7 @@ def faux_content_dir(fs):
     snapshot_three = os.path.join(faux_thread_dir, "snapshot_03.json")
     snapshot_four = os.path.join(faux_thread_dir, "snapshot_04.json")
     # Evil depricated snapshot for testing interactions with outdated files
-    snapshot_depr = os.path.join(faux_content_dir, "snapshot_depr.json")
+    snapshot_depr = os.path.join(faux_thread_dir, "snapshot_depr.json")
 
     # Create fake snapshot content data
     # (Likely don't need all of this for testing, but I would rather be
