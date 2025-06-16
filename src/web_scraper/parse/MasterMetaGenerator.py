@@ -67,7 +67,7 @@ class MasterMetaGenerator:
         logger.info(f"Master metadata for thread {thread_id} has been updated.")
 
     def get_path(self) -> str:
-        """Retrieves master meta filepath"""
+        """Retrieves master meta filepath; currently unused."""
         return self.master_meta_filepath
     
     def find_recent_word_count(self) -> int:

@@ -160,6 +160,7 @@ class SnapshotMetaGenerator:
             json.dump(meta, f, indent=2, ensure_ascii=False)
     
     def get_path(self) -> str:
+        """Currently unused."""
         return self.meta_file_path
 
     # Main method:
