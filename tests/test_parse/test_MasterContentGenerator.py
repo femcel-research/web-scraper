@@ -205,7 +205,7 @@ def test__generate_master_content(mocker, faux_content_dir):
     snapshot_three = os.path.join(faux_content_dir, "snapshot_03.json")
     paths = [snapshot_one, snapshot_two, snapshot_three]
 
-    # Assign the empty variables that would normally by handled by init
+    # Assign the empty variables that would normally be handled by init
     master_content_generator.original_post = {}
     master_content_generator.all_replies = {}
     master_content_generator.all_post_ids = set()
@@ -255,7 +255,7 @@ def test__generate_master_content_one_lost(mocker, faux_content_dir):
     paths = [snapshot_one, snapshot_three, snapshot_four]
     # Skipping 2 so we can test how one lost post is handled
 
-    # Assign the empty variables that would normally by handled by init
+    # Assign the empty variables that would normally be handled by init
     master_content_generator.original_post = {}
     master_content_generator.all_replies = {}
     master_content_generator.all_post_ids = set()

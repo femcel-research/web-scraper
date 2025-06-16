@@ -32,8 +32,6 @@ class MasterContentGenerator:
 
             # Populates master thread content with data
             self.master_contents = {
-                # "date_of_previous_scan": "",
-                # "date_of_latest_scan": "",
                 "thread_id": "",
                 "original_post": self.original_post,
                 "replies": self.all_replies,
