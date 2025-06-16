@@ -66,7 +66,7 @@ class Reparser:
         master_content_generator = MasterContentGenerator(list_of_content_paths)
         master_content_generator.content_dump()
         logger.info(
-            f"Master content has been regenerated for thread path: {thread_folder_path}"
+            f"+ MASTER CONTENT GENERATED FOR PATH {thread_folder_path} +"
         )  # Log message
 
         # Master text creation:
@@ -80,6 +80,7 @@ class Reparser:
             params["site_dir"]
         )
         master_text_generator.write_text()
+        logger.info(f"+ MASTER CONTENT GENERATED FOR PATH {thread_folder_path} +")
 
         # Find all of thread's meta JSONs
         candidate_meta_files = os.path.join(thread_folder_path, "**", "meta_*.json")
@@ -91,8 +92,7 @@ class Reparser:
         master_meta_generator = MasterMetaGenerator(list_of_meta_paths)
         master_meta_generator.master_meta_dump()
         logger.info(
-            f"Master meta has been regenerated for thread path: {thread_folder_path}"
-        )  # Log message
+            f"+ MASTER META GENERATED FOR PATH {thread_folder_path} +")  # Log message
 
     def generate_content(self, html: str, site_name: str, scan_time: str, params: dict) -> str:
         """Generates a content JSON from saved HTML and returns the file path.
@@ -145,12 +145,15 @@ class Reparser:
             site_directory = f"./data/{site_name}"
 
             html_pattern = "*.html"  # Look for an html file
-            logger.info("Processing existing threads")  # Log message
+            logger.info(
+                f"+++ REPARSING EXISTING THREADS "
+                f"ASSOCIATED WITH {site_name} +++")  # Log message
 
             for thread_folder in os.listdir(site_directory):
                 thread_folder_path = os.path.join(site_directory, thread_folder)
 
-                # If the thread folder is a directory, find its .html and meta file and use that to reprocess the thread.
+                # If the thread folder is a directory, find its .html and 
+                # meta file and use that to reprocess the thread.
                 if os.path.isdir(thread_folder_path):
                     html_search_path = os.path.join(thread_folder_path, "**", html_pattern)
 
@@ -158,6 +161,10 @@ class Reparser:
 
                     if len(matching_html_files) > 0:
                         # Reparse all snapshots to fit new format
+                        logger.info(
+                            f"++ REPARSING {len(matching_html_files)} HTML "
+                            f"FILES IN {thread_folder_path} ++")
+                        
                         for html_file_path in matching_html_files:
                             html_dir_name: str = os.path.dirname(html_file_path)
                             html_scan_time: str = os.path.basename(
@@ -170,17 +177,19 @@ class Reparser:
                             content_path: str = self.generate_content(
                                 html_content, site_name, html_scan_time, params
                             )
-                            logger.debug(
-                                f"Snapshot content has been generated for HTML path: {html_file_path}"
+                            logger.info(
+                                f"+ SNAPSHOT CONTENT GENERATED FOR HTML PATH {html_file_path} +"
                             )  # Log message # Snapshot meta creation:]
                             meta_generator = SnapshotMetaGenerator(content_path)
                             meta_generator.meta_dump()
-                            logger.debug(
-                                f"Snapshot meta has been generated for content path: {content_path}"
+                            logger.info(
+                                f"+ SNAPSHOT META GENERATED FOR CONTENT PATH {content_path} +"
                             )  # Log message
 
                         # Regenerates masters
                         self.regenerate_masters(thread_folder_path, params)
+                        # Logging messages are in method itself
+                        
         except FileNotFoundError as error:
             logger.error(f"Error while reparsing: {error}")
             pass
