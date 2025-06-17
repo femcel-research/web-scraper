@@ -61,25 +61,37 @@ class MasterContentGenerator:
                 snapshot_content = data
                 # General board/thread info
                 if i == 0:
-                    try:
-                        thread_id: str = snapshot_content["thread_id"]
-                    except KeyError:
-                        thread_id: str = snapshot_content["thread_number"]
-                        logger.warning(
-                        "Thread ID not found for path: "
-                        f"{snapshot_content_path}")
-                    self.master_contents.update({"thread_id": thread_id})
+                    thread_id: str = snapshot_content["thread_id"]
+                    # except KeyError:
+                        # thread_id: str = snapshot_content["thread_number"]
 
+                    # I don't think we should handle this in this way
+                    # because outdated snapshot content files should
+                    # not be tolerated by the master generators (as
+                    # important data may not be available)
+
+                    # I think it would be better to have a descriptive
+                    # error, so the problem can be resolved. Otherwise
+                    # we will play a cat-and-mouse game, trying
+                    # to supplement outdated data
+
+                    self.master_contents.update({"thread_id": thread_id})
                 # Retrieves OP and replies from snapshot and 
                 # adds their ids to a set
-                try:
-                    original_post: dict = snapshot_content["original_post"]
-                    logger.debug(f"Original post retrieved.")
-                except KeyError:
-                    logger.warning(
-                        f"Skipping snapshot {snapshot_content_path}:" 
-                        " 'original_post' key not found.")
-                    continue
+
+                # try:
+                original_post: dict = snapshot_content["original_post"]
+                logger.debug(f"Original post retrieved.")
+                # except KeyError:
+                    # logger.warning(
+                    #     f"Skipping snapshot {snapshot_content_path}:" 
+                    #     " 'original_post' key not found.")
+                    # continue
+
+                # Here it also makes little sense to only handle KeyErrors
+                # like this for a single key, when we could potentially
+                # run into KeyErrors for the call below (if the passed
+                # data is outdated)
 
                 replies: dict = snapshot_content["replies"]
                 logger.debug(f"Replies retrieved.")
@@ -107,6 +119,17 @@ class MasterContentGenerator:
             )
 
             return self.master_contents
+        
+        except KeyError as error:
+            logger.warning(
+                f"KeyError ({error}) while generating master content from "
+                f"list of paths: {self.list_of_content_paths}")
+            logger.warning(
+                "Check the data to ensure it follows formatting "
+                "guidelines, and reparse if necessary")
+            raise KeyError(
+                f"KeyError ({error}) while generating master content from "
+                f"list of paths: {self.list_of_content_paths}")
         except Exception as error:
             logger.error(f"Error when generating master: {error}")
             raise Exception(f"Error when generating master: {error}")
