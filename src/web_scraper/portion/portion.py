@@ -9,6 +9,7 @@ import random
 import shutil  # Used for copying
 
 from datetime import datetime
+from token_data import TokenDataGenerator
 
 def random_portion_out(
         site_params: list[dict], por_dir: str, percentage: int):
@@ -95,8 +96,13 @@ def random_portion_out(
                             shutil.copy(master_text_path, current_portion_site_path)
 
                             duplicated_thread_ids.append(random_thread_id)
-
                             successful_duplications += 1
+
+                            data_for_tokenization: TokenDataGenerator = TokenDataGenerator(params["site_dir"], duplicated_thread_ids)
+                            token_data: dict = data_for_tokenization.generate_portion_json()
+                            token_data_path: str = os.path.join(current_portion_site_path, f"{params["site_name"]}_token_data.json")
+                            with open(token_data_path, "w") as json_file:
+                                json.dump(token_data, json_file, indent=4)
 
             # And at last, write the duplicated IDs into site's portion log
             # "These thread IDs has now been duplicated for this site"

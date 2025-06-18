@@ -59,3 +59,10 @@ def unix_to_datetime(unix_time: int) -> datetime:
             unix_time (int): UNIX timestamp"""
         datetime_obj = datetime.fromtimestamp(unix_time)
         return datetime_obj
+
+def str_to_datetime(date_str: str) -> datetime:
+        """Formats str to a datetime object.
+        Args:
+            date_str (str): Date to be turned into datetime"""
+        datetime_obj: datetime = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+        return datetime_obj
