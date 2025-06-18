@@ -9,7 +9,7 @@ import random
 import shutil  # Used for copying
 
 from datetime import datetime
-from token_data import TokenDataGenerator
+from .token_data import TokenDataGenerator
 
 def random_portion_out(
         site_params: list[dict], por_dir: str, percentage: int):
