@@ -27,8 +27,12 @@ class TokenDataGenerator:
                 # Opens master meta
                 with open(master_meta_path, "r") as json_file:
                     master_meta: dict = json.load(json_file)
-            content.update({master_meta["board_name"]:{master_content["thread_id"]: self.grab_op_data(master_content)}})
-            content.update({master_meta["board_name"]:{master_content["thread_id"]: self.grab_replies_data(master_content)}})
+            original_post: dict = self.grab_op_data(master_content)
+            replies: dict = self.grab_replies_data(master_content)
+            posts: dict = {}
+            posts.update(original_post)
+            posts.update(replies)
+            content.update({master_meta["board_name"]: {master_content["thread_id"]:posts}})
         return content
     
     def grab_op_data(self, master_content) -> dict:
