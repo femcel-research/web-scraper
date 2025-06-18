@@ -1231,3 +1231,28 @@ def test_collect_all_data(mocker):
             original_post,
         "replies": all_replies
         }
+
+def test_get_thread_id_deleted_post(mocker):
+    """Test get_thread_id() captures a thread ID from a soup's HTML."""
+    # Arrange
+    chan_to_content = ChanToContent.__new__(ChanToContent)
+    mocker.patch.object(ChanToContent, "__init__", return_value=None)
+
+    html_content = b"""
+    <html>
+    <body>
+        <div class='post op' id='op_101010'>
+            <p class='intro'>
+                <input class='delete' id='delete_101010'>
+                    <label for='delete_101010'></label>
+                </input>
+            </p>
+        </div>
+    </body>
+    </html>"""
+    thread_soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
+    chan_to_content.logger = logging.getLogger(__name__)
+    chan_to_content.thread_soup = thread_soup
+
+    # Act & Assert the thread IDs in ChanToContent is correct
+    assert chan_to_content.get_thread_id() == "101010"

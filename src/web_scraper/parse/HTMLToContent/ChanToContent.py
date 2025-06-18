@@ -217,9 +217,9 @@ class ChanToContent:
         # method is used to search for the "id"
         try:
             thread_id = self.thread_soup.find(class_="intro").get("id")
-        except:
-            logger.error("Thread ID unable to be located")
-            raise TagNotFoundError("Thread ID unable to be located")
+        except Exception as error:
+            logger.error(f"Thread ID unable to be located: {error}")
+            raise TagNotFoundError(f"Thread ID unable to be located: {error}")
         if thread_id is None:
             try:
                 thread_id = (
@@ -233,8 +233,18 @@ class ChanToContent:
 
                 return thread_id
             except:
-                logger.error("Thread ID unable to be located")
-                raise TagNotFoundError("Thread ID unable to be located")
+                try:
+                    # Attempt at resolving deleted post errors
+                    thread_id = (
+                        self.thread_soup.find(class_="post op")
+                        .get("id")
+                        .replace("op_", "")
+                    )
+                    
+                    return thread_id
+                except Exception as error:
+                    logger.error(f"Thread ID unable to be located: {error}")
+                    raise TagNotFoundError(f"Thread ID unable to be located {error}")
         else:
             logger.debug(f"ID successfully found: {thread_id}")
             # TODO: The thread_id for wizchan content kept having op_ pop up 
