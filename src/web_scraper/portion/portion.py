@@ -98,9 +98,13 @@ def random_portion_out(
                             duplicated_thread_ids.append(random_thread_id)
                             successful_duplications += 1
 
-                            data_for_tokenization: TokenDataGenerator = TokenDataGenerator(params["site_dir"], duplicated_thread_ids)
-                            token_data: dict = data_for_tokenization.generate_portion_json()
                             token_data_path: str = os.path.join(current_portion_site_path, f"{params["site_name"]}_token_data.json")
+                            data_for_tokenization: TokenDataGenerator = TokenDataGenerator(
+                                params["site_dir"], 
+                                duplicated_thread_ids,
+                                token_data_path)
+                            token_data: dict = data_for_tokenization.generate_portion_json()
+                            
                             with open(token_data_path, "w") as json_file:
                                 json.dump(token_data, json_file, indent=4)
 

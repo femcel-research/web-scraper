@@ -168,9 +168,10 @@ def faux_content_dir(fs):
         "replies": two_replies_one_lost}
     snapshot_four_bytes = json.dumps(snapshot_four_content).encode('utf-8')
 
+    # Outdated formatting
     snapshot_depr_content: dict = {
         "thread_number": "00",
-        "op": {
+        "op": {  # Intentionally mismatched with old standard to test KeyError
             "post_id": "00",
             "username": "Dorothy Ashby",
             "reply_to_another_thread?": False,
@@ -376,7 +377,7 @@ def test__generate_master_content_key_error_op(mocker, faux_content_dir):
     snapshot_one = os.path.join(faux_content_dir, "snapshot_01.json")
     snapshot_three = os.path.join(faux_content_dir, "snapshot_03.json")
     snapshot_depr = os.path.join(faux_content_dir, "snapshot_depr.json")
-    # Data in depr follows outdated formatting, but this test should get
+    # Data in depr follows outdated formatting, but this test should
     # raise a KeyError when the method looks for an `original_post` key
     paths = [snapshot_one, snapshot_three, snapshot_depr]
 
