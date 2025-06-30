@@ -122,14 +122,17 @@ def scrape(params_name: str, scan_time_str: str) -> None:
             # )
             pass
         else:
-            content_parser: ChanToContent = ChanToContent(
-                scan_time_str,
-                soup,
-                url,
-                params["op_class"],
-                params["reply_class"],
-                params["root_domain"],
-            )
+            try:
+                content_parser: ChanToContent = ChanToContent(
+                    scan_time_str,
+                    soup,
+                    url,
+                    params["op_class"],
+                    params["reply_class"],
+                    params["root_domain"],
+                )
+            except:
+                continue #so that scraper doesn't crash if we can't parse a link
 
         # Pathing:
         thread_dir: str = os.path.join(
