@@ -6,9 +6,6 @@ import time
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
-import bs4
-import basc_py4chan
-from basc_py4chan import *
 from write_out import *
 from web_scraper.fetch.fetcher import *
 
@@ -37,7 +34,7 @@ class CatalogScraper:
             raise SoupError(
                 f"Error initializing a BeautifulSoup object: {error}")
 
-    def homepage_to_list(self) -> list[str]:
+    def catalog_to_list(self) -> list[str]:
         """Extracts absolute thread URLs from the specified container.
 
         Returns:
@@ -68,18 +65,23 @@ class CatalogScraper:
         base_url: str = self.domain_param
         url_list: list[str] = []
         for board in board_links:
-            board: str = board.get_text()
-            catalog = f"{self.domain_param}/{board}/catalog"
-            catalogue_content = fetch_html_content(catalog)
+            board: str = board.get_text().lower()
+            # if "rules" or "faq" in board:
+            #     continue
+            catalog = f"{self.domain_param}/{board}/catalog.html"
+            try:
+                catalogue_content = fetch_html_content(catalog)
+            except: 
+                continue #if it gives an exception (404) then continue
             if catalogue_content:
                 self.soup = BeautifulSoup(catalogue_content, "html.parser")
                 # link extraction
                 links = self.extract_links(self.soup, base_url)
                 for link in links:
-                    if "/thread/" in link:  # only get links w/ "/thread/"
-                        url_list.add(link)
-
-                page_number += 1
+                    if ("/thread/" in link) or ("/res/" in link):
+                        url_list.append(link)
+                    else:  # only get links w/ "/thread/"
+                        continue
                 # to not overload server
                 # Delay between 10 and 30 seconds
                 delay_seconds = random.uniform(1, 2)

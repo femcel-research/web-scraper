@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from scrape_and_parse import *
+from scrape_catalog import *
 from fourchan_scrape_and_parse import *
 
 scan_time_str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")  # ISO format
@@ -45,18 +46,22 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "backlog", nargs="?", type=bool, help="Boolean used to determine whether or not 4chan backlog is scraped."
+    "catalog", nargs="?", type=bool, help="Boolean used to determine whether or not to scrape from catalog"
 )
+
 
 args = parser.parse_args()
 
-if args.params_name is None:
+if (args.params_name is None) and (args.catalog is not None):
+    catalog_scrape_all(scan_time_str)
+
+elif args.params_name is None:
     scrape_all(scan_time_str)
 
-elif "4chan_" in args.params_name: #to differentiate from 4chanarchives
-    if args.backlog is not None:
-        fourchan_backlog_scrape(args.params_name, scan_time_str)
-    else:
-        fourchan_scrape(args.params_name, scan_time_str)
+elif "4chan_" in args.params_name: 
+    fourchan_backlog_scrape(args.params_name, scan_time_str)
 else:
-    scrape(args.params_name, scan_time_str)
+    if args.catalog is None:
+        scrape(args.params_name, scan_time_str)
+    else: 
+        catalog_scrape(args.params_name, scan_time_str)
