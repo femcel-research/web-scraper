@@ -13,11 +13,10 @@ from pathlib import Path
 
 from fourchan_scrape_and_parse import *
 from fetch import fetch_html_content
-from scrape import ArchiveScraper
+from scrape.catalog_scraper import CatalogScraper
 from scrape import HomepageScraper
 from parse import MasterTextGenerator
 from parse.HTMLToContent import ChanToContent
-from parse.HTMLToContent.ArchiveToContent import ArchiveToContent
 from parse.MasterContentGenerator import MasterContentGenerator
 from parse.MasterMetaGenerator import MasterMetaGenerator
 from parse.SnapshotMetaGenerator import SnapshotMetaGenerator
@@ -26,8 +25,7 @@ from write_out import *
 
 logger = logging.getLogger(__name__)
 
-
-def scrape_all(scan_time_str: str) -> None:
+def catalog_scrape_all(scan_time_str: str) -> None:
     """Scrapes and reparses data for all sites within the data params subfolder
     Args:
         scan_time_str (str): String containing the scan time"""
@@ -40,10 +38,9 @@ def scrape_all(scan_time_str: str) -> None:
         elif "4chan_" in params_name:
             fourchan_scrape(params_name, scan_time_str)
         else:
-            scrape(params_name, scan_time_str)
-
-
-def scrape(params_name: str, scan_time_str: str) -> None:
+            catalog_scrape(params_name, scan_time_str)
+            
+def catalog_scrape(params_name: str, scan_time_str: str) -> None:
     """Scrapes and parses data from a specified website.
     Args:
         params_name (str): Name of website that corresponds to its respective params file
@@ -106,33 +103,19 @@ def scrape(params_name: str, scan_time_str: str) -> None:
         scraper: HomepageScraper = HomepageScraper(
             homepage, params["domain"], params["container"]
         )
-        url_list = scraper.homepage_to_list()
+        scraper: CatalogScraper = CatalogScraper(homepage, params["domain"], params["board_list_container"])
+        url_list = scraper.catalog_to_list()
 
     for url in url_list:
         soup = BeautifulSoup(fetch_html_content(url), features="html.parser")
-        if archive:
-            # content_parser: ArchiveToContent = ArchiveToContent(
-            #     scan_time_str,
-            #     soup,
-            #     url,
-            #     params["op_class"],
-            #     params["reply_class"],
-            #     params["id_class"],
-            #     params["root_domain"],
-            # )
-            pass
-        else:
-            try:
-                content_parser: ChanToContent = ChanToContent(
-                    scan_time_str,
-                    soup,
-                    url,
-                    params["op_class"],
-                    params["reply_class"],
-                    params["root_domain"],
-                )
-            except:
-                continue #so that scraper doesn't crash if we can't parse a link
+        content_parser: ChanToContent = ChanToContent(
+                scan_time_str,
+                soup,
+                url,
+                params["op_class"],
+                params["reply_class"],
+                params["root_domain"],
+            )
 
         # Pathing:
         thread_dir: str = os.path.join(
@@ -196,8 +179,3 @@ def scrape(params_name: str, scan_time_str: str) -> None:
             list_of_snapshot_metas
         )
         master_meta_generator.master_meta_dump()
-
-        if archive:
-            # to not overload server
-            # time.sleep(10)  # wait 10s before looping again
-            pass

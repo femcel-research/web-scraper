@@ -168,9 +168,10 @@ def faux_content_dir(fs):
         "replies": two_replies_one_lost}
     snapshot_four_bytes = json.dumps(snapshot_four_content).encode('utf-8')
 
+    # Outdated formatting
     snapshot_depr_content: dict = {
         "thread_number": "00",
-        "original_post": {
+        "op": {  # Intentionally mismatched with old standard to test KeyError
             "post_id": "00",
             "username": "Dorothy Ashby",
             "reply_to_another_thread?": False,
@@ -326,3 +327,79 @@ def test__generate_master_content_one_lost(mocker, faux_content_dir):
             "Casper Reardon",
         "replied_to_ids":
             ["02"]}
+    
+def test__generate_master_content_key_error_id(mocker, faux_content_dir):
+    """Test _generate_master_content() raises error if you pass bad data."""
+     # Arrange
+    master_content_generator = MasterContentGenerator.__new__(
+        MasterContentGenerator)
+    mocker.patch.object(MasterContentGenerator,"__init__", return_value=None)
+
+    # Create a list of content file paths using faux directory
+    snapshot_one = os.path.join(faux_content_dir, "snapshot_01.json")
+    snapshot_three = os.path.join(faux_content_dir, "snapshot_03.json")
+    snapshot_depr = os.path.join(faux_content_dir, "snapshot_depr.json")
+    # Data in depr follows outdated formatting, and the first path is used
+    # to assign a thread_id, so the following order tests that
+    paths = [snapshot_depr, snapshot_one, snapshot_three]
+
+    # Assign the empty variables that would normally be handled by init
+    master_content_generator.original_post = {}
+    master_content_generator.all_replies = {}
+    master_content_generator.all_post_ids = set()
+    master_content_generator.master_contents = {
+        "thread_id": "",
+        "original_post": master_content_generator.original_post,
+        "replies": master_content_generator.all_replies}
+    
+    # Assign list of faux paths
+    master_content_generator.list_of_content_paths = paths
+
+    # Act & Assert
+    with pytest.raises(KeyError) as excinfo:
+            master_contents = (
+                master_content_generator._generate_master_content())
+            
+    assert str(excinfo.value) == str(KeyError(
+          "KeyError ('thread_id') while generating master content from "
+          f"list of paths: {paths}"))
+
+    assert isinstance(excinfo.value, KeyError)
+
+def test__generate_master_content_key_error_op(mocker, faux_content_dir):
+    """Test _generate_master_content() raises error if you pass bad data."""
+     # Arrange
+    master_content_generator = MasterContentGenerator.__new__(
+        MasterContentGenerator)
+    mocker.patch.object(MasterContentGenerator,"__init__", return_value=None)
+
+    # Create a list of content file paths using faux directory
+    snapshot_one = os.path.join(faux_content_dir, "snapshot_01.json")
+    snapshot_three = os.path.join(faux_content_dir, "snapshot_03.json")
+    snapshot_depr = os.path.join(faux_content_dir, "snapshot_depr.json")
+    # Data in depr follows outdated formatting, but this test should
+    # raise a KeyError when the method looks for an `original_post` key
+    paths = [snapshot_one, snapshot_three, snapshot_depr]
+
+    # Assign the empty variables that would normally be handled by init
+    master_content_generator.original_post = {}
+    master_content_generator.all_replies = {}
+    master_content_generator.all_post_ids = set()
+    master_content_generator.master_contents = {
+        "thread_id": "",
+        "original_post": master_content_generator.original_post,
+        "replies": master_content_generator.all_replies}
+    
+    # Assign list of faux paths
+    master_content_generator.list_of_content_paths = paths
+
+    # Act & Assert
+    with pytest.raises(KeyError) as excinfo:
+            master_contents = (
+                master_content_generator._generate_master_content())
+            
+    assert str(excinfo.value) == str(KeyError(
+          "KeyError ('original_post') while generating master content from "
+          f"list of paths: {paths}"))
+    
+    assert isinstance(excinfo.value, KeyError)
