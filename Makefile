@@ -34,7 +34,9 @@ else
 	@echo "Scraping and parsing complete!"
 endif
 
-scrape_catalog: test_fetch test_scrape test_parse
+scrape_catalog: catalog calculate_sitewide
+
+catalog: test_fetch test_scrape test_parse
 ifeq ($(SITE_NAME),)
 # Site name should be none in this case
 	@echo "Scraping catalog and parsing new data for all availiable sites" 

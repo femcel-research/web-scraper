@@ -3,6 +3,8 @@ import glob
 import json
 import logging
 import os
+from pathlib import Path
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -11,35 +13,32 @@ def get_site_stats(site_name) -> dict:
     """
     Iterates through a list of master meta paths found in the site data subdirectory, and returns a dictionary of site-wide statistics to be dumped into a JSON.
     """
+    params = parameters_search(site_name)
     master_meta_pattern = "**/thread_meta_*.json"
     site_dir = os.path.join("./data", site_name)
     search_pattern = os.path.join(site_dir, master_meta_pattern)
     list_of_master_metas: list[str] = glob.glob(search_pattern, recursive=True)
 
-    if len(list_of_master_metas) > 0:
-        first_found_meta_path = list_of_master_metas[0]
-        with open(first_found_meta_path, "r", encoding="utf-8") as file:
-            data = json.load(file)
-        first_found_meta = data
-        try:
-            url: str = first_found_meta["url"]
-        except KeyError:
-            # Old meta key
-            url: str = first_found_meta["URL"]
+    # if len(list_of_master_metas) > 0:
+    #     first_found_meta_path = list_of_master_metas[0]
+    #     with open(first_found_meta_path, "r", encoding="utf-8") as file:
+    #         data = json.load(file)
+    #     first_found_meta = data
+    url: str = params["hp_url"]
 
-        masterdata = {
-            "url": url,
-            "site_title": site_name,
-            # "description": "", Unsure if we are using these. If so, TODO: will need to add description/keyword rtrieval in ChanScraper
-            # "keywords": "",
-        }
+    masterdata = {
+        "url": url,
+        "site_title": site_name,
+        # "description": "", Unsure if we are using these. If so, TODO: will need to add description/keyword rtrieval in ChanScraper
+        # "keywords": "",
+    }
 
-        stats: dict = calculate_stats(list_of_master_metas)
-        masterdata.update(stats)
-        return masterdata
-    else:
-        logger.error("No master_meta paths found.")
-        raise IndexError("No master_meta paths found.")
+    stats: dict = calculate_stats(list_of_master_metas)
+    masterdata.update(stats)
+    return masterdata
+    # else:
+    #     logger.error("No master_meta paths found.")
+    #     raise IndexError("No master_meta paths found.")
 
 
 def calculate_stats(list_of_master_metas: list[str]) -> dict:
@@ -101,9 +100,47 @@ def dump_all():
     for param_file in params_files:
         site_name = param_file.replace("_params.json", "")
         if "archive" in site_name:  # TODO: Remove once archive sites work
-            continue 
+            continue
         else:
             dump_site_meta(site_name)
+
+
+def parameters_search(params_name) -> dict:
+    """Search for relevant parameters file."""
+    # Parameters
+    params_file_list = glob.glob(f"./data/params/{params_name}*.json")
+    params_file = params_file_list[0] if params_file_list else None
+
+    if params_file is None:
+        logger.critical(f"Parameters file name is not valid: {params_name}")
+        logger.critical("Aborting")
+        sys.exit(1)
+    else:
+        logger.debug(f"Parameters file name is valid: {params_name}")
+        logger.debug("Choosing the first file containing the name")
+
+    params_path = Path(params_file)
+    params: dict
+    try:
+        with open(params_path, "r") as params_file:
+            params = json.load(params_file)
+        logger.info("Loaded parameters successfully")
+    except FileNotFoundError:
+        logger.critical("Parameters file not found with open")
+        logger.critical("Aborting")
+        sys.exit(1)
+    except json.JSONDecodeError as error:
+        logger.critical(f"Parameters file unable to be decoded: {error}")
+        logger.critical("Aborting")
+        sys.exit(1)
+    except Exception as error:
+        # Any other potential errors during file handling
+        logger.critical(
+            f"An unexpected error occurred while loading parameters: {error}"
+        )
+        logger.critical("Aborting")
+        sys.exit(1)
+    return params
 
 
 if __name__ == "__main__":  # used to run script as executable
