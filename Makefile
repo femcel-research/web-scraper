@@ -57,12 +57,6 @@ else
 	@echo "Reparsing complete!"
 endif
 
-# # Retrieves portions, currently requires a site name
-# portion: 
-# 	@echo "Portioning threads..."
-# 	python $(PORTION_RETRIEVER) $(THREAD_PERCENTAGE) $(SITE_NAME) $(RANDOMIZE)
-# 	@echo "Portioning complete!"
-
 portion:
 	@echo "Portioning threads..."
 	PYTHONPATH=./src python -m web_scraper.portion.portion $(THREAD_PERCENTAGE) $(PORTION_DIRECTORY) $(SITE_NAME)
