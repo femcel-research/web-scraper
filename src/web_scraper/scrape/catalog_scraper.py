@@ -54,6 +54,7 @@ class CatalogScraper:
         logger.info("Container specified in parameter found")
 
         board_links = container.find_all("a")
+    
         if not board_links:
             logger.error(
                 f"No list items found within the container '{self.board_list_container}'.")
@@ -64,10 +65,14 @@ class CatalogScraper:
 
         base_url: str = self.domain_param
         url_list: list[str] = []
+        boards: list[str] = []
+        boards.append("nsfw") #add possible hidden nsfw board
+
         for board in board_links:
-            board: str = board.get_text().lower()
-            # if "rules" or "faq" in board:
-            #     continue
+            board_name: str = board.get_text().lower()
+            boards.append(board_name)
+   
+        for board in boards:
             catalog = f"{self.domain_param}/{board}/catalog.html"
             try:
                 catalogue_content = fetch_html_content(catalog)
