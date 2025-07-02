@@ -51,6 +51,7 @@ def calculate_stats(list_of_master_metas: list[str]) -> dict:
     )  # Assumption that number of sitewide threads should correlate with the number of master_thread metas found within a site's data subfolder.
     num_sitewide_total_posts: int = 0
     num_sitewide_dist_posts: int = 0
+    num_sitewide_aggregate_words: int = 0
 
     # Updates values for num_sitewide_total_posts and num_sitewide_dist_posts
     for master_meta_path in list_of_master_metas:
@@ -69,10 +70,16 @@ def calculate_stats(list_of_master_metas: list[str]) -> dict:
             # Old meta key
             num_sitewide_dist_posts += master_meta["num_dist_posts"]
 
+        try:
+            num_sitewide_aggregate_words += master_meta["num_aggregate_words"]
+        except KeyError:
+            continue
+
     return {
         "num_sitewide_threads": num_sitewide_threads,
         "num_sitewide_total_posts": num_sitewide_total_posts,
         "num_sitewide_dist_posts": num_sitewide_dist_posts,
+        "num_sitewide_aggregate_words": num_sitewide_aggregate_words
     }
 
 
@@ -82,7 +89,8 @@ def dump_site_meta(site_name):
     Args:
         site_name (str): Name of site
     """
-    site_meta_file_path = os.path.join("./data", site_name, f"{site_name}_meta.json")
+    site_meta_file_path = os.path.join(
+        "./data", site_name, f"{site_name}_meta.json")
     masterdata: dict = get_site_stats(site_name)
 
     os.makedirs(os.path.dirname(site_meta_file_path), exist_ok=True)

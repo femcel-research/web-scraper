@@ -25,6 +25,7 @@ from write_out import *
 
 logger = logging.getLogger(__name__)
 
+
 def catalog_scrape_all(scan_time_str: str) -> None:
     """Scrapes and reparses data for all sites within the data params subfolder
     Args:
@@ -33,13 +34,14 @@ def catalog_scrape_all(scan_time_str: str) -> None:
     # Iterates through all param files and scrapes and reparses its respective site
     for params_file_name in os.listdir(params_directory):
         params_name = params_file_name.replace("_params.json", "")
-        if "archive" in params_name: #excludes archives and 4chan from scrape all
+        if "archive" in params_name:  # excludes archives and 4chan from scrape all
             continue
         elif "4chan_" in params_name:
             fourchan_scrape(params_name, scan_time_str)
         else:
             catalog_scrape(params_name, scan_time_str)
-            
+
+
 def catalog_scrape(params_name: str, scan_time_str: str) -> None:
     """Scrapes and parses data from a specified website.
     Args:
@@ -83,7 +85,8 @@ def catalog_scrape(params_name: str, scan_time_str: str) -> None:
 
     # Bool determining ehther or not website is an archive
     archive: bool = False
-    if "archive" in params["site_name"]: #TODO: in future maybe add an archive bool key to site param files and read from that
+    # TODO: in future maybe add an archive bool key to site param files and read from that
+    if "archive" in params["site_name"]:
         archive = True
 
     homepage: bytes = fetch_html_content(params["hp_url"])
@@ -103,12 +106,18 @@ def catalog_scrape(params_name: str, scan_time_str: str) -> None:
         scraper: HomepageScraper = HomepageScraper(
             homepage, params["domain"], params["container"]
         )
-        scraper: CatalogScraper = CatalogScraper(homepage, params["domain"], params["board_list_container"])
+        scraper: CatalogScraper = CatalogScraper(
+            homepage, params["domain"], params["board_list_container"])
         url_list = scraper.catalog_to_list()
 
     for url in url_list:
-        soup = BeautifulSoup(fetch_html_content(url), features="html.parser")
-        content_parser: ChanToContent = ChanToContent(
+        try:
+            soup = BeautifulSoup(fetch_html_content(url),
+                                 features="html.parser")
+        except:
+            continue  # continue to next url if there is an exception
+        try:
+            content_parser: ChanToContent = ChanToContent(
                 scan_time_str,
                 soup,
                 url,
@@ -116,6 +125,8 @@ def catalog_scrape(params_name: str, scan_time_str: str) -> None:
                 params["reply_class"],
                 params["root_domain"],
             )
+        except:
+            continue
 
         # Pathing:
         thread_dir: str = os.path.join(
@@ -152,19 +163,20 @@ def catalog_scrape(params_name: str, scan_time_str: str) -> None:
         snapshot_meta_generator.meta_dump()
 
         # Master content creation:
-        candidate_content_files = os.path.join(thread_dir, "**", "content_*.json")
+        candidate_content_files = os.path.join(
+            thread_dir, "**", "content_*.json")
         list_of_snapshot_contents: list[str] = list(
             glob.glob(candidate_content_files, recursive=True)
         )
         master_content_generator: MasterContentGenerator = MasterContentGenerator(
-            list_of_snapshot_contents, 
+            list_of_snapshot_contents,
         )
         master_content_generator.content_dump()
 
         # Master text creation:
         master_text_generator: MasterTextGenerator = MasterTextGenerator(
             os.path.join(
-                thread_dir, 
+                thread_dir,
                 f"master_version_{content_parser.data["thread_id"]}.json"),
             params["site_dir"]
         )
