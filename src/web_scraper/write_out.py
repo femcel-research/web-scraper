@@ -53,6 +53,13 @@ def format_date(date: datetime) -> str:
         formatted_date: str = datetime.strftime(date, "%Y-%m-%dT%H:%M:%S")
         return formatted_date
 
+def str_to_date(date: str) -> datetime:
+        """Formats string to datetime object with format %Y-%m-%dT%H:%M:%S
+        Args:
+            date (str): Date to be formatted"""
+        formatted_date: datetime = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S")
+        return formatted_date
+
 def unix_to_datetime(unix_time: int) -> datetime:
         """Formats a UNIX timestamp into a datetime object
         Args:
