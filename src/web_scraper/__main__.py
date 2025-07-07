@@ -65,7 +65,7 @@ if args.params_name is None:
         
 
 elif "4chan_" in args.params_name: 
-    fourchan_backlog_scrape(args.params_name, scan_time_str)
+    fourchan_scrape(args.params_name, scan_time_str)
 else:
     if args.catalog is None:
         scrape(args.params_name, scan_time_str)

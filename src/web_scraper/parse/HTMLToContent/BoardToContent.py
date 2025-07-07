@@ -11,10 +11,17 @@ logger = logging.getLogger(__name__)
 
 
 class BoardToContent:
-    def __init__(self, site_dir_path: str, thread: Thread, scrape_time: str):
+    def __init__(
+        self,
+        site_dir_path: str,
+        thread: Thread,
+        scrape_time: str,
+        last_scrape: datetime,
+    ):
         """Scrapes from a specific 4chan board"""
         self.thread: Thread = thread
         self.scrape_time: str = scrape_time
+        self.time_of_last_scrape: datetime = last_scrape
         self.site_dir_path: str = site_dir_path
         thread_id: str = str(self.thread.id)
 
@@ -25,24 +32,33 @@ class BoardToContent:
 
         # Data:
         board_name = str(self.thread._board)
-        board_name = re.sub('[<>]', '', board_name)
+        board_name = re.sub("[<>]", "", board_name)
         list_of_posts: list = self.thread.all_posts
         original_post: Post = self.fetch_original_post(list_of_posts)
         list_of_replies: list[Post] = self.fetch_replies(list_of_posts)
-        latest_date: str = self.fetch_latest_date(list_of_replies)
-        post_date: str = self.format_date(original_post.datetime)
+        self.latest_date: str = self.fetch_latest_date(list_of_replies)
 
-        self.data: dict = {
-            "board_name": board_name.replace("Board ", "").strip(),
-            "thread_title": str(self.thread.topic.subject),
-            "thread_id": thread_id,
-            "url": self.thread.url,
-            "date_published": post_date,
-            "date_updated": latest_date,
-            "date_scraped": self.scrape_time,
-            "original_post": self.generate_post_data(original_post),
-            "replies": self.generate_replies_data(list_of_replies),
-        }
+        if str_to_date(self.latest_date) > self.time_of_last_scrape:
+            # Assign data content only if posts haven't been scraped
+            post_date: str = format_date(original_post.datetime)
+            self.data: dict = {
+                "board_name": board_name.replace("Board ", "").strip(),
+                "thread_title": str(self.thread.topic.subject),
+                "thread_id": thread_id,
+                "url": self.thread.url,
+                "date_published": post_date,
+                "date_updated": self.latest_date,
+                "date_scraped": self.scrape_time,
+                "original_post": self.generate_post_data(original_post),
+                "replies": self.generate_replies_data(list_of_replies),
+            }
+        else:
+            # Break out if older thread
+            self.data: dict = None
+            logger.critical(
+                f"Thread {thread_id} is older than date of last scrape. Skipping thread. \n Date of recent post: {self.latest_date}. Date of last scrape: {format_date(self.time_of_last_scrape)}"
+            )
+            return
 
     def fetch_original_post(self, list_of_posts: list[Post]) -> Post:
         """Given a list of posts, the original post is retrieved.
@@ -75,18 +91,20 @@ class BoardToContent:
                 latest_date < reply.datetime
             ):  # if the reply has a later date then update latest_date
                 latest_date = reply.datetime
-        date: str = self.format_date(latest_date)
+        date: str = format_date(latest_date)
         return date
 
     def generate_post_data(self, post: Post) -> dict:
         """Generates data from a post
         Args:
            post(Post): A post from a thread"""
-        date_posted = self.format_date(post.datetime)
+        date_posted = format_date(post.datetime)
         post_id: str = str(post.post_id)
         post_content: str = post.text_comment
         replied_to_ids = self.gather_replied_to_ids(post_content)
-        img_links: list[str] = self.gather_image_url(post) #4chan supports only one file per post
+        img_links: list[str] = self.gather_image_url(
+            post
+        )  # 4chan supports only one file per post
         username = post.name
         post_data = {
             "date_posted": date_posted,
@@ -108,7 +126,7 @@ class BoardToContent:
             replies[f"reply_{reply.number}"] = self.generate_post_data(reply)
         return replies
 
-    def gather_replied_to_ids(self, post_content:str) -> list[int]:
+    def gather_replied_to_ids(self, post_content: str) -> list[int]:
         """Gathers IDs of all replies to a specific post.
         Args:
             post_content: Text content of a post."""
@@ -131,13 +149,8 @@ class BoardToContent:
             return []
         else:
             file_urls: list[str] = []
-            image: str = post.file.file_url #It looks like 4chan limits posters to adding one image
+            image: str = (
+                post.file.file_url
+            )  # It looks like 4chan limits posters to adding one image
             file_urls.append(image)
             return file_urls
-
-    def format_date(self, date) -> str:
-        """Formats datetime object to %Y-%m-%dT%H:%M:%S
-        Args:
-            date (datetime): Date to be formatted"""
-        formatted_date: str = datetime.strftime(date, "%Y-%m-%dT%H:%M:%S")
-        return formatted_date
