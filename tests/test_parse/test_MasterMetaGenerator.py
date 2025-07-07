@@ -170,28 +170,29 @@ def test__generate_master_meta(mocker, faux_content_dir):
     master_meta_generator.thread_id = ""
     master_meta_generator.master_metadata = {
         "board_name": "",
-            "thread_title": "",
-            "thread_id": "",
-            "url": "",
-            "date_published": "",
-            "most_recent_update_date": "0001-01-01T00:00:00",
-            "most_recent_scrape_date": "0001-01-01T00:00:00",
-            "all_post_dates": set(),
-            "all_update_dates": set(),
-            "all_scrape_dates": set(),
-            "snapshot_history": {},
-            "num_aggregate_post_ids": 0,
-            "unique_post_ids": set(),
-            "num_unique_post_ids": 0,
-            "lost_post_ids": set(),
-            "num_aggregate_words": 0,
-            "num_words_most_recent": 22}
+        "thread_title": "",
+        "thread_id": "",
+        "url": "",
+        "date_published": "",
+        "most_recent_update_date": "0001-01-01T00:00:00",
+        "most_recent_scrape_date": "0001-01-01T00:00:00",
+        "all_post_dates": [],
+        "all_update_dates": [],
+        "all_scrape_dates": [],
+        "snapshot_history": {},
+        "num_aggregate_post_ids": 0,
+        "unique_post_ids": [],
+        "num_unique_post_ids": 0,
+        "lost_post_ids": [],
+        "num_aggregate_words": 0,
+        "num_words_most_recent": 0}
 
     # Assign list of faux paths
-    master_meta_generator.list_of_meta_paths = paths
+    master_meta_generator.meta_paths = paths
 
     # Act & Assert
     master_meta = master_meta_generator._generate_master_meta()
 
     assert master_meta["url"] == "example.com"
+    assert master_meta["num_words_most_recent"] == 22
     # TODO: Add more assertions
