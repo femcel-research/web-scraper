@@ -9,7 +9,7 @@ import random
 import shutil  # Used for copying
 
 from datetime import datetime
-from web_scraper.portion.token_data import TokenDataGenerator
+from web_scraper.portion.TokenDataGenerator import TokenDataGenerator
 
 def random_portion_out(
         site_params: list[dict], por_dir: str, percentage: int):
@@ -98,19 +98,26 @@ def random_portion_out(
                             duplicated_thread_ids.append(random_thread_id)
                             successful_duplications += 1
 
-                            token_data_path: str = os.path.join(current_portion_site_path, f"{params["site_name"]}_token_data.json")
-                            data_for_tokenization: TokenDataGenerator = TokenDataGenerator(
-                                params["site_dir"], 
-                                duplicated_thread_ids,
-                                token_data_path)
-                            token_data: dict = data_for_tokenization.generate_portion_json()
-                            
-                            with open(token_data_path, "w") as json_file:
-                                json.dump(token_data, json_file, indent=4)
-
             # And at last, write the duplicated IDs into site's portion log
             # "These thread IDs has now been duplicated for this site"
             _write_thread_ids_to_log(params, por_dir, duplicated_thread_ids)
+
+            # And use the log to create a JSON with all thread post content
+            log_path: str = _get_thread_log(params, por_dir)
+
+            with open(log_path, "r") as log:
+                lines = log.readlines()
+                lines = [line.strip() for line in lines]
+
+                current_portion_site_path: str = (
+                    current_directories[params["site_name"]])
+                token_data_generator = TokenDataGenerator(
+                    params["site_dir"], 
+                    lines, 
+                    current_portion_site_path, 
+                    params["site_name"])
+                token_data_generator.write_out_dict_to_jsons()
+
     except Exception as error:
         logger.error(F"Error while portioning: {error}")
         raise Exception(f"Error while portioning: {error}")
@@ -281,6 +288,18 @@ def _write_thread_ids_to_log(
         raise Exception(
             f"Error while writing thread IDs to log: {error}")
     
+
+def _get_thread_log(specific_params: dict, por_dir: str) -> str:
+    """Returns path to site threads log."""
+    site_por_dir: str = os.path.join(
+        por_dir, specific_params["site_name"])
+    por_log: str = (
+        f"{specific_params["site_name"]}_portioned_threads_log.txt")
+    por_log_path: str = os.path.join(site_por_dir, por_log)
+    return por_log_path
+
+
+
 def _get_all_site_params(params_dir: str) -> list[dict]:
     """Gets a list of data from all found params files.
     
