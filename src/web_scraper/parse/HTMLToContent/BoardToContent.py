@@ -24,6 +24,7 @@ class BoardToContent:
         self.time_of_last_scrape: datetime = last_scrape
         self.site_dir_path: str = site_dir_path
         thread_id: str = str(self.thread.id)
+        thread_path = os.path.join(self.site_dir_path, thread_id)
 
         # Pathing:
         thread_dir: str = os.path.join(self.site_dir_path, thread_id)
@@ -38,27 +39,29 @@ class BoardToContent:
         list_of_replies: list[Post] = self.fetch_replies(list_of_posts)
         self.latest_date: str = self.fetch_latest_date(list_of_replies)
 
-        if str_to_date(self.latest_date) > self.time_of_last_scrape:
-            # Assign data content only if posts haven't been scraped
-            post_date: str = format_date(original_post.datetime)
-            self.data: dict = {
-                "board_name": board_name.replace("Board ", "").strip(),
-                "thread_title": str(self.thread.topic.subject),
-                "thread_id": thread_id,
-                "url": self.thread.url,
-                "date_published": post_date,
-                "date_updated": self.latest_date,
-                "date_scraped": self.scrape_time,
-                "original_post": self.generate_post_data(original_post),
-                "replies": self.generate_replies_data(list_of_replies),
-            }
-        else:
-            # Break out if older thread
-            self.data: dict = None
-            logger.critical(
-                f"Thread {thread_id} is older than date of last scrape. Skipping thread. \n Date of recent post: {self.latest_date}. Date of last scrape: {format_date(self.time_of_last_scrape)}"
-            )
-            return
+        # Check if thread has already been captured
+        if os.path.isdir(thread_path):
+            if str_to_date(self.latest_date) < self.time_of_last_scrape:
+                # Break out if date of newest reply is older than date of last scrape
+                self.data: dict = None
+                logger.critical(
+                    f"Thread {thread_id} is older than date of last scrape. Skipping thread. \n Date of recent post: {self.latest_date}. Date of last scrape: {format_date(self.time_of_last_scrape)}"
+                )
+                return
+
+        # Assign data content only if posts haven't been scraped
+        post_date: str = format_date(original_post.datetime)
+        self.data: dict = {
+            "board_name": board_name.replace("Board ", "").strip(),
+            "thread_title": str(self.thread.topic.subject),
+            "thread_id": thread_id,
+            "url": self.thread.url,
+            "date_published": post_date,
+            "date_updated": self.latest_date,
+            "date_scraped": self.scrape_time,
+            "original_post": self.generate_post_data(original_post),
+            "replies": self.generate_replies_data(list_of_replies),
+        }
 
     def fetch_original_post(self, list_of_posts: list[Post]) -> Post:
         """Given a list of posts, the original post is retrieved.
