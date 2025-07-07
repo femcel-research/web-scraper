@@ -6,55 +6,57 @@ import os
 from pathlib import Path
 import sys
 
+# This should not be titled as a class if it is just a module
+
 logger = logging.getLogger(__name__)
 
 
 def get_site_stats(site_name) -> dict:
-    """
-    Iterates through a list of master meta paths found in the site data subdirectory, and returns a dictionary of site-wide statistics to be dumped into a JSON.
+    """ Given a list of paths, returns a dictionary corresponding to a site.
+
+    Iterates through a list of master meta paths found in the site data 
+    subdirectory, and returns a dictionary of site-wide statistics to be 
+    dumped into a JSON.
     """
     params = parameters_search(site_name)
     master_meta_pattern = "**/thread_meta_*.json"
     site_dir = os.path.join("./data", site_name)
     search_pattern = os.path.join(site_dir, master_meta_pattern)
-    list_of_master_metas: list[str] = glob.glob(search_pattern, recursive=True)
+    master_metas: list[str] = glob.glob(search_pattern, recursive=True)
 
-    # if len(list_of_master_metas) > 0:
-    #     first_found_meta_path = list_of_master_metas[0]
-    #     with open(first_found_meta_path, "r", encoding="utf-8") as file:
-    #         data = json.load(file)
-    #     first_found_meta = data
     url: str = params["hp_url"]
 
     masterdata = {
         "url": url,
         "site_title": site_name,
-        # "description": "", Unsure if we are using these. If so, TODO: will need to add description/keyword rtrieval in ChanScraper
+        # "description": "", Unsure if we are using these. If so, 
+        # TODO: will need to add description/keyword rtrieval in ChanScraper
         # "keywords": "",
     }
 
-    stats: dict = calculate_stats(list_of_master_metas)
+    stats: dict = calculate_stats(master_metas)
     masterdata.update(stats)
     return masterdata
-    # else:
-    #     logger.error("No master_meta paths found.")
-    #     raise IndexError("No master_meta paths found.")
 
 
-def calculate_stats(list_of_master_metas: list[str]) -> dict:
-    """Calculates sitewide stats by iterating through every master meta within the site's data subfolder.
+def calculate_stats(master_metas: list[str]) -> dict:
+    """Calculates sitewide stats by iterating through every master meta 
+    within the site's data subfolder.
+
     Args:
-        list_of_master_metas (list[str]): List containing filepaths to each master meta within the site's data subfolder
+        master_metas (list[str]): Paths to each master meta in site's subdir.
     """
     num_sitewide_threads: int = len(
-        list_of_master_metas
-    )  # Assumption that number of sitewide threads should correlate with the number of master_thread metas found within a site's data subfolder.
+        master_metas
+    )  
+    # Assumption that number of sitewide threads should correlate with 
+    # the number of master_thread metas found within a site's data subfolder.
     num_sitewide_total_posts: int = 0
     num_sitewide_dist_posts: int = 0
     num_sitewide_aggregate_words: int = 0
 
     # Updates values for num_sitewide_total_posts and num_sitewide_dist_posts
-    for master_meta_path in list_of_master_metas:
+    for master_meta_path in master_metas:
         with open(master_meta_path, "r", encoding="utf-8") as file:
             data = json.load(file)
         master_meta = data
@@ -84,8 +86,7 @@ def calculate_stats(list_of_master_metas: list[str]) -> dict:
 
 
 def dump_site_meta(site_name):
-    """
-    Recalculates and saves the current site statistics to its respective site folder.
+    """ Recalculates and saves current site statistics to its site folder.
     Args:
         site_name (str): Name of site
     """
@@ -99,9 +100,7 @@ def dump_site_meta(site_name):
 
 
 def dump_all():
-    """
-    Recalculates and saves up-to-date site statistics for all sites.
-    """
+    """ Recalculates and saves up-to-date site statistics for all sites."""
     params_directory = os.path.join("./data", "params")
     params_files: list[str] = os.listdir(params_directory)
     # Iterates through all availiable sites and recalculates their stats
@@ -114,7 +113,11 @@ def dump_all():
 
 
 def parameters_search(params_name) -> dict:
-    """Search for relevant parameters file."""
+    """Search for relevant parameters file.
+    
+    Returns:
+        Data from a parameters file as a dictionary.
+    """
     # Parameters
     params_file_list = glob.glob(f"./data/params/{params_name}*.json")
     params_file = params_file_list[0] if params_file_list else None
@@ -151,9 +154,12 @@ def parameters_search(params_name) -> dict:
     return params
 
 
-if __name__ == "__main__":  # used to run script as executable
+if __name__ == "__main__":  
+    # Run script as executable
     parser = argparse.ArgumentParser(
-        description="Recalculates sitewide statistics. If no site_name is entered, all sites are recalculated."
+        description=(
+            "Recalculates sitewide statistics. "
+            "If no site_name is entered, all sites are recalculated.")
     )
     parser.add_argument(
         "site_name",
