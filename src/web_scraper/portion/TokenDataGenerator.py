@@ -1,10 +1,12 @@
 # Imports
 import glob
 
+import jsonlines
+
 from web_scraper.write_out import *
 
 class TokenDataGenerator:
-    """Given a list of portion IDs, post content is combined into JSONs."""
+    """Given a list of portion IDs, post content is combined into JSONLs."""
 
     def __init__(
             self, site_dir: str, thread_ids: list, 
@@ -13,8 +15,6 @@ class TokenDataGenerator:
         
         Designed to be called once in the portioning process, not every time
         a thread is portioned.
-
-        # TODO: Use thread log file for thread_ids
 
         Args:
             site_dir (str): Dir where threads should be retrieved from.
@@ -28,16 +28,20 @@ class TokenDataGenerator:
         self.site_name: str = site_name                        
 
 
-    def _combine_thread_content(self) -> dict:
+    def _combine_thread_content(self) -> list:
         """Using a list of thread IDs, post content and data is combined.
         
-        Returns:
-            A dictionary of all posts from all threads listed in `thread_ids`.
-        """
-        final_content: dict = {}
-        content: dict = {}
+        Returns a list of dictionaries (with each corresponding to a post) for
+        efficient creation of a JSONL file.
 
-        for index, id in enumerate(self.thread_ids):
+        Returns:
+            A list of all posts from all threads listed in `thread_ids`.
+        """
+        final_content: list = []
+
+        post_counter: int        
+        for id in self.thread_ids:
+            post_counter = 0
             # Get the path for the thread directory
             thread_path: str = os.path.join(self.site_dir, id)
             # Get the paths for the master content and meta files
@@ -68,73 +72,80 @@ class TokenDataGenerator:
                 with open(master_meta_path, "r") as json_file:
                     master_meta: dict = json.load(json_file)
 
-            original_post: dict = self._get_op_data(master_content)
-            replies: dict = self._get_replies_data(master_content)
-            posts: dict = {}
-            posts.update(original_post)
-            posts.update(replies)
-            content.update({master_content["thread_id"]: posts})
+            op: dict = master_content["original_post"]
+            
+            original_post: dict = self._get_op_data(
+                op, 
+                master_meta)
+
+            final_content.append(original_post)
+
+            post_counter += 1
+
+            replies: dict = master_content["replies"]
+            for reply in replies.values():
+                reply: dict
+                reply_post: dict = self._get_reply_data(
+                    reply,
+                    master_meta)
+                final_content.append(reply_post)
+
+                post_counter += 1
+
             try:
-                assert len(master_meta["unique_post_ids"]) == len(posts)
+                assert len(master_meta["unique_post_ids"]) == post_counter
             except Exception as error:
                 raise Exception(
                     "Inaccuracy when collecting posts for token data: "
                     f"{error}")
             # Final check to ensure accuracy
-            final_content.update({master_meta["board_name"]: content})
+
         return final_content
     
 
-    def _get_op_data(self, master_content: dict) -> dict:
-        """Gets OP ID, date, and content.
+    def _get_op_data(self, op: dict, master_meta: dict) -> dict:
+        """Gets OP ID, date, board name, thread id, and content.
         
         Args:
-            master_content (dict): Thread's master content data.
+            op (dict): OP data from a thread's master content data.
+            master_meta (dict): Thread's master meta data.
         
         Returns:
-            A dictionary with the OP ID as the single key.
+            A dictionary with the OP post data.
         """
-        op: dict = master_content["original_post"]
         return {
-            op["post_id"]: {
-                "date_posted": op["date_posted"],
-                "content": op["post_content"]}}
+            "board_name": master_meta["board_name"],
+            "thread_id": master_meta["thread_id"],
+            "post_id": op["post_id"],
+            "date_posted": op["date_posted"],
+            "content": op["post_content"]}
     
 
-    def _get_replies_data(self, master_content) -> dict:
-        """Gets reply IDs, dates, and content.
+    def _get_reply_data(self, reply: dict, master_meta: dict) -> dict:
+        """Gets reply ID, date, board name. thread id, and content.
         
         Args:
-            master_content (dict): Thread's master content data.
+            reply (dict): Reply data from a thread's master content data.
+            master_meta (dict): Thread's master meta data.
 
         Returns:
-            A dictionary with each reply ID as a key.
+            A dictionary with the reply post data.
         """
-        replies_dict: dict = {}
-        replies: dict = master_content["replies"]
-        for reply in replies.values():
-            reply: dict
-            replies_dict.update({
-                reply["post_id"]: {
-                    "date_posted": reply["date_posted"],
-                    "content": reply["post_content"]}})
-        return replies_dict
+        return {
+            "board_name": master_meta["board_name"],
+            "thread_id": master_meta["thread_id"],
+            "post_id": reply["post_id"],
+            "date_posted": reply["date_posted"],
+            "content": reply["post_content"]}
 
     
-    def write_out_dict_to_jsons(self):
-        """Generates (a) JSON file(s) containing all thread content data."""
-        combined_thread_content: dict = self._combine_thread_content()
-
-        # TODO: Add better handling for extra large files
-        # file_index: int = 0
-        # current_file_path = f"token_data_{file_index:03d}.json"
-        # # Leading zeros: 001, 002, etc.
-        # current_file = None
-        # ...
+    def write_out_dict_to_jsonl(self):
+        """Generates a JSONL file containing all thread content data."""
+        combined_thread_content: list = self._combine_thread_content()
 
         token_data_path: str = os.path.join(
             self.token_data_path, 
-            f"{self.site_name}_token_data.json")
+            f"{self.site_name}_token_data.jsonl")
 
-        with open(token_data_path, "w") as json_file:
-            json.dump(combined_thread_content, json_file, indent=4)
+        with jsonlines.open(token_data_path, mode='w') as writer:
+            writer.write_all(combined_thread_content)

@@ -8,6 +8,7 @@ CATALOG ?= 1 #whether or not to scrape catalog, overwrite as none for default sc
 # Portioning vars:
 THREAD_PERCENTAGE ?= 10 # can be overwritten in command-line. i.e (make portion THREAD_PERCENTAGE = 15)
 PORTION_DIRECTORY ?= ./data/portions
+TOKEN_DATA_FROM_LOG ?= False
 # RANDOMIZE ?= 1 # sets randomization as true
 
 # Scrapes new data, reparses old data
@@ -61,7 +62,7 @@ endif
 
 portion:
 	@echo "Portioning threads..."
-	PYTHONPATH=./src python -m web_scraper.portion.portion $(THREAD_PERCENTAGE) $(PORTION_DIRECTORY) $(SITE_NAME)
+	PYTHONPATH=./src python -m web_scraper.portion.portion $(THREAD_PERCENTAGE) $(PORTION_DIRECTORY) $(SITE_NAME) $(TOKEN_DATA_FROM_LOG)
 	@echo "Portioning complete!"
 
 # Calculates sitewide stats

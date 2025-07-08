@@ -133,6 +133,20 @@ of data you wish to duplicate is specified, the data is duplicated into the
 directory specified, and the specific site you with to have data portioned 
 from is specified.
 
+OR
+
+```
+make portion SITE_NAME=<param_prefix> TOKEN_DATA_FROM_LOG=<bool> PORTION_DIRECTORY=<dir>
+```
+(WITH ARGS) During the portioning process, it is default behavior to combine thread post content
+(from every thread in the thread log file that is generated after portioning is complete) into
+a single JSONL file for tokenization work. These arguments separately create a JSONL file
+(still based off of the thread log file associated with a specific site in the portion directory)
+with combined thread post content.
+
+`PORTION_DIRECTORY` is optional. Default behavior is to use the portion directory
+in the data submodule. 
+
 Terminology
 ========
 **Post**: an original post in a thread/a reply to a post in a thread  

@@ -1,6 +1,6 @@
 [project]
 name = "web_scraper"
-version = "0.0.1"
+version = "0.2.0"
 authors = [
   {name="Moyartu Manley"},
   {name="Wren Kuratana"}
@@ -20,7 +20,8 @@ dependencies = [
   "pytest-mock (>=3.14.0,<4.0.0)",
   "htmldate",
   "basc_py4chan",
-  "pyfakefs"
+  "pyfakefs",
+  "jsonlines",
 ]
 
 [project.urls]

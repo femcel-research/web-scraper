@@ -105,23 +105,39 @@ def random_portion_out(
             # And use the log to create a JSON with all thread post content
             log_path: str = _get_thread_log(params, por_dir)
 
-            with open(log_path, "r") as log:
-                lines = log.readlines()
-                lines = [line.strip() for line in lines]
-
-                current_portion_site_path: str = (
+            current_portion_site_path: str = (
                     current_directories[params["site_name"]])
-                token_data_generator = TokenDataGenerator(
-                    params["site_dir"], 
-                    lines, 
-                    current_portion_site_path, 
-                    params["site_name"])
-                token_data_generator.write_out_dict_to_jsons()
+            
+            _generate_token_data_from_log(
+                log_path, current_portion_site_path, params)
 
     except Exception as error:
         logger.error(F"Error while portioning: {error}")
         raise Exception(f"Error while portioning: {error}")
     
+
+def _generate_token_data_from_log(
+        log_path: str, site_portion_path: str, params: dict):
+    """Generates a JSONL file with content from all thread IDs in the log.
+    
+    Args:
+        log_path (str): Path to a log file with thread IDs.
+        site_portion_path (str): Dir where token data should be written.
+        params (dict): Parameter file for a site.
+    """
+    with open(log_path, "r") as log:
+        lines = log.readlines()
+        lines = [line.strip() for line in lines]
+
+        token_data_generator = TokenDataGenerator(
+                    params["site_dir"], 
+                    lines, 
+                    site_portion_path, 
+                    params["site_name"])
+                
+        token_data_generator.write_out_dict_to_jsonl()
+
+
 def _make_site_directories(site_params: list[dict], por_dir: str):
     """Makes a directory for portioned duplicates, and a subdir per site.
     
@@ -362,6 +378,13 @@ if __name__ == "__main__":
         "site_name", type=str, default="",
         nargs='?',
         help="Name of site to portion from.")
+    parser.add_argument(
+        "token_data_from_log", type=bool, default=False,
+        nargs='?',
+        help="Whether you only want to create a JSONL file based off of logs.")
+    
+    # TODO: Add behavior for when only token data is to be collected,
+    # given the presence of a log list
     
     args = parser.parse_args()
 
@@ -372,6 +395,20 @@ if __name__ == "__main__":
             _get_all_site_params(params_dir),
             args.por_dir,
             args.percentage)
+    elif args.token_data_from_log and args.site_name:  
+        # If just collecting data from log for a specific site,
+        # need to find the specific log file given the site name
+        params: dict = _get_site_params(args.site_name, params_dir)[0]
+        site = params["site_name"]  # Standard name, rather than arg
+        portion_time: str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
+        log_path: str = os.path.join(
+            args.por_dir, site, f"{site}_portioned_threads_log.txt")
+        site_por_dir: str = os.path.join(args.por_dir, site, portion_time)
+        os.makedirs(site_por_dir, exist_ok=True)
+        _generate_token_data_from_log(
+            log_path, 
+            site_por_dir, 
+            params)
     else:
         random_portion_out(
             _get_site_params(args.site_name, params_dir),
