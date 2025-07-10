@@ -395,7 +395,7 @@ if __name__ == "__main__":
             _get_all_site_params(params_dir),
             args.por_dir,
             args.percentage)
-    elif args.token_data_from_log and args.site_name:  
+    elif args.token_data_from_log is not False and args.site_name:  
         # If just collecting data from log for a specific site,
         # need to find the specific log file given the site name
         params: dict = _get_site_params(args.site_name, params_dir)[0]

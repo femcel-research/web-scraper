@@ -8,7 +8,7 @@ CATALOG ?= 1 #whether or not to scrape catalog, overwrite as none for default sc
 # Portioning vars:
 THREAD_PERCENTAGE ?= 10 # can be overwritten in command-line. i.e (make portion THREAD_PERCENTAGE = 15)
 PORTION_DIRECTORY ?= ./data/portions
-TOKEN_DATA_FROM_LOG ?= False
+TOKEN_DATA_FROM_LOG ?=
 # RANDOMIZE ?= 1 # sets randomization as true
 
 # Scrapes new data, reparses old data
