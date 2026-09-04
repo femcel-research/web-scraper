@@ -11,17 +11,21 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 
-from fourchan_scrape_and_parse import *
-from fetch import fetch_html_content
-from scrape.catalog_scraper import CatalogScraper
-from scrape import HomepageScraper
-from parse import MasterTextGenerator
-from parse.HTMLToContent import ChanToContent
-from parse.MasterContentGenerator import MasterContentGenerator
-from parse.MasterMetaGenerator import MasterMetaGenerator
-from parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+from web_scraper.utils.write_out import snapshot_dict_to_json
+from web_scraper.fourchan.fourchan_scrape_parse import *
+from web_scraper.fourchan.utils import *
 
-from write_out import *
+from web_scraper.fourchan.utils.parse.Parser import makeContentJSON
+from web_scraper.utils.fetch import fetch_html_content
+from web_scraper.utils.scrape.catalog_scraper import CatalogScraper
+from web_scraper.utils.scrape import HomepageScraper
+from web_scraper.utils.parse import MasterTextGenerator
+from web_scraper.utils.parse.HTMLToContent import ChanToContent
+from web_scraper.utils.parse.MasterContentGenerator import MasterContentGenerator
+from web_scraper.utils.parse.MasterMetaGenerator import MasterMetaGenerator
+from web_scraper.utils.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+
+from web_scraper.utils.write_out import *
 
 logger = logging.getLogger(__name__)
 
@@ -103,9 +107,9 @@ def catalog_scrape(params_name: str, scan_time_str: str) -> None:
         logging.warning("Archive site detected; WIP; skipping")
         pass  # Archive is still being worked on
     else:
-        scraper: HomepageScraper = HomepageScraper(
-            homepage, params["domain"], params["container"]
-        )
+        # scraper: HomepageScraper = HomepageScraper(
+        #     homepage, params["domain"], params["container"]
+        # )
         scraper: CatalogScraper = CatalogScraper(
             homepage, params["domain"], params["board_list_container"])
         url_list = scraper.catalog_to_list()
@@ -146,6 +150,7 @@ def catalog_scrape(params_name: str, scan_time_str: str) -> None:
         soup_to_html_file(soup, html_file_path)
 
         # Content JSON creation:
+
         snapshot_dict_to_json(
             content_parser.data,
             scan_time_str,

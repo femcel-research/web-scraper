@@ -2,7 +2,7 @@
 import pytest
 import requests
 
-from web_scraper.fetch.fetcher import fetch_html_content, NetworkError
+from web_scraper.utils.fetch.fetcher import fetch_html_content, NetworkError
 
 @pytest.fixture
 def mock_response(mocker):

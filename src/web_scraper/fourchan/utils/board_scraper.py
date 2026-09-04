@@ -7,9 +7,9 @@ from bs4 import BeautifulSoup
 import bs4
 import basc_py4chan
 from basc_py4chan import *
-from write_out import *
+from web_scraper.utils.write_out import *
 
-from .exceptions import SoupError, ContainerNotFoundError, NoListItemsFoundError
+from web_scraper.utils.scrape import SoupError, ContainerNotFoundError, NoListItemsFoundError
 
 logger = logging.getLogger(__name__)
 

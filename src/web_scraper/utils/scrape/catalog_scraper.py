@@ -6,8 +6,8 @@ import time
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
-from write_out import *
-from web_scraper.fetch.fetcher import *
+from web_scraper.utils.write_out import *
+from web_scraper.utils.fetch.fetcher import *
 
 from .exceptions import SoupError, ContainerNotFoundError, NoListItemsFoundError
 

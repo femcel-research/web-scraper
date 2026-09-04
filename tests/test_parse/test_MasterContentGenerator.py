@@ -3,7 +3,7 @@ import json
 import os
 import pytest
 
-from web_scraper.parse.MasterContentGenerator import MasterContentGenerator
+from web_scraper.utils.parse.MasterContentGenerator import MasterContentGenerator
 
 @pytest.fixture
 def faux_content_dir(fs):

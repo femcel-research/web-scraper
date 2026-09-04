@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from web_scraper.scrape.homepage_scraper import (
+from web_scraper.utils.scrape.homepage_scraper import (
     HomepageScraper,
     SoupError,
     ContainerNotFoundError,
@@ -32,7 +32,7 @@ def test_homepage_scraper_init_soup_error(mocker):
     """Test __init__ raises SoupError for invalid HTML content."""
     # Arrange
     mock_beautifulsoup = mocker.patch(
-        "web_scraper.scrape.homepage_scraper.BeautifulSoup")
+        "web_scraper.utils.scrape.homepage_scraper.BeautifulSoup")
     mock_beautifulsoup.side_effect = Exception(
         "Mock BeautifulSoup Initialization Error")
 

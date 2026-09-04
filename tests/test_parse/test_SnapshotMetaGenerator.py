@@ -3,7 +3,7 @@ import json
 import os
 import pytest
 
-from web_scraper.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+from web_scraper.utils.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
 
 @pytest.fixture
 def faux_content_dir(fs):

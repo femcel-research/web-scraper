@@ -3,7 +3,7 @@ import pytest
 
 from bs4 import BeautifulSoup
 
-from web_scraper.scrape.archive_scraper import (
+from web_scraper.utils.scrape.archive_scraper import (
     ArchiveScraper,
     SoupError,
     TagNotFoundError,

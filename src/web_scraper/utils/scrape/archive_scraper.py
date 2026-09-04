@@ -6,7 +6,7 @@ import time
 from bs4 import BeautifulSoup
 
 from .exceptions import SoupError, TagNotFoundError, NoThreadLinkFoundError
-from web_scraper.fetch.fetcher import *
+from web_scraper.utils.fetch.fetcher import *
 
 logger = logging.getLogger(__name__)
 

@@ -11,16 +11,16 @@ from pathlib import Path
 
 from basc_py4chan import *
 
-from fetch.fetcher import fetch_fourchan_json_content
+from web_scraper.utils.fetch.fetcher import fetch_fourchan_json_content
 from scrape.board_scraper import BoardScraper
-from parse.MasterTextGenerator import MasterTextGenerator
+from web_scraper.utils.parse.MasterTextGenerator import MasterTextGenerator
 from parse.HTMLToContent.BoardToContent import BoardToContent
-from parse.MasterContentGenerator import MasterContentGenerator
-from parse.MasterMetaGenerator import MasterMetaGenerator
-from parse.SnapshotMetaGenerator import SnapshotMetaGenerator
-from write_out import *
+from web_scraper.utils.parse.MasterContentGenerator import MasterContentGenerator
+from web_scraper.utils.parse.MasterMetaGenerator import MasterMetaGenerator
+from web_scraper.utils.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+from web_scraper.utils.write_out import *
 
-from write_out import *
+from web_scraper.utils.write_out import *
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,10 @@ def fourchan_scrape(params_name: str, scan_time_str: str) -> None:
         logger.critical("Aborting")
         sys.exit(1)
 
-    last_scrape: datetime = find_last_scrape_date(params)
+    # if there is no last scrape, set last scrape to time of current scrape
+    scan_time_str_to_datetime = datetime.strptime(scan_time_str, "%Y-%m-%dT%H:%M:%S")
+    last_scrape: datetime = find_last_scrape_date(params) if find_last_scrape_date(params) != None else scan_time_str_to_datetime
+    
     scraper: BoardScraper = BoardScraper(params["board_name"])
     list_of_threads: list[Thread] = scraper.all_threads_to_list()
 
@@ -162,10 +165,17 @@ def process(params: dict, scan_time_str: str, last_scrape: datetime, thread: Thr
 
 def find_last_scrape_date(params: dict) -> datetime:
     params_data_dir = params["site_dir"]
+    dirExists =  os.path.exists(params_data_dir)
+
+    if not dirExists:
+        os.makedirs(params_data_dir, exist_ok=True)
+
     subdirectories = [directory for directory in Path(params_data_dir).iterdir() if directory.is_dir()]
     if subdirectories:
         newest_subdirectory = max(subdirectories, key=os.path.getmtime)
         last_scrape = os.path.getmtime(newest_subdirectory)
         last_scrape = datetime.fromtimestamp(last_scrape)
-    return last_scrape
+        return last_scrape
+    else:
+        return None
 

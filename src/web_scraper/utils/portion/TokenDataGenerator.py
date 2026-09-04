@@ -3,7 +3,7 @@ import glob
 
 import jsonlines
 
-from web_scraper.write_out import *
+from web_scraper.utils.write_out import *
 
 class TokenDataGenerator:
     """Given a list of portion IDs, post content is combined into JSONLs."""

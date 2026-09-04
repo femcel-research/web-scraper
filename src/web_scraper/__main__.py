@@ -4,9 +4,9 @@ import logging
 
 from datetime import datetime
 from pathlib import Path
-from scrape_and_parse import *
-from scrape_catalog import *
-from fourchan_scrape_and_parse import *
+from web_scraper.scrape_and_parse import *
+from web_scraper.scrape_catalog import *
+from web_scraper.fourchan import fourchan_scrape_parse
 
 scan_time_str = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")  # ISO format
 

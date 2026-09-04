@@ -152,12 +152,13 @@ class SnapshotMetaGenerator:
                 raise KeyError(f"Error finding 'date_posted' in reply: {error}")
         return all_post_dates
 
-    def meta_dump(self) -> None:
+    def meta_dump(self) -> dict:
         """Dumps thread metadata into a JSON file.
         """
         meta: dict = self._generate_meta()
         with open(self.meta_file_path, "w", encoding="utf-8") as f:
             json.dump(meta, f, indent=2, ensure_ascii=False)
+        return meta
     
     def get_path(self) -> str:
         """Currently unused."""

@@ -20,7 +20,7 @@ scrape_calculate: test_all scrape calculate_sitewide
 setup:
 	@echo "Installing dependencies..."
 #	pip install -r requirements.txt
-	pip install .
+	pip install -e .
 	@echo "Dependencies installed."
 
 # Scrapes and parses new data for a specified site

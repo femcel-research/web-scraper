@@ -5,7 +5,7 @@ import time
 import bs4
 import basc_py4chan
 from basc_py4chan import *
-from write_out import *
+from web_scraper.utils.write_out import *
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +39,15 @@ class BoardToContent:
         list_of_replies: list[Post] = self.fetch_replies(list_of_posts)
         self.latest_date: str = self.fetch_latest_date(list_of_replies)
 
-        # Check if thread has already been captured
-        if os.path.isdir(thread_path):
-            if str_to_date(self.latest_date) < self.time_of_last_scrape:
-                # Break out if date of newest reply is older than date of last scrape
-                self.data: dict = None
-                logger.critical(
-                    f"Thread {thread_id} is older than date of last scrape. Skipping thread. \n Date of recent post: {self.latest_date}. Date of last scrape: {format_date(self.time_of_last_scrape)}"
-                )
-                return
+        # # Check if thread has already been captured
+        # if os.path.isdir(thread_path):
+        #     if str_to_date(self.latest_date) < self.time_of_last_scrape:
+        #         # Break out if date of newest reply is older than date of last scrape
+        #         self.data: dict = None
+        #         logger.critical(
+        #             f"Thread {thread_id} is older than date of last scrape. Skipping thread. \n Date of recent post: {self.latest_date}. Date of last scrape: {format_date(self.time_of_last_scrape)}"
+        #         )
+        #         return
 
         # Assign data content only if posts haven't been scraped
         post_date: str = format_date(original_post.datetime)

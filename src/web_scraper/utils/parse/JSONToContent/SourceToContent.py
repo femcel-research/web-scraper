@@ -1,5 +1,5 @@
 import logging
-from web_scraper.write_out import *
+from web_scraper.utils.write_out import *
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)

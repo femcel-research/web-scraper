@@ -1,5 +1,5 @@
 import pytest
-from web_scraper.parse.JSONToContent import SourceToContent
+from web_scraper.utils.parse.JSONToContent import SourceToContent
 
 
 @pytest.fixture

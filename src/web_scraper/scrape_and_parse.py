@@ -11,18 +11,20 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pathlib import Path
 
-from fourchan_scrape_and_parse import *
-from fetch import fetch_html_content
-from scrape import ArchiveScraper
-from scrape import HomepageScraper
-from parse import MasterTextGenerator
-from parse.HTMLToContent import ChanToContent
-from parse.HTMLToContent.ArchiveToContent import ArchiveToContent
-from parse.MasterContentGenerator import MasterContentGenerator
-from parse.MasterMetaGenerator import MasterMetaGenerator
-from parse.SnapshotMetaGenerator import SnapshotMetaGenerator
+# from fourchan_scrape_and_parse import *
+from web_scraper.utils import *
+from web_scraper.fourchan.fourchan_scrape_parse import fourchan_scrape
+from web_scraper.utils.fetch import fetch_html_content
+from web_scraper.utils.scrape import ArchiveScraper
+from web_scraper.utils.scrape import HomepageScraper
+from web_scraper.utils.parse import MasterTextGenerator
+from web_scraper.utils.parse.HTMLToContent import ChanToContent
+from web_scraper.utils.parse.HTMLToContent.ArchiveToContent import ArchiveToContent
+from web_scraper.utils.parse.MasterContentGenerator import MasterContentGenerator
+from web_scraper.utils.parse.MasterMetaGenerator import MasterMetaGenerator
+from web_scraper.utils.parse.SnapshotMetaGenerator import SnapshotMetaGenerator
 
-from write_out import *
+from web_scraper.utils.write_out import *
 
 logger = logging.getLogger(__name__)
 

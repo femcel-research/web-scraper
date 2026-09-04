@@ -2,7 +2,7 @@
 import os
 import pytest
 
-from web_scraper.parse import MasterTextGenerator
+from web_scraper.utils.parse import MasterTextGenerator
 
 @pytest.fixture
 def mock_master_content(mocker):
