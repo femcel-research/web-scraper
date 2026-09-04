@@ -12,7 +12,7 @@ from web_scraper.utils.pathing_helpers import *
 from web_scraper.fourchan.utils.board_scraper import BoardScraper
 from web_scraper.fourchan.utils.board_to_content import BoardToContent
 from web_scraper.fourchan.utils.parse.DataToJSON import DataToJSON
-from web_scraper.fourchan.utils.fetch.Fourchan_Fetcher import Fourchan_Fetcher
+from web_scraper.fourchan.utils.fetch.fourchan_fetcher import Fourchan_Fetcher
 from basc_py4chan import *
 
 def Parser(params: dict, scan_time_str: str, last_scrape_time: datetime, thread: Thread, thread_id: str):
@@ -37,7 +37,7 @@ def Parser(params: dict, scan_time_str: str, last_scrape_time: datetime, thread:
     makeSourceJSON(thread, scan_time_str, thread_id, site_name)
 
     # create content JSON file
-    makeContentJSON(site_name, thread, thread_id, scan_time_str, last_scrape_time)   
+    makeContentJSON(site_dir, site_name, thread, thread_id, scan_time_str, last_scrape_time)   
 
     # Snapshot meta creation:
     makeContentMeta(content_file_path)
@@ -61,9 +61,9 @@ def makeSourceJSON(thread, scan_time_str, thread_id, site_name):
     DataToJSON(api_data, scan_time_str, thread_id, "source", site_name)
      
      
-def makeContentJSON(site_name: str, thread: Thread, thread_id: str, scan_time_str: str, last_scrape_time: datetime):
+def makeContentJSON(site_dir: str, site_name: str, thread: Thread, thread_id: str, scan_time_str: str, last_scrape_time: datetime):
      # Content JSON creation:
-        content_parser: BoardToContent = BoardToContent(site_name, thread, scan_time_str, last_scrape_time)
+        content_parser: BoardToContent = BoardToContent(site_dir, thread, scan_time_str, last_scrape_time)
     
         if content_parser.data is None:
             return #break out if older thread

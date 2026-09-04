@@ -6,6 +6,7 @@ import bs4
 import basc_py4chan
 from basc_py4chan import *
 from web_scraper.utils.write_out import *
+from web_scraper.utils.pathing_helpers import *
 
 logger = logging.getLogger(__name__)
 
@@ -24,12 +25,11 @@ class BoardToContent:
         self.time_of_last_scrape: datetime = last_scrape
         self.site_dir_path: str = site_dir_path
         thread_id: str = str(self.thread.id)
-        thread_path = os.path.join(self.site_dir_path, thread_id)
 
         # Pathing:
-        thread_dir: str = os.path.join(self.site_dir_path, thread_id)
-        thread_snapshot_path: str = os.path.join(thread_dir, self.scrape_time)
-        os.makedirs(thread_snapshot_path, exist_ok=True)
+        thread_dir: str = getThreadPath(self.site_dir_path, thread_id)
+        thread_snapshot_path: str = getThreadSnapshotPath(thread_dir, self.scrape_time)
+        makeDirectory(thread_snapshot_path)
 
         # Data:
         board_name = str(self.thread._board)
