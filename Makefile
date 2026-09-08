@@ -85,16 +85,19 @@ test_all:
 
 test_fetch:
 	@echo "Running fetching tests..."
+	PYTHONPATH=./src python -m web_scraper
 	pytest ./tests/test_fetch
 	@echo "Tests complete!"
 
 test_parse:
 	@echo "Running parsing tests..."
+	PYTHONPATH=./src python -m web_scraper
 	pytest ./tests/test_parse
 	@echo "Tests complete!"
 
 test_scrape:
 	@echo "Running scraping tests..."
+	PYTHONPATH=./src python -m web_scraper
 	pytest ./tests/test_scrape
 	@echo "Tests complete!"
 
