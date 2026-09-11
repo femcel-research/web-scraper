@@ -23,6 +23,7 @@ def Fourchan_Fetcher(
         _requests_session = requests.session()
         _requests_session.headers["User-Agent"] = "py-4chan/%s" % "0.6.0"
         response = _requests_session.get(url)
+        response.raise_for_status()
         content = json.loads(response.text)
         return content
     except requests.HTTPError as error:
@@ -31,3 +32,6 @@ def Fourchan_Fetcher(
     except requests.RequestException as error:
         logger.error(f"Request error fetching {url}: {error}")
         raise OSError(f"Request error fetching {url}: {error}") from error
+    except json.JSONDecodeError as error:
+        logger.error(f"Failed to parse JSON from {url}: {error}. Response text was: {response.text[:200]}")
+        raise OSError(f"Invalid JSON received from {url}") from error
