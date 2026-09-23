@@ -1,7 +1,7 @@
 # General vars
 MAIN = ./src/web_scraper/__main__.py
-REPARSER = ./src/web_scraper/parse/Reparser.py
-SITE_META = src/web_scraper/parse/SiteMetaGenerator.py
+REPARSER = ./src/web_scraper/utils/parse/Reparser.py
+SITE_META = src/web_scraper/utils/parse/SiteMetaGenerator.py
 SITE_NAME ?=# reflected in data subfolder name
 CATALOG ?= 1 #whether or not to scrape catalog, overwrite as none for default scrape.
 
